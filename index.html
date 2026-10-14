@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>美食知识库</title>
+<style>
+  :root{
+    --bg:#f7f7f5;
+    --card:#ffffff;
+    --card-alt:#fafaf9;
+    --ink:#37352f;
+    --ink-soft:#5f5e5a;
+    --muted:#9b9a97;
+    --accent:#b5804a;
+    --accent-dark:#8f6134;
+    --accent-soft:#f3e9dc;
+    --line:#e9e9e7;
+    --line-strong:#dedcd8;
+    --ok:#3f7d52;
+    --warn:#b07a1e;
+    --info:#3d6b96;
+    --radius:8px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;overflow-x:hidden;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei","PingFang SC","Hiragino Sans GB",sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  [hidden]{display:none!important;}
+
+  /* ---------- 顶栏 ---------- */
+  .topbar{
+    position:sticky;top:0;left:0;z-index:40;height:52px;width:100%;
+    background:var(--card);border-bottom:1px solid var(--line);
+    display:flex;align-items:center;padding:0 16px;gap:12px;
+  }
+  .menu-btn{
+    display:none;border:1px solid var(--line);background:var(--card);border-radius:6px;
+    width:32px;height:32px;cursor:pointer;align-items:center;justify-content:center;color:var(--ink-soft);
+  }
+  .logo{font-weight:700;font-size:15px;white-space:nowrap;cursor:pointer;}
+  .logo em{color:var(--accent);font-style:normal;}
+  .searchbox{
+    flex:1;max-width:520px;margin-left:auto;display:flex;align-items:center;gap:8px;
+    background:var(--bg);border:1px solid transparent;
+    border-radius:6px;padding:6px 12px;transition:.15s;
+  }
+  .searchbox:focus-within{background:var(--card);border-color:var(--line-strong);}
+  .searchbox svg{flex:0 0 auto;opacity:.4;}
+  .searchbox input{border:0;outline:0;flex:1;font-size:13.5px;background:transparent;color:var(--ink);font-family:inherit;min-width:0;}
+  .searchbox input::placeholder{color:var(--muted);}
+  .clear-btn{
+    border:0;background:var(--accent-soft);color:var(--accent-dark);
+    border-radius:5px;font-size:11px;padding:2px 9px;cursor:pointer;font-family:inherit;
+    display:none;font-weight:600;flex:0 0 auto;
+  }
+  .clear-btn.show{display:inline-block;}
+
+  /* ---------- 布局 ---------- */
+  .body{display:flex;max-width:1280px;margin:0 auto;}
+  .sidebar{
+    flex:0 0 230px;width:230px;padding:14px 10px;
+    position:sticky;top:var(--topbar-h,52px);height:calc(100vh - var(--topbar-h,52px));overflow-y:auto;
+  }
+  .content{flex:1;min-width:0;padding:26px 32px 70px;max-width:960px;}
+
+  /* ---------- 侧边导航 ---------- */
+  .nav-group{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.06em;padding:14px 10px 4px;}
+  .nav-group:first-child{padding-top:2px;}
+  .nav-item{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:5px 10px;border-radius:6px;font-size:13.5px;color:var(--ink-soft);
+    cursor:pointer;user-select:none;text-decoration:none;
+  }
+  .nav-item:hover{background:#efedea;}
+  .nav-item.active{background:var(--accent-soft);color:var(--accent-dark);font-weight:600;}
+  .nav-item .n{font-size:11px;color:var(--muted);font-weight:400;}
+  .nav-item.active .n{color:var(--accent-dark);}
+  .nav-item.soon{opacity:.55;}
+  .nav-sub{font-size:10.5px;font-weight:700;color:var(--muted);padding:9px 10px 2px 14px;letter-spacing:.04em;}
+  .nav-item.indent{padding-left:24px;font-size:13px;}
+
+  /* ---------- 面包屑 / 页头 / 返回 ---------- */
+  .pageback{
+    display:inline-flex;align-items:center;gap:5px;
+    border:1px solid var(--line);background:var(--card);border-radius:6px;
+    font-size:12.5px;font-weight:600;color:var(--ink-soft);
+    padding:6px 12px;cursor:pointer;font-family:inherit;margin-bottom:12px;
+  }
+  .pageback:hover{border-color:var(--accent);color:var(--accent-dark);}
+  .pagehead{display:flex;align-items:center;gap:12px;margin-bottom:6px;}
+  .pagehead .page-title{margin:0;flex:1;min-width:0;}
+  .pagehead .pageback{margin-bottom:0;flex:0 0 auto;}
+  .crumb{font-size:12px;color:var(--muted);margin-bottom:6px;}
+  .crumb a{color:var(--muted);cursor:pointer;text-decoration:none;}
+  .crumb a:hover{color:var(--accent-dark);}
+  .page-title{font-size:26px;font-weight:800;margin:0 0 6px;letter-spacing:-.01em;}
+  .page-desc{font-size:13px;color:var(--muted);margin:0 0 20px;}
+  .page-actions{margin:-8px 0 16px;display:flex;gap:8px;}
+  .page-actions button{
+    border:1px solid var(--line);background:var(--card);border-radius:6px;
+    font-size:12px;font-weight:600;color:var(--ink-soft);padding:5px 11px;cursor:pointer;font-family:inherit;
+  }
+  .page-actions button:hover{border-color:var(--accent);color:var(--accent-dark);}
+
+  /* ---------- Tab 栏 ---------- */
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:2px 0 16px;}
+  .tabs button{
+    border:0;background:none;font-family:inherit;font-size:13.5px;font-weight:600;
+    color:var(--muted);padding:8px 12px;cursor:pointer;position:relative;
+  }
+  .tabs button:hover{color:var(--ink-soft);}
+  .tabs button.active{color:var(--accent-dark);}
+  .tabs button.active::after{
+    content:"";position:absolute;left:8px;right:8px;bottom:-1px;height:2px;
+    background:var(--accent);border-radius:2px;
+  }
+
+  /* ---------- 卡片 ---------- */
+  .sec-title{font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.06em;margin:26px 0 10px;}
+  .sec-title:first-of-type{margin-top:0;}
+  .kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;}
+  .kcard{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:13px 15px;cursor:pointer;transition:border-color .15s;
+    display:flex;flex-direction:column;gap:3px;
+  }
+  .kcard:hover{border-color:var(--accent);}
+  .kcard .t{font-size:14.5px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .kcard .t .n{font-size:11px;color:var(--muted);font-weight:400;white-space:nowrap;}
+  .kcard .d{font-size:12px;color:var(--muted);}
+  .kcard.cat{padding:15px 16px;}
+  .kcard .sq{
+    display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;
+    width:22px;height:22px;border-radius:5px;background:var(--c,var(--accent));
+    color:#fff;font-size:12px;font-weight:800;margin-right:8px;
+  }
+  .kcard.soon{opacity:.55;border-style:dashed;}
+  .kcard.soon:hover{border-color:var(--line);}
+
+  /* ---------- 常识科普 ---------- */
+  .primer{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:18px;overflow:hidden;}
+  .primer-head{
+    padding:11px 14px;font-size:13px;font-weight:700;
+    display:flex;justify-content:space-between;align-items:center;gap:8px;
+  }
+  .primer-head .n{font-size:11px;color:var(--muted);font-weight:400;white-space:nowrap;}
+  .pq{border-top:1px solid var(--line);}
+  .primer>.pq:first-child{border-top:0;}
+  .pq-q{
+    display:flex;align-items:center;gap:9px;padding:10px 14px;cursor:pointer;
+    font-size:13.5px;font-weight:600;color:var(--ink-soft);user-select:none;
+  }
+  .pq-q:hover{background:var(--card-alt);}
+  .pq-q .chev{color:var(--muted);transition:transform .18s;display:inline-flex;flex:0 0 auto;}
+  .pq.open .pq-q .chev{transform:rotate(90deg);}
+  .pq-a{display:none;padding:2px 14px 12px 37px;font-size:12.5px;color:var(--muted);line-height:1.75;}
+  .pq.open .pq-a{display:block;}
+
+  /* ---------- 配方折叠列表 ---------- */
+  .recipe{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;}
+  .recipe-head{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;user-select:none;}
+  .recipe-head:hover{background:var(--card-alt);}
+  .recipe-head .chev{flex:0 0 auto;color:var(--muted);transition:transform .18s;display:inline-flex;}
+  .recipe.open .recipe-head .chev{transform:rotate(90deg);}
+  .recipe-head .rn{font-size:14.5px;font-weight:700;flex:1;min-width:0;}
+  .recipe-head .rt{font-size:11.5px;color:var(--muted);white-space:nowrap;}
+  .recipe-body{display:none;border-top:1px solid var(--line);padding:13px 14px;background:var(--card);}
+  .recipe.open .recipe-body{display:block;}
+  .recipe.special{background:linear-gradient(160deg,#fffdf7,#fff);}
+  .tag{font-size:10px;font-weight:700;border-radius:5px;padding:2px 6px;white-space:nowrap;}
+  .tag.type{background:var(--accent-soft);color:var(--accent-dark);}
+  .tag.official{background:#e6f2e9;color:var(--ok);}
+  .tag.sop{background:#e8eff7;color:var(--info);}
+  .tag.replica{background:#faf0dd;color:var(--warn);}
+  .meta{font-size:12px;color:var(--muted);margin:0 0 10px;}
+  .meta b{color:var(--ink-soft);font-weight:600;}
+  .ratio{
+    display:grid;grid-template-columns:1fr auto;gap:1px 0;
+    border:1px solid var(--line);border-radius:6px;overflow:hidden;font-size:13px;margin-bottom:10px;
+  }
+  .ratio .k,.ratio .v{padding:6px 11px;border-bottom:1px solid var(--line);}
+  .ratio .k{background:var(--card-alt);color:var(--ink-soft);border-right:1px solid var(--line);}
+  .ratio .v{background:var(--card);color:var(--accent-dark);font-weight:650;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .ratio .k:last-of-type,.ratio .v:last-of-type{border-bottom:0;}
+  .ratio .kb{display:block;font-size:11px;color:var(--accent-dark);opacity:.8;font-weight:600;margin-top:1px;}
+  .trick{
+    font-size:12.5px;color:var(--ink-soft);background:var(--accent-soft);
+    border-radius:6px;padding:8px 11px;line-height:1.65;
+  }
+  .trick b{color:var(--accent-dark);margin-right:6px;}
+
+  /* ---------- 面板 / 表格 ---------- */
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-bottom:12px;}
+  .panel h3{font-size:14.5px;margin:0 0 3px;font-weight:700;}
+  .panel .desc{font-size:12px;color:var(--muted);margin:0 0 12px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top;}
+  th{font-size:11px;color:var(--muted);font-weight:700;}
+  td{color:var(--ink-soft);}
+  td.num{font-variant-numeric:tabular-nums;color:var(--accent-dark);font-weight:650;}
+  tr:last-child td{border-bottom:0;}
+  .formula{background:var(--accent-soft);border-radius:6px;padding:11px 13px;font-size:13px;color:var(--accent-dark);font-weight:700;margin-top:4px;}
+  .formula small{display:block;font-weight:400;color:var(--ink-soft);margin-top:5px;font-size:12px;}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:760px){.twocol{grid-template-columns:1fr;}}
+  .hot{
+    display:inline-block;background:#f9e8e2;color:#a5502e;font-size:10px;font-weight:700;
+    border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:1px;
+  }
+  td.brand-cell{font-weight:700;color:var(--ink);white-space:nowrap;}
+  td.brand-cell small{display:block;font-weight:400;color:var(--muted);white-space:normal;font-size:11.5px;margin-top:1px;}
+
+  /* ---------- 搜索结果 ---------- */
+  .s-h3{font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--muted);margin:20px 0 10px;}
+  .s-h3:first-child{margin-top:4px;}
+  .hits{display:flex;flex-direction:column;gap:8px;}
+  .hit{
+    background:var(--card);border:1px solid var(--line);border-radius:6px;
+    padding:9px 13px;font-size:13px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;
+    cursor:pointer;transition:border-color .15s;
+  }
+  .hit:hover{border-color:var(--accent);}
+  .hit .hi{font-weight:700;}
+  .hit .hm{color:var(--muted);}
+  .hit .hb{color:var(--accent-dark);font-weight:700;}
+  .hit .hc{font-size:11.5px;color:var(--muted);}
+  .hit .go{margin-left:auto;font-size:11px;color:var(--muted);}
+  .empty{text-align:center;padding:60px 20px;color:var(--muted);font-size:13.5px;}
+  .empty b{display:block;color:var(--ink-soft);font-size:15px;margin-bottom:6px;}
+
+  /* ---------- 提示 ---------- */
+  #toast{
+    position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(16px);
+    background:var(--ink);color:#fff;padding:9px 18px;border-radius:999px;font-size:13px;
+    opacity:0;pointer-events:none;transition:.25s;z-index:60;white-space:nowrap;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  #drawerMask{position:fixed;inset:0;top:var(--topbar-h,52px);background:rgba(55,53,47,.25);z-index:44;display:none;}
+  #drawerMask.show{display:block;}
+  #toTop{
+    position:fixed;right:18px;bottom:calc(22px + env(safe-area-inset-bottom, 0px));z-index:50;
+    width:44px;height:44px;border-radius:50%;border:1px solid var(--line-strong);
+    background:var(--card);cursor:pointer;
+    display:none;align-items:center;justify-content:center;color:var(--accent-dark);
+  }
+  #toTop.show{display:flex;}
+
+  footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);line-height:1.75;}
+  footer b{color:var(--ink-soft);}
+
+  /* ---------- 云服务：登录 / 收藏 / AI ---------- */
+  .uchip{flex:0 0 auto;font-size:12.5px;font-weight:700;color:var(--accent-dark);border:1px solid var(--line-strong);border-radius:999px;padding:5px 13px;cursor:pointer;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis;background:var(--card);}
+  .uchip.on{background:var(--accent-soft);border-color:var(--accent-soft);}
+  .star{cursor:pointer;color:var(--muted);font-size:15px;flex:0 0 auto;padding:0 2px;line-height:1;}
+  .star:hover{color:var(--accent);}
+  .star.on{color:#d9a441;}
+  .body-actions{margin-top:10px;text-align:right;}
+  .ask-ai{border:1px solid var(--line-strong);background:var(--card);border-radius:6px;font-size:12px;font-weight:600;color:var(--accent-dark);padding:5px 12px;cursor:pointer;font-family:inherit;}
+  .ask-ai:hover{border-color:var(--accent);}
+  .unfav{border:1px solid var(--line-strong);background:var(--card);border-radius:6px;font-size:11px;font-weight:600;color:#b3452e;padding:3px 9px;cursor:pointer;font-family:inherit;flex:0 0 auto;}
+  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:70;background:var(--card);border-top:1px solid var(--line-strong);border-radius:14px 14px 0 0;padding:18px 20px calc(24px + env(safe-area-inset-bottom, 0px));max-width:560px;margin:0 auto;box-shadow:0 -8px 30px rgba(55,53,47,.12);max-height:92vh;max-height:92dvh;overflow-y:auto;}
+  .sheet-mask{position:fixed;inset:0;background:rgba(55,53,47,.3);z-index:65;}
+  .sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .sheet-head b{font-size:16px;}
+  .sheet-x{border:0;background:none;font-size:14px;color:var(--muted);cursor:pointer;padding:4px 8px;}
+  .sheet-sub{font-size:12.5px;color:var(--muted);margin:0 0 14px;}
+  .fld{display:block;font-size:12.5px;color:var(--muted);margin-bottom:10px;}
+  .fld span{display:block;margin-bottom:4px;font-weight:600;}
+  .fld input{width:100%;border:1px solid var(--line-strong);border-radius:6px;padding:9px 12px;font-size:14px;font-family:inherit;outline:none;background:var(--card);}
+  .fld input:focus{border-color:var(--accent);}
+  .code-row{display:flex;gap:8px;}
+  .code-row input{flex:1;}
+  .code-row button{flex:0 0 auto;border:1px solid var(--line-strong);background:var(--card);border-radius:6px;padding:0 12px;font-size:12.5px;font-weight:600;color:var(--accent-dark);cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .code-row button:disabled{opacity:.5;cursor:default;}
+  .fld-err{font-size:12px;color:#b3452e;min-height:16px;margin:-4px 0 6px;}
+  .primary-btn{width:100%;border:0;background:var(--accent);color:#fff;border-radius:8px;padding:11px;font-size:14.5px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px;}
+  .primary-btn:disabled{opacity:.6;}
+  .wx-btn{background:#07c160;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .wx-note{margin:10px 0 0;font-size:12px;}
+  .wx-note b{color:var(--accent-dark);font-weight:650;}
+  .divider-line{text-align:center;border-bottom:1px solid var(--line);line-height:.1;margin:16px 0 14px;}
+  .divider-line span{background:var(--card);padding:0 10px;color:var(--muted);font-size:11.5px;}
+  .wx-tip{background:#fff7e6;border-bottom:1px solid #f0e0b8;color:#8a6420;font-size:12px;padding:8px 14px;text-align:center;position:relative;z-index:45;}
+  #aiFab{position:fixed;left:18px;bottom:calc(22px + env(safe-area-inset-bottom, 0px));z-index:50;border:0;background:var(--accent);color:#fff;border-radius:999px;padding:11px 18px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(143,97,52,.35);}
+  .chat{height:70vh;height:70dvh;display:flex;flex-direction:column;}
+  .chat-log{flex:1;overflow-y:auto;padding:10px 2px;display:flex;flex-direction:column;gap:10px;}
+  .chat-hint{font-size:12.5px;color:var(--muted);text-align:center;padding:14px;}
+  .msg{max-width:86%;padding:9px 13px;border-radius:12px;font-size:13.5px;line-height:1.65;white-space:pre-wrap;word-break:break-word;}
+  .msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px;}
+  .msg.assistant{align-self:flex-start;background:var(--bg);border:1px solid var(--line);border-bottom-left-radius:4px;}
+  .chat-input{display:flex;gap:8px;padding-top:10px;border-top:1px solid var(--line);}
+  .chat-input input{flex:1;border:1px solid var(--line-strong);border-radius:999px;padding:9px 15px;font-size:13.5px;font-family:inherit;outline:none;}
+  .chat-input input:focus{border-color:var(--accent);}
+  .chat-input button{border:0;background:var(--accent);color:#fff;border-radius:999px;padding:0 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .chat-input button:disabled{opacity:.6;}
+  .mini-btn{border:1px solid var(--line-strong);background:var(--card);border-radius:6px;font-size:11.5px;font-weight:600;color:var(--ink-soft);padding:4px 10px;cursor:pointer;font-family:inherit;margin-right:4px;}
+
+  /* ---------- 移动端 ---------- */
+  @media(max-width:960px){
+    .menu-btn{display:inline-flex;}
+    .topbar{height:auto;min-height:52px;}
+    .topbar-in{flex-wrap:wrap;padding:8px 10px 0;gap:8px;}
+    .sidebar{
+      position:fixed;left:0;top:var(--topbar-h,52px);bottom:0;z-index:45;
+      background:var(--bg);border-right:1px solid var(--line);
+      transform:translateX(-105%);transition:transform .2s;height:auto;
+    }
+    .sidebar.open{transform:none;}
+    .content{padding:18px 16px 60px;}
+    .page-title{font-size:22px;}
+    td.brand-cell{white-space:normal;}
+    .ratio .v{white-space:normal;}
+    .searchbox{order:5;flex:1 1 100%;margin:6px 0 8px;padding:5px 10px;}
+    .searchbox input{font-size:13px;}
+    .logo{font-size:13.5px;}
+    .uchip{padding:4px 9px;font-size:11.5px;max-width:86px;}
+    .panel{overflow-x:auto;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="目录">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+  <div class="logo" id="logoHome">美食<em>知识库</em></div>
+  <div class="searchbox">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="q" type="text" placeholder="全文搜索：配方 / 原料 / 品牌 / 科普…" autocomplete="off">
+    <button class="clear-btn" id="clearBtn">清空</button>
+  </div>
+  <div class="uchip" id="favBtn" title="我的收藏">★ 收藏</div>
+  <div class="uchip" id="uChip">登录</div>
+</div>
+
+<div class="body">
+  <div id="drawerMask"></div>
+  <nav class="sidebar" id="sidebar"></nav>
+
+  <main class="content">
+
+    <!-- 首页：知识库总入口 -->
+    <section id="view-home">
+      <h1 class="page-title">美食知识库</h1>
+      <p class="page-desc">按分类组织的家庭复刻手册：轻油、轻盐、轻糖，不做油炸。已开馆 6 个频道：饮品 / 鸡尾酒 / 甜点 / 粤菜 / 川菜 / 江西小炒。</p>
+      <div class="sec-title">全部分类</div>
+      <div class="kgrid" id="homeCats"></div>
+    </section>
+
+    <!-- 频道页（通用：任何分类） -->
+    <section id="view-channel" hidden>
+      <div class="pagehead">
+        <button class="pageback" data-pageback>‹ 返回</button>
+        <h1 class="page-title" id="chName"></h1>
+      </div>
+      <p class="page-desc" id="chDesc"></p>
+      <div class="tabs" id="chTabs" hidden></div>
+      <div id="chPrimer" hidden></div>
+      <div class="kgrid" id="chGroups"></div>
+      <div class="kgrid" id="chTools" hidden></div>
+    </section>
+
+    <!-- 分组页（通用：任何分类下的分组，如 饮品/霸王茶姬） -->
+    <section id="view-group" hidden>
+      <div class="pagehead">
+        <button class="pageback" data-pageback>‹ 返回</button>
+        <h1 class="page-title" id="grName"></h1>
+      </div>
+      <p class="page-desc" id="grDesc"></p>
+      <div class="page-actions">
+        <button id="expandAll">全部展开</button>
+        <button id="collapseAll">全部收起</button>
+      </div>
+      <div id="grList"></div>
+    </section>
+
+    <!-- 搜索 -->
+    <section id="view-search" hidden>
+      <div class="pagehead">
+        <button class="pageback" data-pageback>‹ 返回</button>
+        <h1 class="page-title">搜索结果</h1>
+      </div>
+      <p class="page-desc" id="sStats"></p>
+      <div id="searchOut"></div>
+    </section>
+
+    <!-- 我的收藏 -->
+    <section id="view-favorites" hidden>
+      <div class="pagehead">
+        <button class="pageback" data-pageback>‹ 返回</button>
+        <h1 class="page-title">我的收藏</h1>
+      </div>
+      <p class="page-desc">星标的配方会出现在这里，云端同步。</p>
+      <div id="favList"></div>
+    </section>
+
+    <!-- 工具箱（饮品频道工具页） -->
+    <section id="view-toolbox" hidden>
+      <div class="pagehead">
+        <button class="pageback" data-pageback>‹ 返回</button>
+        <h1 class="page-title">通用配比工具箱</h1>
+      </div>
+      <p class="page-desc">不挑品牌、任何茶底都能套用的底层公式与操作参数。掌握这几张表，你就能自己调出任意口味。</p>
+
+      <div class="panel">
+        <h3>① 万能奶液公式（四套可选）</h3>
+        <p class="desc">奶液 = 浓缩奶。新手优先用「鲜奶 + 冰勃朗」组合，最接近新中式奶茶门店口感。</p>
+        <table>
+          <thead><tr><th>方案</th><th>配比</th><th>风味特征</th></tr></thead>
+          <tbody>
+            <tr><td>门店主流（新中式）</td><td class="num">鲜牛乳 80ml + 冰勃朗基底乳 30ml</td><td>茶香突出、顺滑不腻，霸王/茉莉奶白同款路线</td></tr>
+            <tr><td>传统植脂末</td><td class="num">植脂末 65g + 开水 65g</td><td>奶味厚重、成本低，台式奶茶风格</td></tr>
+            <tr><td>淡奶咖啡系</td><td class="num">三花淡奶 60g + 纯牛奶 45g + 奶咖 25g</td><td>港式丝袜奶茶方向，奶香浓烈</td></tr>
+            <tr><td>自制冰博克</td><td class="num">250ml 全脂牛奶冷冻后缓慢解冻，取前 130g 浓缩奶</td><td>零添加的浓缩奶，无冰勃朗时的最佳替代</td></tr>
+          </tbody>
+        </table>
+        <div class="formula">
+          万能奶茶公式：茶汤 4 : 奶液 2 : 糖浆 1
+          <small>以 500ml 杯为例 = 茶汤 200ml + 奶液 100ml + 糖浆 50ml + 冰块补满。浓茶党改 5:2:1，奶味党改 3:2:1。</small>
+        </div>
+      </div>
+
+      <div class="twocol">
+        <div class="panel">
+          <h3>② 茶汤冲泡参数表</h3>
+          <p class="desc">茶叶 : 90℃左右热水，闷泡后过滤，即得约 200ml 热茶汤。绿茶类水温降至 75–80℃，避免焖出涩味。</p>
+          <table>
+            <thead><tr><th>茶底</th><th>茶叶</th><th>水量</th><th>闷泡</th></tr></thead>
+            <tbody>
+              <tr><td>CTC 红茶</td><td class="num">9g</td><td class="num">220g</td><td class="num">5 min</td></tr>
+              <tr><td>茉莉绿茶 / 雪芽</td><td class="num">10g</td><td class="num">220g</td><td class="num">3–7 min</td></tr>
+              <tr><td>四季春 / 铁观音</td><td class="num">12g</td><td class="num">230g</td><td class="num">10 min</td></tr>
+              <tr><td>黄金乌龙 / 直火乌龙</td><td class="num">10g</td><td class="num">220g</td><td class="num">8 min</td></tr>
+              <tr><td>蜜香红茶</td><td class="num">11g</td><td class="num">220g</td><td class="num">10 min</td></tr>
+              <tr><td>桂花乌龙</td><td class="num">9g</td><td class="num">220g</td><td class="num">9 min</td></tr>
+              <tr><td>蜜桃乌龙</td><td class="num">10g</td><td class="num">220g</td><td class="num">9 min</td></tr>
+              <tr><td>鸭屎香单丛</td><td class="num">10g</td><td class="num">220g</td><td class="num">10 min</td></tr>
+            </tbody>
+          </table>
+          <div class="formula" style="margin-top:14px;">
+            冰饮化处理：热茶汤 200g + 冰块 130g 搅至融化
+            <small>快速降温可锁香去涩；严禁挤压茶渣，否则单宁析出会发苦。茶汤 4 小时内用完。</small>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>③ 糖浆换算表</h3>
+          <p class="desc">同一甜度下，不同糖浆的用量差异较大。未特别标注时，配方均默认冰糖浆。</p>
+          <table>
+            <thead><tr><th>糖浆类型</th><th>等甜度用量</th><th>特点</th></tr></thead>
+            <tbody>
+              <tr><td>冰糖浆</td><td class="num">40g</td><td>清甜回甘，新中式奶茶首选</td></tr>
+              <tr><td>白砂糖浆</td><td class="num">30g</td><td>甜度尖锐，还原度略差</td></tr>
+              <tr><td>黑糖浆</td><td class="num">40g</td><td>焦香浓郁，适合波波/烤奶</td></tr>
+              <tr><td>果葡糖浆</td><td class="num">25g</td><td>甜度最高、易溶，果茶常用</td></tr>
+              <tr><td>零卡糖</td><td class="num">40g</td><td>控糖用，甜感略单薄</td></tr>
+            </tbody>
+          </table>
+          <div class="formula" style="margin-top:14px;">
+            自制糖浆：糖 : 水 = 2 : 1，小火煮至完全溶解
+            <small>约可存放 2 周（冷藏）。甜度对照：全糖 100% / 七分糖 70% / 五分糖 50% / 三分糖 30%。</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>④ 奶盖与常见小料</h3>
+        <p class="desc">奶盖分「芝士咸奶盖」和「纯奶油顶」两派，新中式品牌多用后者。</p>
+        <table>
+          <thead><tr><th>项目</th><th>配比</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td>芝士咸奶盖</td><td class="num">奶油奶酪 240g + 牛奶 240g + 炼乳 240g + 盐 12g + 淡奶油 1000g</td><td>打发至稠，古茗/喜茶同款结构</td></tr>
+            <tr><td>轻芝士奶盖（小份）</td><td class="num">芝士奶盖粉 55g + 淡奶油 100g + 全脂牛奶 100g</td><td>打发即用，量小适合家庭</td></tr>
+            <tr><td>茉莉花奶油顶</td><td class="num">淡奶油 240g + 糖 20g</td><td>茉莉奶白「一朵茉莉花」路线，撒山核桃碎</td></tr>
+            <tr><td>珍珠（波波）</td><td class="num">木薯粉 100g + 红糖 30g + 水 70g</td><td>煮 15min + 焖 15min，捞出泡糖浆防粘</td></tr>
+            <tr><td>芋泥</td><td class="num">荔浦芋头 120g + 糖 25g + 淡奶油 60g + 牛奶 60g + 黄油 12g</td><td>蒸熟后搅打至纹路不消失，冷藏保存</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 原料品牌库（饮品频道工具页） -->
+    <section id="view-brands" hidden>
+      <div class="pagehead">
+        <button class="pageback" data-pageback>‹ 返回</button>
+        <h1 class="page-title">原料品牌库</h1>
+      </div>
+      <p class="page-desc">整理自下厨房高赞菜谱、什么值得买、销量榜单与网友实测帖，均为公开口碑信息（非广告）。标「高口碑」者为多来源交叉推荐。</p>
+      <div id="brandsPanels"></div>
+    </section>
+
+    <footer>
+      <b>关于数据可信度</b><br>
+      · <b>官方公开</b>：品牌官方渠道公布过的成分占比或配方（如霸王茶姬 2024 年公开成分表）。<br>
+      · <b>门店 SOP（网传）</b>：网络流传的门店操作配方，比例高度一致、可信度较高，但未经品牌确认。<br>
+      · <b>网络复刻</b>：消费者/博主实测复刻版本，风味接近但存在个体差异。<br><br>
+      所有比例以 <b>单杯 500ml</b> 为基准（另有标注除外）。品牌核心配方属商业机密，本手册仅作 DIY 参考，
+      实际风味受茶叶品质、水质、冰量、摇晃手法影响较大，建议先按标准比例做一杯，再按个人口味微调糖度与奶量。<br><br>
+      <b>关于原料品牌推荐</b><br>
+      「原料品牌库」与配方配料中的「荐」字标注，均整理自公开菜谱、评测与销量榜单，仅为信息汇总，与任何品牌均无利益关联。
+      电商商品价格与配方可能随时变动，购买前请以商品页最新配料表与评价为准。
+    </footer>
+
+  </main>
+</div>
+
+<!-- 登录弹层 -->
+<div class="sheet-mask" id="loginMask" hidden></div>
+<div class="sheet" id="loginSheet" hidden>
+  <div class="sheet-head"><b>登录</b><button class="sheet-x" id="loginClose">✕</button></div>
+  <p class="sheet-sub">登录后可收藏配方、使用 AI 问答，云端同步。</p>
+  <button class="primary-btn wx-btn" id="wxLoginBtn">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8.7 4C4.9 4 2 6.6 2 9.8c0 1.8.9 3.3 2.4 4.4l-.6 1.9 2.2-1.1c.6.2 1.2.3 1.8.3.2 0 .4 0 .6 0-.1-.5-.2-1-.2-1.5 0-3 2.9-5.4 6.5-5.4.2 0 .4 0 .6 0C14.7 6 12 4 8.7 4zm-2 3.2a.8.8 0 1 1 0 1.6.8.8 0 0 1 0-1.6zm4 0a.8.8 0 1 1 0 1.6.8.8 0 0 1 0-1.6zM15.3 9.5c-3.1 0-5.6 2-5.6 4.6s2.5 4.6 5.6 4.6c.5 0 1-.1 1.5-.2l1.9.9-.5-1.6c1.2-.9 2-2.1 2-3.6 0-2.5-2.5-4.7-4.9-4.7zm-1.9 2.4a.7.7 0 1 1 0 1.4.7.7 0 0 1 0-1.4zm3.8 0a.7.7 0 1 1 0 1.4.7.7 0 0 1 0-1.4z"/></svg>
+    微信授权登录
+  </button>
+  <p class="sheet-sub wx-note">微信内打开可一键授权，电脑端展示扫码；<b>只有一台手机时，请用下方手机号登录</b>。</p>
+  <div class="divider-line"><span>或</span></div>
+  <label class="fld"><span>手机号</span><input id="loginPhone" type="tel" maxlength="11" placeholder="11 位手机号"></label>
+  <div class="fld-err" id="phoneErr"></div>
+  <label class="fld"><span>验证码</span>
+    <div class="code-row"><input id="loginCode" type="text" maxlength="6" placeholder="6 位验证码"><button id="sendCodeBtn" type="button">获取验证码</button></div>
+  </label>
+  <div class="fld-err" id="loginErr"></div>
+  <button class="primary-btn" id="loginSubmit">手机号登录 / 注册</button>
+</div>
+
+<!-- AI 问答弹层 -->
+<div class="sheet chat" id="chatSheet" hidden>
+  <div class="sheet-head">
+    <b id="chatTitle">问 AI</b>
+    <div><button class="mini-btn" id="chatNew">新对话</button><button class="sheet-x" id="chatClose">✕</button></div>
+  </div>
+  <div class="chat-log" id="chatLog"></div>
+  <div class="chat-input"><input id="chatText" placeholder="如：没有冰勃朗用什么替？"><button id="chatSend">发送</button></div>
+</div>
+
+<button id="aiFab">问 AI</button>
+
+<div id="toast"></div>
+<button id="toTop" title="回到顶部" aria-label="回到顶部"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg></button>
+
+<script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js" async></script>
+<script>
+/* ================= 云服务初始化（publicConfig 来自云服务开通结果，可安全随前端发布） ================= */
+const PUBLIC_CONFIG = {"resourceId":"wbcs_McaRKpGRHoFIdjQmbr1Fr0","endpoint":"https://milk-tea-recipes.app.workbuddy.host","oauthRelayBaseUrl":"https://www.workbuddy.cn/v2/as/genie-baas/oauth","publishableKey":"wbpk_tgwXUtdIhszLhfd04sw18U_Od5u6as4CWnU2KA3dFvalymsx3WmxoFX"};
+let cloud = null;
+function retryCloud(){
+  if(cloud) return true;
+  try{
+    if(window.WorkBuddyCloud && WorkBuddyCloud.createWorkBuddyCloud){
+      cloud = WorkBuddyCloud.createWorkBuddyCloud({
+        endpoint: PUBLIC_CONFIG.endpoint,
+        oauthRelayBaseUrl: PUBLIC_CONFIG.oauthRelayBaseUrl,
+        publishableKey: PUBLIC_CONFIG.publishableKey
+      });
+    }
+  }catch(e){ cloud = null; }
+  return !!cloud;
+}
+retryCloud();
+function cloudReady(){
+  if(cloud || retryCloud()) return true;
+  toast("云服务未加载成功，请检查网络后刷新页面");
+  return false;
+}
+
+/* ============================================================
+ * 内容扩展指南（功能已冻结——加内容只动这个数据区，不用碰视图逻辑）
+ *
+ * 1. 加一条配方：往 DATA 里 push
+ *      { cat:"分类id", group:"分组名", name, type, tea, items:[[原料,用量]], tips, level, src }
+ *    - 没写 cat 时默认 "drinks"；新 group 名会自动出现在该分类的频道页和左侧导航，无需改别的。
+ *    - level 可选："official" 官方公开 / "sop" 门店SOP / "replica" 网络复刻；special:true 置顶高亮。
+ * 2. 给分组写简介（可选）：GROUP_META["分组名"] = { desc:"..." }。
+ * 3. 开新分类：CATEGORIES 里把对应项 ready 改 true，补 groupLabel（分组区标题，如"经典调酒"）。
+ *    - 可选：PRIMERS["分类id"] = [{q,a}...]（常识科普，作为 Tab 面板显示在一级分组页/频道页，二级分组页与配方详情不放，无则不显示）；
+ *    - 可选：分类加 tools:[{id,t,d}] 并在 PAGE_RENDERERS 注册一个工具页渲染函数。
+ * 4. 加原料品牌：BRANDS_DATA 对应面板 rows.push({item, brand, note, use, kw})。
+ * 5. 配料想自动带「荐」：往 ING_BRAND 顶部插 ["关键词","推荐品牌"]（上面的规则优先匹配）。
+ * ============================================================ */
+
+/* ================= 分类（知识库入口） ================= */
+const CATEGORIES = [
+  {id:"drinks", t:"饮品", c:"#b5804a", d:"奶茶 · 果茶 · 原料与配比工具", ready:true, groupLabel:"奶茶配方",
+   tools:[{id:"toolbox", t:"通用配比工具箱", d:"万能公式 / 冲泡 / 糖浆 / 奶盖"},
+          {id:"brands",  t:"原料品牌库",     d:"奶基底 / 茶叶 / 糖浆 / 小料"}]},
+  {id:"cocktail", t:"鸡尾酒", c:"#7a8ba8", d:"经典调酒 · 低糖家庭版", ready:true, groupLabel:"经典调酒"},
+  {id:"dessert", t:"甜点", c:"#b0727f", d:"低糖家常甜品 · 糖水凉粉", ready:true, groupLabel:"家常甜品"},
+  {id:"yuecai", t:"粤菜", c:"#6fa39a", d:"清蒸白灼 · 老火靓汤 · 轻油", ready:true, groupLabel:"家常菜谱"},
+  {id:"chuancai", t:"川菜", c:"#c26d5c", d:"麻辣轻负担 · 减油减盐版", ready:true, groupLabel:"家常菜谱"},
+  {id:"jiangxi", t:"江西小炒", c:"#b5502f", d:"鲜辣锅气 · 家常少油版", ready:true, groupLabel:"家常菜谱"}
+];
+
+/* ================= 分组简介（可选，按分组名索引） ================= */
+const GROUP_META = {
+  "霸王茶姬":{desc:"新中式鲜奶茶代表 · 官方公开成分：茶汤 66% / 牛乳 19% / 基底乳 8% / 糖浆 7%"},
+  "茉莉奶白":{desc:"花香鲜奶茶 · 招牌茉莉银毫茶底，奶油顶系列人气高"},
+  "茶百道":{desc:"果茶与豆乳系见长 · 杨枝甘露、豆乳玉麒麟为销量担当"},
+  "喜茶":{desc:"芝士奶盖茶开创者 · 芝芝系列、多肉葡萄为经典"},
+  "奈雪的茶":{desc:"霸气鲜果茶系列 · 草莓、菠萝、葡萄为主打"},
+  "蜜雪冰城":{desc:"平价国民路线 · 柠檬水、珍珠奶茶、芝士奶盖四季春"},
+  "古茗":{desc:"清爽果茶与芝士茶 · 用料扎实，暴打柠檬茶出圈"},
+  "沪上阿姨":{desc:"五谷奶茶与港式浓郁风 · 血糯米奶茶为招牌"},
+  "金酒基底":{desc:"杜松子草本香，清爽系调酒首选"},
+  "威士忌基底":{desc:"麦芽烟熏感，兑苏打最顺口"},
+  "伏特加基底":{desc:"中性纯净，风味交给辅料"},
+  "朗姆基底":{desc:"甘蔗甜香，热带清爽路线"},
+  "奶制甜品":{desc:"蒸出来的滑嫩，基本不用油"},
+  "清润糖水":{desc:"文火慢炖出胶，靠食材本味回甜"},
+  "凉粉仙草":{desc:"粉水比例是关键，冷藏定型"},
+  "清蒸白灼":{desc:"粤菜精髓：水开再蒸，吃食材本味"},
+  "白切与蒸鸡":{desc:"浸熟蒸透，皮爽肉嫩零用油"},
+  "老火靓汤":{desc:"煲够火候，盐最后放"},
+  "川味凉菜":{desc:"煮好过冰水，料汁是灵魂"},
+  "少油热菜":{desc:"减油不减味，靠香料和高汤"},
+  "经典小炒":{desc:"锅气第一，猛火快炒"},
+  "瓦罐煨汤":{desc:"隔水慢煨，汤清味鲜"}
+};
+
+/* ================= 配方（43 条；cat 省略 = drinks，group = 品牌） ================= */
+const DATA = [
+  {brand:"霸王茶姬", name:"官方公开成分占比", type:"通用", tea:"—",
+   items:[["原叶茶汤","66%"],["优质牛乳","19%"],["冰勃朗非氢化基底乳","8%"],["风味糖浆（自选）","7%"]],
+   tips:"品牌 2024 年公布的成分表，是所有霸王系复刻的基准锚点：茶为主、奶为辅、基底乳只占 8%。",
+   level:"official", src:"霸王茶姬官方成分表", special:true},
+  {brand:"霸王茶姬", name:"伯牙绝弦", type:"奶茶", tea:"茉莉雪芽（七窨以上）",
+   items:[["味全鲜牛乳","70–80ml"],["冰勃朗基底乳","30ml"],["冰糖糖浆","25–27g"],["茉莉雪芽茶汤","220ml"],["冰块","100g"]],
+   tips:"招牌大单品。茶汤 85℃ 冲泡、滤后立即入冰镇凉；奶昔机打 5 秒或雪克 30 秒出杯。",
+   level:"sop", src:"网传门店 SOP"},
+  {brand:"霸王茶姬", name:"万里木兰", type:"奶茶", tea:"锡兰红茶",
+   items:[["味全鲜牛乳","75–80g"],["冰勃朗基底乳","30g"],["冰糖糖浆","25g"],["锡兰红茶茶汤","220–250ml"],["冰块","100g"]],
+   tips:"红茶底咖啡因极高（大杯超 180mg），对咖啡因敏感者建议下午 3 点前饮用或选轻因版。",
+   level:"sop", src:"网传门店 SOP"},
+  {brand:"霸王茶姬", name:"桂馥兰香", type:"奶茶", tea:"桂花乌龙",
+   items:[["味全鲜牛乳","70g"],["冰勃朗基底乳","20g"],["冰糖糖浆","30g"],["桂花乌龙茶汤","220ml"],["冰块","100g"]],
+   tips:"基底乳减至 20g，让桂花香更透；糖浆反而加到 30g 平衡花香。",
+   level:"sop", src:"网传门店 SOP"},
+  {brand:"霸王茶姬", name:"青青糯山", type:"奶茶", tea:"糯香绿茶（毛尖）",
+   items:[["味全鲜牛乳","75g"],["冰勃朗基底乳","30g"],["冰糖糖浆","28g"],["糯香绿茶茶汤","220ml"],["冰块","100g"]],
+   tips:"糯香需靠茶叶本身，普通绿茶无法替代；糖度略高于经典款以突出米香。",
+   level:"sop", src:"网传门店 SOP"},
+  {brand:"霸王茶姬", name:"山野栀子", type:"奶茶", tea:"栀香绿茶",
+   items:[["味全鲜牛乳","60g"],["冰勃朗基底乳","30g"],["冰糖糖浆","25g"],["栀香绿茶茶汤","250ml"],["冰块","适量"]],
+   tips:"茶汤加到 250ml、鲜奶减到 60g，属于「重茶轻奶」配方，栀子花香更冲。",
+   level:"sop", src:"网传门店 SOP"},
+  {brand:"霸王茶姬", name:"白雾红尘", type:"奶茶", tea:"大红袍 / 山涧红袍",
+   items:[["味全鲜牛乳","60–75g"],["冰勃朗基底乳","30–45g"],["冰糖糖浆","30g"],["大红袍茶汤","220–250ml"],["冰块","100g"]],
+   tips:"岩茶焙火香重，基底乳可加到 45g 压住火味；喜清爽则用 60g 奶 + 250ml 茶。",
+   level:"sop", src:"网传门店 SOP"},
+  {brand:"霸王茶姬", name:"花田乌龙", type:"奶茶", tea:"蜜桃乌龙",
+   items:[["味全鲜牛乳","70g"],["冰勃朗基底乳","20g"],["冰糖糖浆","30g"],["蜜桃乌龙茶汤","220ml"],["冰块","100g"]],
+   tips:"与桂馥兰香同属「低基底乳高糖」的果香调路线。",
+   level:"sop", src:"网传门店 SOP"},
+  {brand:"霸王茶姬", name:"醒时春山", type:"奶茶", tea:"龙井绿茶",
+   items:[["味全鲜牛乳","80g"],["冰勃朗基底乳","30g"],["冰糖糖浆","32g"],["龙井绿茶茶汤","220ml"],["冰块","100g"]],
+   tips:"龙井嫩度高，水温务必降到 75℃ 左右，否则秒出涩味。",
+   level:"sop", src:"网传门店 SOP"},
+  {brand:"霸王茶姬", name:"晴山栖谷", type:"奶茶", tea:"稻香黄茶",
+   items:[["味全鲜牛乳","75g"],["冰勃朗基底乳","45g"],["冰糖糖浆","30g"],["稻香黄茶茶汤","220ml"],["冰块","100g"]],
+   tips:"基底乳用量全场最高（45g），茶感最柔，适合怕苦的人。",
+   level:"sop", src:"网传门店 SOP"},
+  {brand:"霸王茶姬", name:"去云南·玫瑰普洱", type:"奶茶", tea:"玫瑰普洱",
+   items:[["味全鲜牛乳","70g"],["冰勃朗基底乳","20g"],["冰糖糖浆","25g"],["玫瑰普洱茶汤","250ml"],["冰块","100g"]],
+   tips:"特调款：普洱醇厚、茶汤量大，故减奶减冰，避免压过玫瑰香。",
+   level:"sop", src:"网传门店 SOP"},
+  {brand:"茉莉奶白", name:"茉莉奶白", type:"奶茶", tea:"茉莉银毫 / 雪芽（七窨）",
+   items:[["茉莉花茶汤","250ml"],["鲜牛乳","80–85ml"],["冰勃朗 / 咖奶（厚奶）","30ml"],["冰糖浆（或果糖）","30g"],["冰块","100g"]],
+   tips:"品牌招牌。奶昔机搅打 5–10 秒出杯，务必加厚奶——只用鲜奶达不到门店的顺滑度。",
+   level:"replica", src:"网络流传配方"},
+  {brand:"茉莉奶白", name:"茉莉奶白（下厨房高赞版）", type:"奶茶", tea:"茉莉花茶",
+   items:[["茉莉花茶","10g"],["热水（泡茶）","280g"],["鲜奶","50g"],["冰博克（浓缩奶）","40g"],["黄油牛乳","30g"],["冰糖浆","30g"],["茶汤用量","250g"]],
+   tips:"用「鲜奶 + 冰博克 + 黄油牛乳」三层奶结构模拟厚乳，是家庭版还原度最高的组合。",
+   level:"replica", src:"下厨房高赞菜谱"},
+  {brand:"茉莉奶白", name:"一朵茉莉花 / 一口单丛（奶油顶）", type:"奶茶", tea:"茉莉花茶 / 黄枝香单丛",
+   items:[["茶底奶茶","按茉莉奶白标准配方"],["淡奶油","240g"],["细砂糖","20g"],["山核桃碎","少许"]],
+   tips:"升级版＝标准奶茶 + 茉莉花香奶油顶 + 撒山核桃碎。奶油顶需现打现挤，久放会塌。",
+   level:"replica", src:"官方菜单 + 网络复刻"},
+  {brand:"茉莉奶白", name:"桂花龙井", type:"奶茶", tea:"龙井 + 桂花",
+   items:[["龙井茶汤","220ml"],["鲜牛乳","80ml"],["厚奶 / 冰勃朗","25ml"],["桂花糖浆","25g"],["冰块","100g"]],
+   tips:"官方描述为「一芽一叶 + 金黄桂花」，复刻时桂花糖浆不宜过多，否则盖住龙井豆香。",
+   level:"replica", src:"网络复刻"},
+  {brand:"茶百道", name:"杨枝甘露（标准版）", type:"果茶", tea:"无茶底（椰奶基底）",
+   items:[["西柚粒","1 勺"],["芒果浆","1.3 勺"],["芒果粒","1.5 勺"],["黄金糖浆","10cc"],["椰浆","40ml"],["特奶（奶精粉）","1 勺"],["西米","2 勺"],["冰块","8 分满"],["纯净水","补至满"]],
+   tips:"门店 SOP 版本。西米需煮至透明再过凉水防粘连；冰量是分层不出水的关键。",
+   level:"sop", src:"网传门店 SOP 表单"},
+  {brand:"茶百道", name:"杨枝甘露（家庭复刻版）", type:"果茶", tea:"无茶底",
+   items:[["果糖","15ml"],["咖奶","20ml"],["椰浆","25ml"],["芒果酱","35ml"],["西柚粒","35g"],["芒果果肉","40g"],["西米","25g"],["纯净水","50ml"],["冰块","适量"]],
+   tips:"全部倒进雪克杯，加冰至 500ml 摇匀即可，十分钟搞定。怕西柚苦可减量。",
+   level:"replica", src:"网络复刻"},
+  {brand:"茶百道", name:"茉莉奶绿", type:"奶茶", tea:"茉莉花茶",
+   items:[["茉莉花茶茶汤","100ml"],["牛奶","100ml"],["冰块","适量"]],
+   tips:"最基础的奶绿结构，茶奶 1:1。想更接近门店，加 20ml 冰勃朗 + 20g 冰糖浆。",
+   level:"replica", src:"网络复刻"},
+  {brand:"茶百道", name:"豆乳米麻薯", type:"奶茶", tea:"茉莉绿茶",
+   items:[["茉莉绿茶","200ml"],["牛奶","100ml"],["红糯米","1 勺"],["芋圆啵啵","1 勺"],["麻薯","适量"],["芝士奶盖","适量"],["黄豆粉","1 勺"]],
+   tips:"黄豆粉最后撒在奶盖上，过早加入会沉底结块。",
+   level:"replica", src:"网络复刻"},
+  {brand:"茶百道", name:"豆乳玉麒麟", type:"奶茶", tea:"豆乳 + 奶茶底",
+   items:[["豆花布丁","适量"],["奥利奥碎","适量"],["奶茶基底","按标准配方"],["甜度建议","五分糖"],["冰量建议","去冰"]],
+   tips:"豆花布丁 + 奥利奥碎的搭配，豆乳香浓、口感层次强；去冰能避免布丁被冲散。",
+   level:"replica", src:"网络点单攻略"},
+  {brand:"茶百道", name:"元气桃桃奶茶", type:"奶茶", tea:"绿茶",
+   items:[["水蜜桃果肉","3 勺"],["绿茶","100ml"],["桃子酱","1 勺"],["牛奶","30ml"],["果糖","5g"],["脆啵啵","1 勺"],["冰块","适量"]],
+   tips:"牛奶只占 30ml，属于「果味为主、奶味点缀」的轻奶茶。",
+   level:"replica", src:"网络复刻"},
+  {brand:"茶百道", name:"草莓奶冻", type:"果茶", tea:"茉莉绿茶",
+   items:[["奶冻","2 勺"],["草莓酱","70g"],["茉莉绿茶","150ml"],["牛奶","适量"],["果糖","25g"],["冰块","适量"]],
+   tips:"草莓酱先垫底挂壁再倒茶，成品才好看。",
+   level:"replica", src:"网络复刻"},
+  {brand:"喜茶", name:"芝芝芒芒", type:"果茶", tea:"四季春",
+   items:[["四季春茶汤","100ml"],["芒果果蓉","30ml"],["小台农芒果果肉","100g"],["冰糖浆","30g"],["冰块","200g"],["直饮水","150ml"],["海盐奶盖","适量"]],
+   tips:"冰沙杯打至细腻后倒入出品杯，最后铺海盐奶盖；奶盖留出杯口 1/3 空间。",
+   level:"replica", src:"行业流传配方"},
+  {brand:"喜茶", name:"芝芝桃桃", type:"果茶", tea:"四季春",
+   items:[["四季春茶汤","100ml"],["水蜜桃果蓉","30ml"],["水蜜桃果肉","50g"],["冰糖浆","30g"],["冰块","250g"],["直饮水","100ml"],["红心火龙果汁","5ml"],["海盐奶盖","适量"]],
+   tips:"火龙果汁只用于调出粉红色泽，多了会串味，5ml 是上限。",
+   level:"replica", src:"行业流传配方"},
+  {brand:"喜茶", name:"金凤茶冻撞奶茶", type:"奶茶", tea:"金凤茶王（乌龙）",
+   items:[["金凤茶王茶包","2 个"],["鲜牛奶","500ml"],["吉利丁片","适量"],["糖","按口味"]],
+   tips:"茶汤加泡软吉利丁做茶冻，冷藏 4–5 小时凝固后入杯，倒鲜奶即成。",
+   level:"official", src:"喜茶官方公开配方"},
+  {brand:"喜茶", name:"芋泥黑糖波波茶", type:"奶茶", tea:"红茶",
+   items:[["红茶","1.5–3g"],["热水","140ml（泡 5 分钟）"],["热牛奶","100ml"],["糖浆","10ml"],["芋泥","3 份见通用表"],["黑糖波波","3 份见通用表"]],
+   tips:"芋泥抹杯壁留空隙，黑糖波波垫底，最后加奶茶至九分满。",
+   level:"replica", src:"下厨房高赞复刻"},
+  {brand:"喜茶", name:"多肉葡萄（点单公式）", type:"果茶", tea:"绿妍 / 茉莉花茶",
+   items:[["巨峰葡萄果肉","100g（捣碎垫底）"],["葡萄汁","100g"],["茉莉花茶","150g"],["冰块","200g"],["糖浆","30ml"],["脆波波","按喜好"],["甜度建议","三分糖"],["冰量建议","少冰"]],
+   tips:"葡萄对半切后掐出果肉，保留颗粒感；三分糖能突出果酸。",
+   level:"replica", src:"网络复刻"},
+  {brand:"奈雪的茶", name:"霸气草莓", type:"果茶", tea:"茉莉绿茶",
+   items:[["新鲜草莓","10 颗"],["茉莉绿茶","20g"],["蜂蜜","35g"],["冰块","100g"],["原味酸奶","150ml"],["芝士奶盖","150ml"]],
+   tips:"先打茉莉绿茶冰沙，再放整颗草莓打至带颗粒感；顶部 1/3 留位加酸奶或芝士奶盖。",
+   level:"official", src:"奈雪官方公开配方"},
+  {brand:"奈雪的茶", name:"霸气菠萝百香", type:"果茶", tea:"四季春",
+   items:[["四季春茶汤","250ml"],["冰糖浆","45ml"],["冰块","180g"],["百香果果溶","20ml"],["菠萝","80g"]],
+   tips:"冰沙档打匀后倒杯，顶部加奶盖。糖量偏高，是果酸与甜度的平衡点。",
+   level:"replica", src:"行业流传配方"},
+  {brand:"蜜雪冰城", name:"珍珠奶茶", type:"奶茶", tea:"红茶",
+   items:[["红茶","按 9g / 220g 水熬煮"],["牛奶","与红茶比例 1 : 3"],["爽滑版比例","红茶 : 奶 = 1 : 4"],["珍珠","木薯粉 100g + 红糖 30g + 水 70g"]],
+   tips:"兑茶时从 30cm 高度倒入并同步搅拌，可让奶与茶充分乳化、消除气泡。",
+   level:"replica", src:"网络流传配方"},
+  {brand:"蜜雪冰城", name:"柠檬水", type:"果茶", tea:"无茶底",
+   items:[["柠檬片","40g"],["果蜜（蜂蜜+柠檬汁）","55g"],["冰水","适量"]],
+   tips:"镇店之宝的黄金比例 40:55，果蜜可替换为蜂蜜 + 柠檬汁。",
+   level:"replica", src:"网络流传配方"},
+  {brand:"蜜雪冰城", name:"芝士奶盖四季春", type:"奶茶", tea:"四季春（35g / 1000ml 水，93℃，10 分钟）",
+   items:[["四季春茶汤","250ml"],["调味糖浆","25ml"],["冰块","150g"],["芝士奶盖","50g"]],
+   tips:"喝法三段式：先只喝奶盖 → 再喝底下茶汤 → 最后搅匀当四季春奶茶喝。",
+   level:"replica", src:"网络流传配方"},
+  {brand:"蜜雪冰城", name:"东方乌龙轻乳茶", type:"奶茶", tea:"乌龙茶",
+   items:[["乌龙茶","350ml"],["鲜牛乳","150ml"],["椰果","30g"],["脆波波","30g"]],
+   tips:"茶奶比约 7:3，属于轻乳茶结构，几乎不需要额外加糖。",
+   level:"replica", src:"网络复刻"},
+  {brand:"蜜雪冰城", name:"棒打鲜橙", type:"果茶", tea:"绿茶",
+   items:[["鲜橙果肉","80g"],["糖浆","20g"],["绿茶","适量补底"],["蜂蜜","按口味"]],
+   tips:"橙子三成切片贴壁、七成榨汁带果肉；务必用冷水或低温水，热水会放大果酸变苦涩。",
+   level:"replica", src:"网络复刻"},
+  {brand:"古茗", name:"杨枝甘露（轻盈版）", type:"果茶", tea:"茉莉花茶（清爽派）",
+   items:[["芒果肉","80g"],["西柚粒","20g"],["西米","15g"],["多肉","15g"],["茉莉花茶","替代 50% 椰奶"],["甜度建议","三分糖"],["冰量建议","少冰"]],
+   tips:"古茗走清爽路线，果料占比超 40%；用茉莉花茶替代一半椰奶，热量较原版低约 40%。",
+   level:"replica", src:"网络复刻"},
+  {brand:"古茗", name:"暴打柠檬茶", type:"果茶", tea:"乌龙茶（三得利可平替）",
+   items:[["香水柠檬","半个切片捶打（≈20ml 原浆）"],["乌龙茶","200ml"],["冰块","300g"],["糖浆","30ml"]],
+   tips:"关键在香水柠檬——绝不能用黄柠檬，香气完全不同。锤打约 30 下出汁即可，别打烂白瓤。",
+   level:"replica", src:"下厨房高赞复刻"},
+  {brand:"古茗", name:"多肉葡萄", type:"果茶", tea:"茉莉花茶（东方树叶可平替）",
+   items:[["巨峰葡萄","100g（掐出果肉捣碎垫底）"],["葡萄汁","100g"],["茉莉花茶","150g"],["冰块","200g"],["糖浆","30ml"]],
+   tips:"冰沙档打成细冰沙，葡萄肉垫底保留口感。",
+   level:"replica", src:"下厨房高赞复刻"},
+  {brand:"古茗", name:"芝士茉莉 / 芝士乌龙", type:"奶茶", tea:"茉莉花茶 / 乌龙茶",
+   items:[["茶汤","250ml"],["淡奶油奶盖","按通用奶盖配方"],["冰块","适量"]],
+   tips:"极简结构：茶汤 + 奶盖。乌龙茶用三得利瓶装茶即可高度还原古茗风味。",
+   level:"replica", src:"下厨房高赞复刻"},
+  {brand:"沪上阿姨", name:"杨枝甘露（港式浓郁版）", type:"果茶", tea:"无茶底（椰奶基底）",
+   items:[["芒果肉","140g + 糖水 50g + 冰水 310g 打碎"],["多肉（出品杯）","60g"],["芒果粒（出品杯）","30g"],["西柚粒（出品杯）","30g"],["椰浆（出品杯）","40g"]],
+   tips:"先打冰沙再往果料上倒，层次分明；港式风味不走冰沙路线，椰奶更厚重。",
+   level:"replica", src:"网络复刻"},
+  {brand:"沪上阿姨", name:"超嗲草莓大福", type:"奶茶", tea:"茉莉花茶",
+   items:[["草莓汁","75g"],["厚乳","45g"],["茉莉花茶","75g"],["糖水","45g"],["冰块 + 水","310g"],["草莓（出品杯）","50g 碾碎"],["麻薯（出品杯）","50g"],["双皮奶（出品杯）","50g"]],
+   tips:"先放麻薯与双皮奶再倒冰沙，否则小料会浮起。",
+   level:"replica", src:"网络复刻"},
+  {brand:"沪上阿姨", name:"血糯米奶茶", type:"奶茶", tea:"红茶",
+   items:[["血糯米","加满杯底"],["奶茶基底","按标准配方"],["甜度建议","三分糖"],["温度建议","温热"]],
+   tips:"血糯米加满、三分糖、温热是官方点单公式；糯米饱腹感强，建议当加餐。",
+   level:"replica", src:"网络点单攻略"},
+  {brand:"沪上阿姨", name:"鲜煮白金茶（福鼎老白茶）", type:"果茶", tea:"福鼎老白茶",
+   items:[["柠檬汁","20g"],["白茶汤","120g"],["糖水","40g"],["冰块 + 水","250g"],["黄柠檬","切几刀压出汁"]],
+   tips:"老白茶不苦不涩，是做柠檬茶的好底子；柠檬压汁后连皮放回杯中增香。",
+   level:"replica", src:"网络复刻"},
+  {brand:"沪上阿姨", name:"手打青提柠檬", type:"果茶", tea:"无茶底（果味）",
+   items:[["广东香水柠檬","60g 切块"],["冰块","150g（捶打用）"],["冷冻青提汁","70g"],["糖水","50g"],["冰块 + 水","330g"]],
+   tips:"柠檬块 + 冰大力捶打约 30 下，再加青提汁雪克；香水柠檬香气是成败关键。",
+   level:"replica", src:"网络复刻"},
+
+  /* ---------- 鸡尾酒（低糖家庭版） ---------- */
+  {cat:"cocktail", group:"金酒基底", name:"金汤力 Gin & Tonic", type:"调酒", tea:"—",
+   items:[["金酒","50ml"],["汤力水","120ml"],["青柠角","1 角"],["冰块","满杯"]],
+   tips:"直调法：冰满杯 → 倒金酒 → 补汤力水 → 挤青柠角。汤力水本身含糖，控糖选无糖汤力水。",
+   level:"official", src:"IBA 官方配方"},
+  {cat:"cocktail", group:"金酒基底", name:"干马天尼 Dry Martini", type:"调酒", tea:"—",
+   items:[["金酒","60ml"],["干味美思","10ml"],["冰块","适量"],["柠檬皮","1 片"]],
+   tips:"搅拌杯加冰搅 20 秒滤出，柠檬皮拧香挂杯。6:1 是 IBA 标准比例；越冰越顺口，材料提前冷藏。",
+   level:"official", src:"IBA 官方配方"},
+  {cat:"cocktail", group:"威士忌基底", name:"威士忌海波 Highball", type:"调酒", tea:"—",
+   items:[["威士忌","45ml"],["苏打水","120–150ml"],["冰块","满杯"],["柠檬角","可选"]],
+   tips:"居酒屋喝法：冰满杯、威士忌:苏打 ≈ 1:3，轻搅一圈即可（搅多跑气）。零糖添加，最轻负担的威士忌喝法。",
+   level:"replica", src:"居酒屋通用做法"},
+  {cat:"cocktail", group:"威士忌基底", name:"古典 Old Fashioned（低糖版）", type:"调酒", tea:"—",
+   items:[["威士忌","60ml"],["方糖","半块（原版 1 块）"],["苦精","2–3 滴"],["橙皮","1 片"],["大冰块","1 块"]],
+   tips:"方糖减半、加 5ml 水化开，先苦精后酒再下大冰，橙皮拧香。糖没化开会喝到砂粒感。",
+   level:"replica", src:"经典款减糖复刻"},
+  {cat:"cocktail", group:"伏特加基底", name:"伏特加汤力 Vodka Tonic", type:"调酒", tea:"—",
+   items:[["伏特加","45ml"],["汤力水","120ml"],["青柠角","1 角"],["冰块","满杯"]],
+   tips:"伏特加味中性，汤力水是风味主角——换无糖汤力水就是接近零糖的一杯。",
+   level:"replica", src:"经典款复刻"},
+  {cat:"cocktail", group:"伏特加基底", name:"莫斯科骡子 Moscow Mule", type:"调酒", tea:"—",
+   items:[["伏特加","45ml"],["干姜水","120ml"],["青柠汁","10ml"],["冰块","满杯"],["薄荷叶","可选"]],
+   tips:"传统用铜杯（导热快更冰爽），家用玻璃杯即可。干姜水选低糖款；青柠汁现挤，瓶装的香气差一截。",
+   level:"official", src:"IBA 官方配方"},
+  {cat:"cocktail", group:"朗姆基底", name:"莫吉托 Mojito（减糖版）", type:"调酒", tea:"—",
+   items:[["白朗姆酒","40ml"],["青柠汁","30ml"],["薄荷叶","6–8 片"],["糖","1 吧勺（原版 2 勺）"],["苏打水","补满"],["冰块","碎冰最佳"]],
+   tips:"薄荷拍醒别捣烂（会出苦味）；IBA 原版 2 吧勺糖，减半后靠青柠酸度平衡，更清爽。",
+   level:"official", src:"IBA 官方配方（减糖调整）"},
+
+  /* ---------- 甜点（低糖） ---------- */
+  {cat:"dessert", group:"奶制甜品", name:"双皮奶", type:"蒸甜品", tea:"—",
+   items:[["全脂牛奶","500ml"],["鸡蛋清","3 个"],["糖","25g（可减至 15g）"]],
+   tips:"牛奶煮微沸倒出结奶皮 → 奶+蛋清糖搅匀过筛 → 沿碗边倒回让奶皮浮起 → 中火蒸 12 分钟焖 5 分钟。水牛奶最正宗，全脂奶可替代。",
+   level:"replica", src:"家常做法"},
+  {cat:"dessert", group:"奶制甜品", name:"杏仁豆腐", type:"冷藏甜品", tea:"—",
+   items:[["南杏仁","50g（或杏仁露 250ml）"],["牛奶","250ml"],["吉利丁","10g"],["糖","15g"],["糖桂花","少许"]],
+   tips:"杏仁泡 4 小时打浆过滤，与牛奶煮微沸后加泡软的吉利丁，冷藏 3 小时切块，淋糖桂花。用无糖杏仁露可再减糖。",
+   level:"replica", src:"家常做法"},
+  {cat:"dessert", group:"奶制甜品", name:"无糖酸奶水果杯", type:"免做甜品", tea:"—",
+   items:[["无糖希腊酸奶","200g"],["时令水果","100g"],["燕麦 / 坚果","20g"],["蜂蜜","5g（可省）"]],
+   tips:"无糖酸奶打底，水果选蓝莓/草莓/猕猴桃等低 GI 款，燕麦坚果增饱腹感。控糖期蜂蜜可不加。",
+   level:"replica", src:"家常做法"},
+  {cat:"dessert", group:"清润糖水", name:"银耳莲子羹", type:"糖水", tea:"—",
+   items:[["干银耳","半朵"],["莲子","30g"],["红枣","4 颗"],["枸杞","10g"],["冰糖","20g（可再减）"]],
+   tips:"银耳冷水发 2 小时撕小朵，大火煮开转小火 40 分钟出胶，后放莲子和糖。红枣自带甜味，糖可再减。",
+   level:"replica", src:"家常做法"},
+  {cat:"dessert", group:"清润糖水", name:"陈皮红豆沙", type:"糖水", tea:"—",
+   items:[["红豆","150g"],["陈皮","1 小片"],["冰糖","25g（可减至 15g）"]],
+   tips:"红豆泡 4 小时，煮 1 小时至开花起沙；陈皮最后 10 分钟放，久煮发苦。更低糖可用赤藓糖醇等量替代。",
+   level:"replica", src:"家常做法"},
+  {cat:"dessert", group:"凉粉仙草", name:"烧仙草", type:"凉粉", tea:"—",
+   items:[["仙草粉","20g"],["水","500ml"],["牛奶 / 椰奶","150ml"],["蜂蜜","10g"],["红豆 / 芋圆（可选）","适量"]],
+   tips:"仙草粉先用 50ml 冷水调开，再冲入沸水搅煮 1 分钟，冷藏凝固切块。配奶和少量蜂蜜，比门店少一半糖。",
+   level:"replica", src:"家常做法"},
+  {cat:"dessert", group:"凉粉仙草", name:"蜂蜜龟苓膏", type:"凉粉", tea:"—",
+   items:[["龟苓膏粉","20g"],["水","500ml"],["蜂蜜","10g"]],
+   tips:"粉水比例按包装（约 1:25），煮开后小火搅 2 分钟。龟苓膏本身微苦，蜂蜜吃前淋，别一起煮。",
+   level:"replica", src:"家常做法"},
+
+  /* ---------- 粤菜（清蒸白灼 · 轻油） ---------- */
+  {cat:"yuecai", group:"清蒸白灼", name:"清蒸鲈鱼", type:"蒸菜", tea:"—",
+   items:[["鲈鱼","1 条（约 500g）"],["姜","6 片"],["葱","2 根"],["蒸鱼豉油","2 勺"],["热油","1 勺（可减半）"]],
+   tips:"水开后再上锅，500g 鱼大火蒸 8 分钟关火虚蒸 2 分钟；倒掉盘中腥水再淋豉油。泼油减半更清爽，不减香。",
+   level:"replica", src:"家常做法"},
+  {cat:"yuecai", group:"清蒸白灼", name:"白灼虾", type:"白灼", tea:"—",
+   items:[["鲜虾","400g"],["姜","3 片"],["料酒","1 勺"],["生抽","2 勺（蘸料）"],["香醋","1 勺（蘸料）"]],
+   tips:"水开下虾，变红弯曲即捞（约 2 分钟），过冰水更弹。蘸料用生抽+醋+姜末，比油碟轻得多。",
+   level:"replica", src:"家常做法"},
+  {cat:"yuecai", group:"清蒸白灼", name:"蒸水蛋", type:"蒸菜", tea:"—",
+   items:[["鸡蛋","3 个"],["温水","蛋液的 1.5 倍"],["盐","1 小撮"],["生抽","半勺"],["香油","几滴"]],
+   tips:"蛋液过筛 + 盖保鲜膜扎孔，中火蒸 10 分钟焖 2 分钟，镜面不起蜂窝。水温 40℃ 左右，别用开水。",
+   level:"replica", src:"家常做法"},
+  {cat:"yuecai", group:"清蒸白灼", name:"蒜蓉蒸丝瓜", type:"蒸菜", tea:"—",
+   items:[["丝瓜","1 根"],["蒜","5 瓣"],["生抽","1 勺"],["油","1 小勺"]],
+   tips:"丝瓜去皮切段铺蒜蓉，水开蒸 5 分钟。蒜蓉先用水冲一下去辛辣，蒸出来不苦。",
+   level:"replica", src:"家常做法"},
+  {cat:"yuecai", group:"白切与蒸鸡", name:"白切鸡", type:"白切", tea:"—",
+   items:[["三黄鸡","半只（约 700g）"],["姜","5 片"],["葱","2 根"],["料酒","1 勺"],["姜蓉蘸料","姜蓉+盐+少许鸡汤"]],
+   tips:"水微沸（虾眼水）下鸡，浸 20 分钟关火再焖 10 分钟，捞出过冰水皮才爽脆。蘸料少油版：姜蓉+盐+一点鸡汤。",
+   level:"replica", src:"家常做法"},
+  {cat:"yuecai", group:"白切与蒸鸡", name:"香菇蒸滑鸡", type:"蒸菜", tea:"—",
+   items:[["鸡腿","2 个"],["干香菇","4 朵"],["生抽","1 勺"],["蚝油","半勺"],["淀粉","1 小勺"],["姜丝","适量"]],
+   tips:"鸡腿去骨切块，加料抓匀腌 20 分钟，水开蒸 12 分钟。蒸制零额外用油，比炒鸡块嫩。",
+   level:"replica", src:"家常做法"},
+  {cat:"yuecai", group:"老火靓汤", name:"玉米胡萝卜排骨汤", type:"汤", tea:"—",
+   items:[["排骨","400g"],["玉米","1 根"],["胡萝卜","1 根"],["姜","3 片"],["盐","起锅前加"]],
+   tips:"排骨冷水下锅焯去血沫，换水大火煮开转小火煲 1.5 小时，盐最后放（早放肉柴）。不放一滴油。",
+   level:"replica", src:"家常做法"},
+  {cat:"yuecai", group:"老火靓汤", name:"冬瓜薏米排骨汤", type:"汤", tea:"—",
+   items:[["排骨","400g"],["冬瓜","400g"],["薏米","40g"],["姜","3 片"],["盐","起锅前加"]],
+   tips:"薏米提前泡 2 小时；冬瓜最后 30 分钟放，煮太烂会浑汤。清淡祛湿的经典搭配。",
+   level:"replica", src:"家常做法"},
+
+  /* ---------- 川菜（减油减盐版） ---------- */
+  {cat:"chuancai", group:"川味凉菜", name:"蒜泥白肉", type:"凉菜", tea:"—",
+   items:[["五花肉","300g"],["蒜","6 瓣"],["生抽","2 勺"],["香醋","1 勺"],["红油","1 勺（可减半）"],["糖","1 小撮"]],
+   tips:"肉冷水下锅加姜葱煮 25 分钟，放凉切薄片。蒜泥用捣的才出香；红油减半、加 2 勺煮肉原汤，减一半油不减风味。",
+   level:"replica", src:"家常做法"},
+  {cat:"chuancai", group:"川味凉菜", name:"口水鸡（减油版）", type:"凉菜", tea:"—",
+   items:[["鸡腿","2 个"],["姜葱","适量"],["生抽","2 勺"],["香醋","1 勺"],["花椒油","半勺"],["红油","1 勺"],["熟芝麻","少许"],["糖","1 小撮"]],
+   tips:"鸡腿浸熟过冰水（同白切鸡手法）。料汁用 2 勺煮鸡汤打底，红油减到 1 勺，麻香不减、油腻大减。",
+   level:"replica", src:"家常做法"},
+  {cat:"chuancai", group:"川味凉菜", name:"凉拌三丝", type:"凉菜", tea:"—",
+   items:[["胡萝卜","半根"],["黄瓜","1 根"],["粉丝","1 把"],["蒜","3 瓣"],["生抽","1.5 勺"],["香醋","1 勺"],["香油","几滴"],["辣椒油","半勺（可省）"]],
+   tips:"粉丝煮软过凉，三丝切细。酸辣口靠醋和蒜提味，辣椒油可省——这道本来就轻油。",
+   level:"replica", src:"家常做法"},
+  {cat:"chuancai", group:"少油热菜", name:"麻婆豆腐（少油版）", type:"热菜", tea:"—",
+   items:[["嫩豆腐","1 盒"],["牛肉末","80g"],["豆瓣酱","1 勺"],["花椒粉","适量"],["水淀粉","适量"],["蒜苗","1 根"]],
+   tips:"豆腐先盐水焯烫不易碎；豆瓣酱减半、加 100ml 高汤补味，起锅不淋明油——这是减油关键，麻香靠花椒粉现撒。",
+   level:"replica", src:"家常做法"},
+  {cat:"chuancai", group:"少油热菜", name:"鱼香肉丝（少油少糖版）", type:"热菜", tea:"—",
+   items:[["里脊肉","200g"],["木耳","5 朵"],["胡萝卜","半根"],["泡椒","2 勺"],["生抽","1.5 勺"],["香醋","1.5 勺"],["糖","半勺（原版 2 勺）"],["淀粉","适量"]],
+   tips:"鱼香靠泡椒+姜蒜，不靠多糖多油。糖减半、醋不减；肉丝滑油改滑水（水开汆 20 秒），省油一半。",
+   level:"replica", src:"家常做法"},
+  {cat:"chuancai", group:"少油热菜", name:"粉蒸牛肉", type:"蒸菜", tea:"—",
+   items:[["牛肉","300g"],["蒸肉米粉","80g"],["豆瓣酱","半勺"],["生抽","1 勺"],["姜","适量"]],
+   tips:"牛肉逆纹切薄片，加料腌 30 分钟，铺土豆块上锅蒸 40 分钟。全程蒸制无额外用油，比红烧省油得多。",
+   level:"replica", src:"家常做法"},
+
+  /* ---------- 江西小炒（家常少油版） ---------- */
+  {cat:"jiangxi", group:"经典小炒", name:"江西辣椒炒肉", type:"小炒", tea:"—",
+   items:[["前腿肉","250g"],["余干辣椒 / 线椒","150g"],["蒜","4 瓣"],["豆豉","1 小勺"],["生抽","1 勺"],["老抽","几滴"]],
+   tips:"肉分肥瘦：肥肉先下锅煸出油（不再额外放油），瘦肉后下；辣椒干锅煸出虎皮再合炒。江西版偏鲜辣，别放糖。",
+   level:"replica", src:"家常做法"},
+  {cat:"jiangxi", group:"经典小炒", name:"藜蒿炒腊肉", type:"小炒", tea:"—",
+   items:[["藜蒿","300g"],["腊肉","120g"],["蒜","3 瓣"],["干辣椒","2 个"]],
+   tips:"腊肉先蒸 10 分钟再切片（析出的盐油倒掉），下锅煸出油后只用这个油炒藜蒿，全程不加盐——腊肉的咸足够。",
+   level:"replica", src:"家常做法"},
+  {cat:"jiangxi", group:"经典小炒", name:"井冈烟笋炒肉", type:"小炒", tea:"—",
+   items:[["烟笋干","150g"],["里脊肉","150g"],["青红椒","各半个"],["蒜","3 瓣"],["生抽","1 勺"]],
+   tips:"烟笋提前泡 24 小时换水 2 次（去烟熏咸味），先干锅煸干水分再炒。笋吸油，油比平常炒菜略多一点即可，别贪多。",
+   level:"replica", src:"家常做法"},
+  {cat:"jiangxi", group:"经典小炒", name:"三杯鸡（少油版）", type:"小炒", tea:"—",
+   items:[["鸡腿","3 个"],["米酒","4 勺"],["生抽","2 勺"],["老抽","半勺"],["九层塔 / 罗勒","1 把"],["姜","6 片"],["蒜","6 瓣"],["香油","半勺"]],
+   tips:"传统三杯=一杯油一杯米酒一杯酱油。少油做法：鸡皮朝下干煸出油替代「一杯油」；九层塔起锅前 10 秒放，香气才不跑。",
+   level:"replica", src:"家常做法"},
+  {cat:"jiangxi", group:"瓦罐煨汤", name:"鸡蛋肉饼瓦罐汤", type:"煨汤", tea:"—",
+   items:[["猪肉末","150g"],["鸡蛋","1 个"],["姜","2 片"],["盐","少许"],["淀粉","1 小勺"]],
+   tips:"肉末加淀粉和少许水搅上劲，压成饼铺碗底，磕入整蛋，加水没过，隔水煨 40 分钟。蒸出来的汤清味鲜，零油。",
+   level:"replica", src:"家常做法"},
+  {cat:"jiangxi", group:"瓦罐煨汤", name:"山药排骨瓦罐汤", type:"煨汤", tea:"—",
+   items:[["排骨","300g"],["铁棍山药","1 根"],["姜","3 片"],["枸杞","10g"],["盐","起锅前加"]],
+   tips:"排骨焯水后与姜入罐，加水煨 1 小时，山药最后 30 分钟放。家用深碗 + 蒸锅即可复刻瓦罐效果。",
+   level:"replica", src:"家常做法"}
+];
+
+/* ================= 原料品牌库（30 项） ================= */
+const BRANDS_DATA = [
+ {cat:"① 奶与奶基底", desc:"新中式鲜奶茶口感的半壁江山。预算有限时优先保证「鲜奶 + 基底乳」这两样。", rows:[
+  {item:"冰勃朗基底乳", brand:"圣吗哪（黄标）", hot:1, sub:"白金标更丝滑 / 蓝标更低脂", note:"霸王茶姬供应链同款。黄标奶香浓不腻、适配性最强；1L 约 ¥35–45；开封后冷藏 7 天内用完；认准 SC 证 + 配料含「浓缩牛奶」", use:"霸王茶姬 / 茉莉奶白全系", kw:"冰勃朗 冰博朗 基底乳 圣吗哪 黄标 咖奶 厚奶"},
+  {item:"鲜牛乳（门店同款）", brand:"味全鲜牛乳", note:"网传霸王茶姬门店 SOP 指定用奶，奶味中正不抢茶香", use:"霸王茶姬全系", kw:"鲜牛乳 鲜奶 味全 门店同款"},
+  {item:"鲜牛乳（清爽升级）", brand:"悦鲜活", hot:1, note:"口感清甜纯净、几乎无奶腥，INF 杀菌保质约 19 天；评测公认「不掩盖茶味」，最适合做茶饮基底", use:"轻乳茶 / 鲜奶茶", kw:"鲜牛乳 鲜奶 悦鲜活 升级"},
+  {item:"鲜牛乳（浓醇升级）", brand:"每日鲜语 娟姗 4.0", note:"蛋白质 4.0g、奶味浓郁挂壁，适合追求厚奶感；缺点是喝多易腻、价格偏高", use:"厚乳奶茶 / 直接饮用", kw:"鲜牛乳 鲜奶 每日鲜语 娟姗 浓郁"},
+  {item:"淡奶油", brand:"雀巢 / 安佳", hot:1, note:"雀巢性价比高、打发稳定（蜜雪冰城奶盖配方同款）；安佳为茉莉奶白官方菜单奶油顶的用奶，动物脂风味更足", use:"奶盖 / 奶油顶 / 芋泥", kw:"淡奶油 雀巢 安佳 奶盖 奶油顶"},
+  {item:"炼乳", brand:"雀巢鹰唛 / 熊猫牌", note:"鹰唛是茉莉奶白复刻配方同款；熊猫牌小条装适合家用不浪费", use:"奶盖 / 豆乳玉麒麟 / 港式奶茶", kw:"炼乳 炼奶 雀巢 鹰唛 熊猫"},
+  {item:"椰浆", brand:"Kara 佳乐 / 安利来", note:"Kara 是行业标杆（约 ¥33/L）；越南安利来约 ¥18/L，被网友称为「完美平替」", use:"杨枝甘露 / 生椰系", kw:"椰浆 kara 佳乐 安利来"},
+  {item:"厚椰乳", brand:"菲诺", hot:1, note:"生椰拿铁带火的头部厚椰乳，家庭 DIY 生椰系默认选项，约 ¥17/L", use:"芒芒生打椰 / 生椰系", kw:"厚椰乳 菲诺 生椰"},
+  {item:"芝士奶盖粉", brand:"馥苏 / 果仙尼", note:"馥苏是蜜雪冰城芝士奶盖四季春配方同款；果仙尼主打免奶油打发，新手零失败", use:"芝士奶盖四季春 / 多肉葡萄奶盖", kw:"芝士奶盖粉 馥苏 果仙尼 奶盖"},
+  {item:"植脂末（奶精）", brand:"速品 866 / 以慕", note:"做传统台式奶茶用；选购认准「0 反式脂肪酸 / 非氢化」标注", use:"台式珍珠奶茶 / 烤奶", kw:"植脂末 奶精 速品 奶咖"}
+ ]},
+ {cat:"② 茶叶（茶底决定上限）", desc:"商用茶底供应商的货其实都能网购，认准「奶茶店专用」关键词，价格比想象中低。", rows:[
+  {item:"茉莉雪芽 / 茉莉绿茶", brand:"茶半春 / 姚小茶", hot:1, note:"均为「伯牙绝弦平替」口碑款，多窨次雪芽、花香入茶骨；散茶替代可选七窨茉莉绿茶或茉莉毛尖", use:"伯牙绝弦 / 茉莉奶白 / 茉莉奶绿", kw:"茉莉雪芽 茉莉绿茶 茶半春 姚小茶 伯牙绝弦 平替"},
+  {item:"锡兰红茶", brand:"茗杰 / 三隐 / 以慕", note:"京东自营约 ¥29/500g，「奶茶专用」款；做柠檬茶选 CTC 碎茶，出汤快、茶感浓", use:"万里木兰 / 港式奶茶 / 柠檬红茶", kw:"锡兰红茶 茗杰 三隐 以慕 万里木兰"},
+  {item:"四季春", brand:"以慕四季春 / 三得利（瓶装）", note:"以慕是奶茶店同款原料（月销数千）；偷懒直接用三得利无糖乌龙茶，被网友称为「完美复刻古茗茶底」", use:"芝士奶盖四季春 / 芝芝系列", kw:"四季春 以慕 三得利 乌龙茶"},
+  {item:"鸭屎香（凤凰单丛）", brand:"以慕鸭屎香", hot:1, note:"月销 2 万+ 的奶茶店专用款，约 ¥13/250g，兰花香高扬，手打柠檬茶顶流茶底", use:"鸭屎香柠檬茶 / 单丛奶茶", kw:"鸭屎香 凤凰单丛 单枞 以慕 柠檬茶"},
+  {item:"乌龙茶 / 茉莉花茶（瓶装平替）", brand:"三得利 / 东方树叶", note:"无糖瓶装茶，不用泡不用滤，实测还原度极高；东方树叶茉莉花茶是古茗多肉葡萄复刻指定用茶", use:"芝士乌龙 / 暴打柠檬茶 / 多肉葡萄", kw:"乌龙茶 三得利 东方树叶 平替 瓶装"},
+  {item:"桂花乌龙 / 蜜桃乌龙", brand:"源芽 / 以慕等商用茶厂", note:"搜「桂馥兰香同款 / 花田乌龙同款」即可找到奶茶店供应商货源，桂花香气足、回甘好", use:"桂馥兰香 / 花田乌龙", kw:"桂花乌龙 蜜桃乌龙 白桃乌龙 源芽 以慕"}
+ ]},
+ {cat:"③ 糖浆与甜味", desc:"家用首推自制冰糖浆（糖:水=2:1），成本最低；需要风味糖浆再上网购款。", rows:[
+  {item:"风味糖浆", brand:"莫林 MONIN", hot:1, note:"法国百年品牌、全球调饮师默认选择，纯蔗糖 + 天然香料；缺点是价高、开封后约 1 个月内用完", use:"各类奶茶 / 果茶调甜", kw:"风味糖浆 莫林 monin 焦糖 香草"},
+  {item:"风味糖浆（性价比）", brand:"特朗尼 Torani", note:"美国老牌，100+ 口味，单价比莫林低，适合尝鲜多种风味", use:"各类奶茶 / 果茶调甜", kw:"风味糖浆 特朗尼 torani"},
+  {item:"冰糖浆 / 调味糖浆", brand:"馥苏 / 太古 Taikoo", note:"馥苏是蜜雪冰城配方同款调味糖浆；太古为百年炼糖企业，冰糖浆品质稳、家常易购", use:"新中式鲜奶茶通用", kw:"冰糖浆 调味糖浆 馥苏 太古"},
+  {item:"果葡糖浆（果糖）", brand:"双桥", note:"国标起草单位、连锁奶茶店上游供应商，F-42/F-55 规格；甜度高用量省，适合果茶", use:"果茶 / 商用口味还原", kw:"果葡糖浆 果糖 双桥 商用"},
+  {item:"黑糖浆", brand:"自制优先", note:"黑糖:水=1:1 小火熬 5–10 分钟至微稠即可，挂壁效果比市售好；网购选配料仅「黑糖、水」的", use:"黑糖波波 / 脏脏茶", kw:"黑糖浆 黑糖 自制"}
+ ]},
+ {cat:"④ 小料与特色粉类", desc:"网购小料认准「免煮 / 即食」关键词，家庭用量选小包装，开封后不易坏。", rows:[
+  {item:"珍珠 / 波波", brand:"展艺免煮珍珠 / 花仙尼", hot:1, note:"展艺是淘宝小料销量 TOP 级品牌，免煮冲泡型 0 脂肪；花仙尼快煮黑糖珍珠为奶茶店同款波霸口感", use:"珍珠奶茶 / 黑糖波波茶", kw:"珍珠 波波 粉圆 展艺 花仙尼 免煮"},
+  {item:"脆啵啵 / 寒天晶球", brand:"展艺脆啵啵 / 川资晶球", note:"0 脂即食小包装；川资寒天晶球被称「古茗多肉的灵魂伴侣」；马蹄爆爆珠是销量 TOP1 单品", use:"多肉葡萄 / 果茶加料", kw:"脆啵啵 脆波波 寒天晶球 展艺 川资"},
+  {item:"西米", brand:"焙小姐小西米", note:"罐装 550g 约 ¥12，杨枝甘露复刻帖高频出现；煮至透明后立即过凉水防粘", use:"杨枝甘露 / 西米露", kw:"西米 焙小姐 杨枝甘露"},
+  {item:"椰果", brand:"花仙尼椰果粒", note:"约 ¥4.5/包，pdd 口碑店铺同款，开袋即用", use:"各类奶茶 / 果茶加料", kw:"椰果 花仙尼"},
+  {item:"熟黄豆粉（豆乳撒粉）", brand:"展艺 / 易小焙 / 璞匠", hot:1, note:"必须选「熟」粉——生粉有豆腥味。展艺京东评论 200 万+、有无蔗糖版；易小焙低温烘焙焦香浓，约 ¥15–25/200g", use:"豆乳玉麒麟 / 豆乳米麻薯", kw:"豆乳粉 熟黄豆粉 展艺 易小焙 璞匠 豆乳玉麒麟 撒粉"},
+  {item:"纯豆浆粉（冲豆乳底）", brand:"冰泉 / 北大荒 / 维维", hot:1, note:"做饮品选「配料只有黄豆」的纯豆浆粉：冰泉（中华老字号、高蛋白、配料最干净）、北大荒（0 添加低 GI）；维维是豆奶粉龙头但含麦芽糖、口味偏甜", use:"豆乳奶茶底 / 豆乳盒子", kw:"豆乳粉 豆浆粉 豆奶粉 冰泉 北大荒 维维 冲调"},
+  {item:"红西柚粒（罐头）", brand:"慕茗 / 奶茶店原料店", note:"杨枝甘露必备，罐头装约 ¥23；也可用新鲜西柚手剥，口感更好但费时", use:"杨枝甘露", kw:"西柚粒 红西柚罐头 慕茗"},
+  {item:"葡萄汁", brand:"味全葡萄汁", note:"古茗多肉葡萄复刻配方指定，浓甜度最接近门店", use:"多肉葡萄", kw:"葡萄汁 味全 多肉葡萄"},
+  {item:"麻薯（鲜奶麻薯）", brand:"建议自制（三象糯米粉）", note:"木薯淀粉/糯米粉 + 牛奶小火搅至拉丝即可，5 分钟搞定；三象水磨糯米粉是烘焙圈口碑款", use:"豆乳米麻薯 / 草莓大福", kw:"麻薯 糯米粉 三象 自制"}
+ ]}
+];
+
+/* ================= 常识科普（按分类 id） ================= */
+const PRIMERS = {
+  drinks:[
+    {q:"鲜牛奶、纯牛奶、牛乳——到底有什么区别？",
+     a:"看两点：杀菌方式和配料表。巴氏鲜奶（冷藏柜、保质 7–19 天）奶味鲜活，是做鲜奶茶的首选；常温纯牛奶（UHT、保质 6 个月）风味略熟但耐储存，也能用。「牛乳 / 鲜牛乳」只是叫法、不是国家标准用语。无论哪种，配料表都应该只有「生牛乳」三个字——带糖、香精、复原乳字样的都不适合入茶。"},
+    {q:"基底乳（冰勃朗）是什么？为什么配方里都有它？",
+     a:"它是新中式鲜奶茶的「融合剂」：一种非氢化工艺制成的浓缩乳基底，作用是把茶和奶「粘」在一起——提升顺滑度、托住茶香、减少分层。注意三点：① 只占整杯的 8% 左右，加多了会腻、会抢茶味；② 它不是奶精，也不能替代牛奶，配方里鲜奶照加；③ 选购认准 SC 生产许可证、配料表含「浓缩牛奶」。没有时可用自制冰博克（全脂奶冷冻后取先融化的约一半）替代。"},
+    {q:"鲜奶怎么选？记住一个排序",
+     a:"按用途三档选：复刻霸王茶姬选味全（网传门店同款、奶味中正）；日常轻乳茶选悦鲜活（清甜无奶腥、不抢茶味）；追求浓醇口感选每日鲜语娟姗 4.0（奶味厚、挂壁感强）。通用原则：蛋白质 ≥ 3.6g/100ml、配料表只有生牛乳、买冷藏柜里的。"},
+    {q:"为什么步骤里总强调「加冰、摇匀」？",
+     a:"冰块不是配角：一是热茶汤必须立刻镇凉，否则香气挥发、涩味加重；二是雪克时冰的撞击让茶、奶、糖浆充分乳化，口感才绵密；三是出品冰量不足会放大甜度和奶感，喝起来腻。家里没有雪克杯，用带盖的保温杯猛摇 30 秒，效果接近。"}
+  ],
+  cocktail:[
+    {q:"基底酒（基酒）是什么？",
+     a:"基酒是鸡尾酒的主体，通常占酒量一半以上，决定整杯的性格。六大基酒：金酒（草本清香）、伏特加（纯净中性）、朗姆（甘蔗甜香）、威士忌（烟熏麦芽）、龙舌兰（植物辛香）、白兰地（果香醇厚）。家庭常备三瓶就够——金酒 + 伏特加 + 威士忌，能覆盖大部分经典款。"},
+    {q:"选择基酒的底层逻辑是什么？",
+     a:"两条原则。① 看风味走向：想喝清爽选金酒/伏特加，想喝醇厚选威士忌/白兰地，想喝甜香选朗姆。② 看辅料强弱：辅料味道淡（苏打、汤力）就配中性基酒（伏特加），让辅料唱戏；辅料有性格（苦精、姜汁、薄荷）就配有性格的基酒（金酒、威士忌），互相衬托。新手从「基酒 + 一种辅料」的二元结构入手（金汤力、Highball），失败率最低。"},
+    {q:"没有雪克杯能调酒吗？",
+     a:"能。本页这些款大多是「直调法」：材料和冰直接进杯、吧勺或筷子搅两圈即可，不需要任何专业器具。需要摇匀的（莫吉托），用带盖水杯摇 10 秒效果一样。唯一要投资的是量具——没有量杯就用矿泉水瓶盖（约 5ml）估算。小酌怡情，酒后不开车。"}
+  ],
+  dessert:[
+    {q:"控糖做甜点，怎么减糖不失味？",
+     a:"三条路：① 借食材本味——红枣、桂圆、香蕉、芒果自带果糖，配方糖量可先减三分之一；② 代糖替换——赤藓糖醇可 1:1 替白糖（但它不参与焦化反应，需要上色的甜品不适用）；③ 酸香平衡——少量柠檬汁、桂花、陈皮能放大甜感，糖少了也不觉得寡。"},
+    {q:"双皮奶为什么总是做失败？",
+     a:"三大死因：① 用错奶——低脂奶结不出奶皮，必须全脂，水牛奶最佳；② 蛋清没打散没过筛——蒸出来全是蜂窝；③ 火太大——水蛋分离。记住「中火蒸、关火焖」，成功率立刻上来。"},
+    {q:"糖水要「出胶」是什么意思？",
+     a:"指银耳、桃胶这类食材炖出的植物胶质，让汤变稠变滑。出胶三要素：冷水泡发撕小朵、大火煮开再转小火、炖足 40 分钟以上。出不出胶和糖没关系，别为了稠而猛放糖。"}
+  ],
+  yuecai:[
+    {q:"粤菜的「鲜」到底靠什么？",
+     a:"三个字：本味、火候、时机。本味——好食材少调味，鱼有鱼味、鸡有鸡味；火候——蒸鱼蒸鸡以分钟计，老一分钟就柴；时机——水开再上锅、盐最后放、葱丝泼油都在出锅前。粤菜调味料种类最少，但对顺序最敏感。"},
+    {q:"清蒸的三要素是什么？",
+     a:"① 水开再蒸：冷水上锅等于「煮」，肉老且腥；② 掐表 + 虚蒸：关火后焖 2 分钟，用余温让中心刚熟；③ 倒腥水：盘里蒸出的汁水腥味重，必须倒掉再淋豉油。做到这三点，家庭灶也能出酒楼效果。"},
+    {q:"老火靓汤为什么盐要最后放？",
+     a:"盐放早了会让肉表面蛋白质过早凝固，肉质变柴、鲜味也出不来；最后 10 分钟放，肉烂汤鲜。同理，煲汤别大火猛滚——小火微沸，汤才清亮。本频道所有汤品都不额外放油，靠食材本身出味。"}
+  ],
+  chuancai:[
+    {q:"川菜不等于重油——麻辣怎么轻负担？",
+     a:"三个替换：① 滑油改滑水——肉丝肉片用水汆代替过油，省油一半；② 高汤补味——豆瓣酱减半后加两勺高汤，咸鲜不减；③ 不淋明油——起锅那勺红油是餐馆做法，家常可省，麻香靠起锅前现撒花椒面。本频道菜谱已按这三招改好。"},
+    {q:"为什么豆瓣酱、酱油要先减半？",
+     a:"这两样是川菜钠含量大头（豆瓣酱含盐约 15–18%）。减半后咸度依然够，因为花椒、辣椒、蒜、醋这些「风味料」不含盐——川菜的本事是香辛料撑味，不是盐撑味。控盐之后，反而更吃得出层次。"},
+    {q:"花椒和辣椒怎么用才香而不燥？",
+     a:"花椒要「现焙现撒」：干锅小火焙 10 秒碾碎，起锅前放，麻香最足，久煮只剩苦。干辣椒要「先泡后炒」：温水泡 5 分钟再下锅，不易糊、辣而不燥。掌握了这两点，少油也能做出川味。"}
+  ],
+  jiangxi:[
+    {q:"江西小炒的灵魂「锅气」，在家怎么炒出来？",
+     a:"三句话：锅要烧到冒烟、料要沥干水、动作要快。家庭灶火力小，对策是「分批小份」——一次炒量别超过锅的一半；肉先煸到微焦再下菜；全程大火，合炒不超过 2 分钟。有锅气才有江西味。"},
+    {q:"江西辣和四川辣有什么区别？",
+     a:"江西是「鲜辣」：用新鲜辣椒（余干辣椒、线椒），辣得直接、带椒香，吃辣椒本身的味道；四川是「麻辣 + 香辣」，靠干辣椒、花椒和复合调味。所以江西小炒少放酱，吃的就是椒、肉、锅气三样。"},
+    {q:"腊肉怎么用才不咸不油？",
+     a:"先蒸后炒：腊肉上锅蒸 10 分钟，析出的盐水倒掉，再切片下锅；煸出的猪油就是这道菜全部的用油，不再额外加；盐也基本不用放——腊味的咸香足够带起整盘菜。"}
+  ]
+};
+
+/* ================= 配料 → 品牌推荐（自动关联，按序匹配） ================= */
+const ING_BRAND = [
+  ["冰勃朗","圣吗哪黄标"],["冰博朗","圣吗哪黄标"],["冰博克","自制冰博克"],["黄油牛乳","饮品专用黄油牛乳"],
+  ["味全鲜牛乳","味全 / 悦鲜活"],["鲜牛乳","味全 / 悦鲜活"],["鲜奶","悦鲜活 / 味全"],["生牛乳","悦鲜活 / 味全"],["热牛奶","悦鲜活"],["牛奶","悦鲜活 / 每日鲜语"],
+  ["茉莉雪芽","茶半春 / 姚小茶"],["茉莉银毫","茶半春 / 姚小茶"],["茉莉蜜茶","东方树叶"],["茉莉花茶","茶半春 / 东方树叶"],["茉莉绿茶","茶半春 / 东方树叶"],["绿妍","绿妍茶包"],
+  ["四季春","以慕 / 三得利"],["锡兰红茶","茗杰 / 三隐"],["鸭屎香","以慕"],["单丛","以慕"],
+  ["桂花乌龙","源芽 / 以慕"],["蜜桃乌龙","源芽 / 以慕"],["糯香绿茶","搜「糯香毛尖」"],["栀香绿茶","搜「栀香绿茶」"],
+  ["龙井","雨前龙井"],["大红袍","武夷大红袍"],["红袍","武夷大红袍"],["玫瑰普洱","熟普洱+墨红玫瑰"],["普洱","熟普洱"],
+  ["黄茶","蒙顶黄芽"],["白茶","福鼎老白茶"],["金凤茶","金凤茶王茶包"],["红茶","CTC 红茶 / 阿萨姆"],["绿茶","七窨茉莉绿茶"],["乌龙茶","三得利（瓶装）"],["三得利","三得利"],["东方树叶","东方树叶"],
+  ["厚椰乳","菲诺"],["椰奶","Kara 椰浆+奶"],["椰浆","Kara / 安利来"],["椰果","花仙尼"],
+  ["淡奶油","雀巢 / 安佳"],["奶油奶酪","kiri / 安佳"],["黄油","安佳"],["炼乳","鹰唛 / 熊猫"],
+  ["咖奶","圣吗哪 / 爱护"],["厚奶","圣吗哪 / 爱护"],["特奶","速品 866"],["植脂末","速品 866"],["奶精","速品 866"],
+  ["芝士奶盖粉","馥苏 / 果仙尼"],["奶盖粉","馥苏 / 果仙尼"],
+  ["桂花糖浆","莫林桂花 / 自制糖桂花"],["冰糖","太古 / 自制（2:1）"],["调味糖浆","馥苏"],["黄金糖","双桥果糖"],["黑糖","自制（1:1 熬制）"],["果糖","双桥 F-55"],["糖浆","太古 / 莫林 / 自制"],["糖水","自制糖浆"],["蜂蜜","百花蜜"],["果蜜","蜂蜜+柠檬汁"],["细砂糖","太古"],
+  ["芒果浆","冷冻芒果浆"],["芒果酱","芒果果酱"],["芒果","小台农"],["桃子酱","水蜜桃果酱"],["水蜜桃","阳山水蜜桃"],["桃酱","水蜜桃果酱"],
+  ["葡萄汁","味全"],["巨峰葡萄","新鲜巨峰"],["葡萄","巨峰"],["草莓汁","新鲜草莓榨汁"],["草莓酱","草莓果酱"],["草莓","新鲜红颜"],
+  ["香水柠檬","广东香水柠檬"],["黄柠檬","新奇士黄柠檬"],["柠檬","广东香水柠檬"],["青提","阳光玫瑰"],["凤梨","金菠萝"],["菠萝","金菠萝"],["百香果","紫皮百香果"],["鲜橙","赣南脐橙"],["橙","赣南脐橙"],["金桔","海南青金桔"],
+  ["西米","焙小姐"],["西柚","慕茗罐头 / 新鲜果"],["珍珠","展艺 / 花仙尼"],["波波","展艺 / 花仙尼"],["脆啵","展艺 / 川资"],["啵啵","展艺 / 川资"],["晶球","川资"],["爆爆珠","展艺马蹄爆爆珠"],["芋圆","展艺 / 花仙尼"],
+  ["血糯米","十月稻田血糯米"],["红糯米","十月稻田"],["糯米","十月稻田"],
+  ["麻薯","自制 / 三象糯米粉"],["双皮奶","自制（水牛奶最佳）"],["豆花","内酯豆腐自制"],["黄豆粉","展艺 / 易小焙（熟）"],
+  ["奥利奥","奥利奥碎"],["奶冻","自制（牛奶+吉利丁）"],["吉利丁","展艺"],["木薯粉","展艺 / 三象"],["果蓉","饮爆点 / 鲜活"],["火龙果汁","红心火龙果现榨"],["酸奶","简爱 / 和润"],["核桃","碧根果碎（散称即可）"]
+];
+
+/* ================= 全文搜索补充索引：工具表 ================= */
+const TOOL_DOCS = [
+  {title:"万能奶液公式（四套可选）", go:"toolbox", text:"鲜牛乳80ml 冰勃朗基底乳30ml 植脂末65g 开水65g 三花淡奶60g 纯牛奶45g 奶咖25g 自制冰博克 250ml全脂牛奶冷冻 万能奶茶公式 茶汤4 奶液2 糖浆1 浓茶党 奶味党"},
+  {title:"茶汤冲泡参数表", go:"toolbox", text:"CTC红茶9g 茉莉绿茶雪芽10g 四季春铁观音12g 黄金乌龙直火乌龙 蜜香红茶11g 桂花乌龙9g 蜜桃乌龙10g 鸭屎香10g 闷泡 水温 冰饮化处理 热茶汤200g 冰块130g 4小时内用完"},
+  {title:"糖浆换算表", go:"toolbox", text:"冰糖浆40g 白砂糖浆30g 黑糖浆40g 果葡糖浆25g 零卡糖40g 自制糖浆 糖:水=2:1 全糖 七分糖 五分糖 三分糖"},
+  {title:"奶盖与常见小料", go:"toolbox", text:"芝士咸奶盖 奶油奶酪240g 牛奶240g 炼乳240g 盐12g 淡奶油1000g 轻芝士奶盖 奶盖粉55g 茉莉花奶油顶 珍珠 木薯粉100g 红糖30g 水70g 芋泥 荔浦芋头120g 黄油12g"},
+  {title:"原料选购三原则", go:"brands", text:"配料表越短越好 生牛乳 只有黄豆 熟粉 平替 瓶装无糖茶 三得利 东方树叶 小包装 基底乳 奶盖粉 开封后使用期限"}
+];
+
+const LEVEL_TAG = {
+  official:{cls:"official", txt:"官方公开"},
+  sop:{cls:"sop", txt:"门店 SOP"},
+  replica:{cls:"replica", txt:"网络复刻"}
+};
+
+/* ================= 归一化访问器（数据不写 cat/group 时的默认值） ================= */
+const catOf   = d => d.cat   || "drinks";
+const groupOf = d => d.group || d.brand;
+function groupsOfCat(catId){
+  const seen = [];
+  DATA.forEach(d=>{ if(catOf(d)===catId){ const g=groupOf(d); if(seen.indexOf(g)===-1) seen.push(g); } });
+  return seen;
+}
+function countOf(catId, group){
+  return DATA.filter(d=>catOf(d)===catId && (!group || groupOf(d)===group)).length;
+}
+
+/* ================= 工具 ================= */
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function brandOf(name){
+  for(const kv of ING_BRAND){ if(name.indexOf(kv[0])!==-1) return kv[1]; }
+  return "";
+}
+const qEl = document.getElementById("q");
+const clearBtn = document.getElementById("clearBtn");
+const sidebar = document.getElementById("sidebar");
+const drawerMask = document.getElementById("drawerMask");
+
+/* ================= 视图路由（含返回栈） ================= */
+const VIEW_IDS = ["home","channel","group","search","toolbox","brands","favorites"];
+let currentView = "home", returnView = "home";
+let currentCat = null, currentGroup = null;
+let navStack = [];
+
+function showSoft(v){
+  currentView = v;
+  VIEW_IDS.forEach(x=>document.getElementById("view-"+x).hidden = (x!==v));
+  document.querySelectorAll(".nav-item").forEach(n=>{
+    n.classList.toggle("active",
+      n.dataset.v === v ||
+      (v==="channel" && n.dataset.ch === currentCat) ||
+      (v==="group" && n.dataset.group === currentGroup && n.dataset.ch === currentCat));
+  });
+  closeDrawer();
+}
+function show(v){
+  if(v!=="search"){
+    returnView = v;
+    if(currentView!==v && currentView!=="search") navStack.push(currentView);
+  }
+  showSoft(v);
+  qEl.value=""; clearBtn.classList.remove("show");
+  window.scrollTo({top:0});
+}
+function goBack(){
+  if(currentView==="search"){
+    qEl.value=""; clearBtn.classList.remove("show");
+    showSoft(returnView); window.scrollTo({top:0}); return;
+  }
+  const prev = navStack.pop() || "home";
+  returnView = prev;
+  showSoft(prev);
+  window.scrollTo({top:0});
+}
+function closeDrawer(){ sidebar.classList.remove("open"); drawerMask.classList.remove("show"); }
+
+/* ================= 侧边导航（由 CATEGORIES 生成） ================= */
+function renderNav(){
+  const ready = CATEGORIES.filter(c=>c.ready);
+  const soon  = CATEGORIES.filter(c=>!c.ready);
+  sidebar.innerHTML =
+    `<div class="nav-group">导航</div>
+     <a class="nav-item active" data-v="home">首页</a>
+     <a class="nav-item" data-v="favorites">我的收藏</a>` +
+    ready.map(c=>{
+      const groups = groupsOfCat(c.id);
+      let html = `<div class="nav-group">${esc(c.t)}</div>
+        <a class="nav-item" data-ch="${c.id}">${esc(c.t)}首页</a>`;
+      if(groups.length){
+        html += `<div class="nav-sub">${esc(c.groupLabel||"配方")}</div>` +
+          groups.map(g=>`<a class="nav-item indent" data-ch="${c.id}" data-group="${esc(g)}">${esc(g)}<span class="n">${countOf(c.id,g)}</span></a>`).join("");
+      }
+      if(c.tools && c.tools.length){
+        html += `<div class="nav-sub">工具</div>` +
+          c.tools.map(t=>`<a class="nav-item indent" data-v="${t.id}">${esc(t.t)}</a>`).join("");
+      }
+      return html;
+    }).join("") +
+    (soon.length ? `<div class="nav-group">更多分类</div>` +
+      soon.map(c=>`<a class="nav-item soon" data-soon="${esc(c.t)}">${esc(c.t)}<span class="n">筹备中</span></a>`).join("") : "");
+  sidebar.querySelectorAll(".nav-item").forEach(n=>{
+    n.addEventListener("click",()=>{
+      if(n.dataset.soon){ toast("「"+n.dataset.soon+"」正在筹备，敬请期待"); return; }
+      if(n.dataset.group) openGroup(n.dataset.ch, n.dataset.group);
+      else if(n.dataset.ch) openChannel(n.dataset.ch);
+      else {
+        show(n.dataset.v);
+        if(n.dataset.v === "favorites") renderFavList();
+      }
+    });
+  });
+}
+
+/* ================= 首页：总入口 ================= */
+function renderHome(){
+  document.getElementById("homeCats").innerHTML = CATEGORIES.map(c=>{
+    const n = c.ready
+      ? groupsOfCat(c.id).length + " 分组 · " + countOf(c.id) + " 条"
+      : "筹备中";
+    return `<div class="kcard cat${c.ready?"":" soon"}" data-cat="${c.id}" data-ready="${c.ready?1:0}" data-t="${esc(c.t)}">
+      <div class="t"><span style="display:flex;align-items:center;min-width:0;"><span class="sq" style="--c:${c.c}">${esc(c.t[0])}</span>${esc(c.t)}</span><span class="n">${n}</span></div>
+      <div class="d">${esc(c.d)}</div>
+    </div>`;
+  }).join("");
+  document.getElementById("homeCats").addEventListener("click",e=>{
+    const card = e.target.closest(".kcard");
+    if(!card) return;
+    if(card.dataset.ready==="1") openChannel(card.dataset.cat);
+    else toast("「"+card.dataset.t+"」分类正在筹备，敬请期待");
+  });
+}
+
+/* ================= 常识科普块（按分类渲染） ================= */
+const PQ_CHEV = '<span class="chev"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>';
+function primerHTML(catId, headless){
+  const list = PRIMERS[catId];
+  if(!list || !list.length) return "";
+  return `<div class="primer">
+    ${headless?"":`<div class="primer-head">常识科普 · 入门先搞懂这几件事<span class="n">${list.length} 条 · 点击展开</span></div>`}
+    ${list.map(p=>`<div class="pq">
+      <div class="pq-q">${PQ_CHEV}${esc(p.q)}</div>
+      <div class="pq-a">${esc(p.a)}</div>
+    </div>`).join("")}
+  </div>`;
+}
+function bindPrimerToggles(root){
+  root.querySelectorAll(".pq-q").forEach(q=>{
+    q.addEventListener("click",()=>q.parentElement.classList.toggle("open"));
+  });
+}
+
+/* ================= 频道页（通用） ================= */
+function openChannel(catId){
+  const cat = CATEGORIES.find(c=>c.id===catId);
+  if(!cat || !cat.ready){ if(cat) toast("「"+cat.t+"」正在筹备，敬请期待"); return; }
+  currentCat = catId;
+  document.getElementById("chName").textContent = cat.t;
+  document.getElementById("chDesc").textContent = cat.d;
+
+  // 面板：分组卡
+  document.getElementById("chGroups").innerHTML = groupsOfCat(catId).map(g=>{
+    const m = GROUP_META[g]||{};
+    return `<div class="kcard" data-group="${esc(g)}">
+      <div class="t">${esc(g)}<span class="n">${countOf(catId,g)} 条</span></div>
+      <div class="d">${esc(m.desc||"")}</div>
+    </div>`;
+  }).join("");
+
+  // 面板：工具卡
+  const hasTools = !!(cat.tools && cat.tools.length);
+  document.getElementById("chTools").innerHTML = hasTools ? cat.tools.map(t=>
+    `<div class="kcard" data-v="${t.id}">
+      <div class="t">${esc(t.t)}</div>
+      <div class="d">${esc(t.d)}</div>
+    </div>`).join("") : "";
+
+  // 面板：常识科普
+  const hasPrimer = !!(PRIMERS[catId] && PRIMERS[catId].length);
+  const primerEl = document.getElementById("chPrimer");
+  if(hasPrimer){
+    primerEl.innerHTML = primerHTML(catId, true);
+    bindPrimerToggles(primerEl);
+  } else {
+    primerEl.innerHTML = "";
+  }
+
+  // Tab 栏（多于一个面板才显示，默认落在分组面板）
+  const panels = [];
+  if(hasPrimer) panels.push({id:"primer", label:"常识科普"});
+  panels.push({id:"groups", label:cat.groupLabel || "配方"});
+  if(hasTools) panels.push({id:"tools", label:"工具箱"});
+  const tabsEl = document.getElementById("chTabs");
+  if(panels.length > 1){
+    tabsEl.hidden = false;
+    tabsEl.innerHTML = panels.map(p=>
+      `<button data-tab="${p.id}" class="${p.id==="groups"?"active":""}">${esc(p.label)}</button>`).join("");
+    tabsEl.querySelectorAll("button").forEach(b=>
+      b.addEventListener("click",()=>setChTab(b.dataset.tab)));
+  } else {
+    tabsEl.hidden = true;
+    tabsEl.innerHTML = "";
+  }
+  setChTab("groups");
+  show("channel");
+}
+function setChTab(t){
+  document.querySelectorAll("#chTabs button").forEach(b=>
+    b.classList.toggle("active", b.dataset.tab===t));
+  document.getElementById("chPrimer").hidden = t!=="primer";
+  document.getElementById("chGroups").hidden = t!=="groups";
+  document.getElementById("chTools").hidden = t!=="tools";
+}
+document.getElementById("view-channel").addEventListener("click",e=>{
+  const card = e.target.closest(".kcard");
+  if(!card) return;
+  if(card.dataset.group) openGroup(currentCat, card.dataset.group);
+  else if(card.dataset.v) show(card.dataset.v);
+});
+
+/* ================= 配方折叠列表（配料含品牌推荐 + 小诀窍） ================= */
+const R_CHEV = '<span class="chev"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>';
+function recipeHTML(d, showGroup){
+  const lv = LEVEL_TAG[d.level] || LEVEL_TAG.replica;
+  const metaTea = (d.tea && d.tea!=="—") ? `茶底：<b>${esc(d.tea)}</b>` : "";
+  const metaGroup = showGroup ? `品牌：<b>${esc(groupOf(d))}</b>${metaTea?" · ":""}` : "";
+  const key = keyOf(d);
+  return `<div class="recipe${d.special?" special":""}" data-name="${esc(d.name)}">
+    <div class="recipe-head">
+      ${R_CHEV}
+      <span class="rn">${esc(d.name)}</span>
+      <span class="tag type">${esc(d.type)}</span>
+      <span class="tag ${lv.cls}">${lv.txt}</span>
+      <span class="star" data-key="${esc(key)}" title="收藏">☆</span>
+    </div>
+    <div class="recipe-body">
+      <p class="meta">${metaGroup}${metaTea}</p>
+      <div class="ratio">
+        ${d.items.map(i=>{
+          const rec = brandOf(i[0]);
+          return `<div class="k">${esc(i[0])}${rec?`<span class="kb">荐 ${esc(rec)}</span>`:""}</div><div class="v">${esc(i[1])}</div>`;
+        }).join("")}
+      </div>
+      <div class="trick"><b>小诀窍</b>${esc(d.tips)}</div>
+      <div class="body-actions"><button class="ask-ai" data-key="${esc(key)}">问 AI 做这道</button></div>
+    </div>
+  </div>`;
+}
+function bindRecipeToggles(root){
+  root.querySelectorAll(".recipe-head").forEach(h=>{
+    h.addEventListener("click",()=>h.parentElement.classList.toggle("open"));
+  });
+}
+
+/* ================= 分组页（通用） ================= */
+function openGroup(catId, group){
+  const cat = CATEGORIES.find(c=>c.id===catId);
+  if(!cat) return;
+  currentCat = catId; currentGroup = group;
+  const list = DATA.filter(d=>catOf(d)===catId && groupOf(d)===group);
+  const m = GROUP_META[group]||{};
+  document.getElementById("grName").textContent = group;
+  document.getElementById("grDesc").textContent = (m.desc||"") + (m.desc?" · ":"") + "共 " + list.length + " 条，点击逐条展开";
+
+  const listEl = document.getElementById("grList");
+  listEl.innerHTML = list.map(d=>recipeHTML(d,false)).join("");
+  bindRecipeToggles(listEl);
+  show("group");
+}
+document.getElementById("expandAll").addEventListener("click",()=>{
+  document.querySelectorAll("#grList .recipe").forEach(r=>r.classList.add("open"));
+});
+document.getElementById("collapseAll").addEventListener("click",()=>{
+  document.querySelectorAll("#grList .recipe").forEach(r=>r.classList.remove("open"));
+});
+
+/* ================= 原料品牌库 ================= */
+function renderBrandsPanels(){
+  const html = BRANDS_DATA.map(c=>`
+    <div class="panel">
+      <h3>${esc(c.cat)}</h3>
+      <p class="desc">${esc(c.desc)}</p>
+      <table>
+        <thead><tr><th>原料</th><th>推荐品牌</th><th>口碑理由 / 注意事项</th><th>用于复刻</th></tr></thead>
+        <tbody>
+          ${c.rows.map(r=>`<tr>
+            <td>${esc(r.item)}</td>
+            <td class="brand-cell">${esc(r.brand)}${r.hot?'<span class="hot">高口碑</span>':""}${r.sub?`<small>${esc(r.sub)}</small>`:""}</td>
+            <td>${esc(r.note)}</td>
+            <td>${esc(r.use)}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>
+    </div>`).join("");
+  document.getElementById("brandsPanels").innerHTML = html + `
+    <div class="panel">
+      <div class="formula">
+        选购三原则
+        <small>① 配料表越短越好：鲜奶只认「生牛乳」，豆浆粉只认「只有黄豆」，熟粉认「熟」字。
+        ② 平替思路：瓶装无糖茶（三得利/东方树叶）≈ 现泡茶底，适合懒人。
+        ③ 家庭量买小包装：基底乳、奶盖粉开封后都有使用期限，宁可多买几次。</small>
+      </div>
+    </div>`;
+}
+
+/* ================= 全文搜索 ================= */
+function matchWords(hay, words){ return words.every(w=>hay.includes(w)); }
+function recipeMatch(d, words){
+  const hay = [groupOf(d),catOf(d),d.name,d.type,d.tea,d.tips,d.src]
+    .concat(d.items.map(i=>i[0]+" "+i[1])).join(" ").toLowerCase();
+  return matchWords(hay, words);
+}
+function renderSearch(q){
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+
+  const rec = DATA.filter(d=>recipeMatch(d,words));
+
+  const ings = [];
+  BRANDS_DATA.forEach(c=>c.rows.forEach(r=>{
+    const hay = (r.item+" "+r.brand+" "+(r.sub||"")+" "+r.note+" "+r.use+" "+r.kw).toLowerCase();
+    if(matchWords(hay,words)) ings.push(Object.assign({cat:c.cat},r));
+  }));
+
+  const primers = [];
+  Object.keys(PRIMERS).forEach(cat=>{
+    const ct = (CATEGORIES.find(c=>c.id===cat)||{}).t || cat;
+    PRIMERS[cat].forEach(p=>{
+      if(matchWords((p.q+" "+p.a).toLowerCase(),words)) primers.push({q:p.q, catT:ct, catId:cat});
+    });
+  });
+
+  const tools = TOOL_DOCS.filter(t=>matchWords((t.title+" "+t.text).toLowerCase(),words));
+
+  document.getElementById("sStats").innerHTML =
+    `配方 <b>${rec.length}</b> 条 · 原料品牌 <b>${ings.length}</b> 项 · 常识科普 <b>${primers.length}</b> 条 · 工具表 <b>${tools.length}</b> 张`;
+
+  let html = "";
+  if(rec.length){
+    html += `<h3 class="s-h3">配方（${rec.length}）</h3>` + rec.map(d=>recipeHTML(d,true)).join("");
+  }
+  if(primers.length){
+    html += `<h3 class="s-h3">常识科普（${primers.length}）</h3><div class="hits">${primers.map(p=>`
+      <div class="hit" data-ch="${p.catId}"><span class="hi">${esc(p.q)}</span><span class="go">常识科普 · ${esc(p.catT)} →</span></div>`).join("")}</div>`;
+  }
+  if(ings.length){
+    html += `<h3 class="s-h3">原料品牌（${ings.length}）</h3><div class="hits">${ings.map(r=>`
+      <div class="hit" data-v="brands">
+        <span class="hi">${esc(r.item)}</span><span class="hm">→</span>
+        <span class="hb">${esc(r.brand)}${r.hot?' <span class="hot">高口碑</span>':""}</span>
+        <span class="hc">${esc(r.cat.replace(/^[①②③④]\s*/,""))} · ${esc(r.use)}</span>
+        <span class="go">原料库 →</span>
+      </div>`).join("")}</div>`;
+  }
+  if(tools.length){
+    html += `<h3 class="s-h3">工具表（${tools.length}）</h3><div class="hits">${tools.map(t=>`
+      <div class="hit" data-v="${t.go}"><span class="hi">${esc(t.title)}</span><span class="go">${t.go==="toolbox"?"工具箱":"原料库"} →</span></div>`).join("")}</div>`;
+  }
+  if(!rec.length && !ings.length && !primers.length && !tools.length){
+    html = `<div class="empty"><b>没有找到「${esc(q)}」</b>换个关键词试试，如「伯牙绝弦」「冰勃朗」「西米」「糖浆」。</div>`;
+  }
+  const out = document.getElementById("searchOut");
+  out.innerHTML = html;
+  bindRecipeToggles(out);
+  out.querySelectorAll(".hit[data-v]").forEach(hEl=>{
+    hEl.addEventListener("click",()=>show(hEl.dataset.v));
+  });
+  out.querySelectorAll(".hit[data-ch]").forEach(hEl=>{
+    hEl.addEventListener("click",()=>openChannel(hEl.dataset.ch));
+  });
+}
+
+/* ================= 提示 Toast ================= */
+let toastTimer;
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+/* ================= 事件绑定 ================= */
+document.querySelectorAll("[data-pageback]").forEach(b=>b.addEventListener("click",goBack));
+document.querySelectorAll("[data-go='home']").forEach(a=>a.addEventListener("click",()=>show("home")));
+document.querySelectorAll("[data-go-ch]").forEach(a=>a.addEventListener("click",()=>openChannel(a.dataset.goCh)));
+document.getElementById("logoHome").addEventListener("click",()=>show("home"));
+document.getElementById("menuBtn").addEventListener("click",()=>{
+  sidebar.classList.toggle("open");
+  drawerMask.classList.toggle("show", sidebar.classList.contains("open"));
+});
+drawerMask.addEventListener("click",closeDrawer);
+
+qEl.addEventListener("input",()=>{
+  const q = qEl.value.trim();
+  clearBtn.classList.toggle("show", q.length>0);
+  if(q){ showSoft("search"); renderSearch(q); }
+  else { showSoft(returnView); }
+});
+clearBtn.addEventListener("click",()=>{ qEl.value=""; showSoft(returnView); clearBtn.classList.remove("show"); qEl.focus(); });
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){
+    if(sidebar.classList.contains("open")){ closeDrawer(); return; }
+    qEl.value=""; clearBtn.classList.remove("show"); showSoft(returnView);
+  }
+});
+
+const toTop = document.getElementById("toTop");
+window.addEventListener("scroll",()=>{ toTop.classList.toggle("show", window.scrollY>400); });
+toTop.addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"}));
+
+/* ================= 云服务：登录 / 收藏 / AI 问答 ================= */
+let currentUser = null;
+const uChip = document.getElementById("uChip");
+const loginSheet = document.getElementById("loginSheet");
+const loginMask = document.getElementById("loginMask");
+const loginErr = document.getElementById("loginErr");
+const loginPhone = document.getElementById("loginPhone");
+const loginCode = document.getElementById("loginCode");
+const sendCodeBtn = document.getElementById("sendCodeBtn");
+const loginSubmit = document.getElementById("loginSubmit");
+const phoneErr = document.getElementById("phoneErr");
+let pendingOtp = null, codeTimer = null;
+
+function openLogin(){ loginSheet.hidden = false; loginMask.hidden = false; loginErr.textContent=""; phoneErr.textContent=""; }
+function closeLogin(){ loginSheet.hidden = true; loginMask.hidden = true; }
+document.getElementById("loginClose").addEventListener("click", closeLogin);
+loginMask.addEventListener("click", closeLogin);
+loginPhone.addEventListener("input", ()=>{ phoneErr.textContent=""; });
+
+/* 方式一：微信授权（电脑扫码 / 微信内一键授权） */
+document.getElementById("wxLoginBtn").addEventListener("click", async ()=>{
+  if(!cloudReady()) return;
+  loginErr.textContent = "";
+  const { data, error } = await cloud.auth.signInWithOAuth({ provider: "wechat", redirectTo: location.origin });
+  if(error){ loginErr.textContent = error.message || "暂时无法发起微信登录，请改用下方手机号登录"; return; }
+  location.assign(data.url);
+});
+
+/* 方式二：手机号验证码（单手机场景） */
+function startCodeCountdown(){
+  let left = 60;
+  sendCodeBtn.disabled = true;
+  sendCodeBtn.textContent = left + "s";
+  codeTimer = setInterval(()=>{
+    left--;
+    if(left <= 0){ clearInterval(codeTimer); sendCodeBtn.disabled = false; sendCodeBtn.textContent = "获取验证码"; }
+    else sendCodeBtn.textContent = left + "s";
+  }, 1000);
+}
+sendCodeBtn.addEventListener("click", async ()=>{
+  if(!cloudReady()) return;
+  const phone = loginPhone.value.trim();
+  if(!/^1\d{10}$/.test(phone)){ phoneErr.textContent = "请输入正确的 11 位手机号"; return; }
+  phoneErr.textContent = "";
+  sendCodeBtn.disabled = true;
+  const sent = await cloud.auth.sendOtp({ phone });
+  if(sent.error){
+    loginErr.textContent = sent.error.message || "验证码发送失败，请重试";
+    sendCodeBtn.disabled = false;
+    return;
+  }
+  pendingOtp = { phone, ...sent.data };
+  loginErr.textContent = "";
+  toast("验证码已发送");
+  startCodeCountdown();
+});
+loginSubmit.addEventListener("click", async ()=>{
+  if(!cloudReady()) return;
+  const phone = loginPhone.value.trim();
+  const code = loginCode.value.trim();
+  if(!pendingOtp || pendingOtp.phone !== phone){ loginErr.textContent = "请先获取当前手机号的验证码"; return; }
+  if(!code){ loginErr.textContent = "请输入验证码"; return; }
+  loginSubmit.disabled = true;
+  const completed = await cloud.auth.verifyOtp({
+    phone: pendingOtp.phone,
+    verificationId: pendingOtp.verificationId,
+    isExistingUser: pendingOtp.isExistingUser,
+    token: code
+  });
+  loginSubmit.disabled = false;
+  if(completed.error){ loginErr.textContent = completed.error.message || "登录失败，请检查验证码"; return; }
+  pendingOtp = null;
+  loginCode.value = "";
+  closeLogin();
+  toast("登录成功");
+});
+
+function renderChip(){
+  if(currentUser){
+    uChip.textContent = currentUser.name || currentUser.phone || currentUser.email || "已登录";
+    uChip.classList.add("on");
+    uChip.title = "点击退出登录";
+  } else {
+    uChip.textContent = "登录";
+    uChip.classList.remove("on");
+    uChip.title = "手机号登录";
+  }
+}
+uChip.addEventListener("click", async ()=>{
+  if(currentUser){
+    if(window.confirm("确定退出登录吗？")){
+      await cloud.auth.signOut();
+      toast("已退出登录");
+    }
+  } else openLogin();
+});
+
+/* 微信授权登录：OAuth 跳转流程，无验证码 */
+
+/* ---------- 收藏 ---------- */
+let favSet = new Set();
+const keyOf = d => catOf(d) + "|" + groupOf(d) + "|" + d.name;
+const recipeByKey = k => DATA.find(d => keyOf(d) === k);
+
+async function loadFavs(){
+  if(!cloud) return;
+  const { data: session } = await cloud.auth.getSession();
+  if(!session){ favSet = new Set(); return; }
+  const { data, error } = await cloud.database.from("favorites").select("recipe_key").limit(500);
+  if(!error && data) favSet = new Set(data.map(r => r.recipe_key));
+}
+function refreshStars(){
+  document.querySelectorAll(".star").forEach(s=>{
+    const on = favSet.has(s.dataset.key);
+    s.textContent = on ? "★" : "☆";
+    s.classList.toggle("on", on);
+  });
+}
+async function toggleFav(key){
+  if(!cloudReady()) return;
+  const { data: session } = await cloud.auth.getSession();
+  if(!session){ openLogin(); return; }
+  const d = recipeByKey(key);
+  if(!d) return;
+  if(favSet.has(key)){
+    const { error } = await cloud.database.from("favorites").delete().eq("recipe_key", key).select();
+    if(error){ toast("操作失败，请重试"); return; }
+    favSet.delete(key);
+  } else {
+    const { error } = await cloud.database.from("favorites").insert({
+      recipe_key: key,
+      cat: catOf(d),
+      group_name: groupOf(d),
+      recipe_name: d.name,
+      owner_name: (session.user && session.user.name) || null
+    }).select();
+    if(error){
+      if(error.code === "23505"){ favSet.add(key); }
+      else { toast("收藏失败，请重试"); return; }
+    } else favSet.add(key);
+  }
+  refreshStars();
+  if(currentView === "favorites") renderFavList();
+}
+async function renderFavList(){
+  const box = document.getElementById("favList");
+  if(!cloud){
+    box.innerHTML = `<div class="empty"><b>云服务未加载</b>请检查网络后刷新页面。</div>`;
+    return;
+  }
+  const { data: session } = await cloud.auth.getSession();
+  if(!session){
+    box.innerHTML = `<div class="empty"><b>登录后使用收藏功能</b>手机号验证码登录，收藏云端同步。<br><br><button class="primary-btn" id="favLoginBtn" style="max-width:240px;margin:0 auto;">手机号登录</button></div>`;
+    const b = document.getElementById("favLoginBtn");
+    if(b) b.addEventListener("click", openLogin);
+    return;
+  }
+  box.innerHTML = `<div class="empty">加载中…</div>`;
+  const { data, error } = await cloud.database.from("favorites")
+    .select("recipe_key, recipe_name, group_name, cat, created_at")
+    .order("created_at", { ascending: false }).limit(200);
+  if(error){ box.innerHTML = `<div class="empty"><b>加载失败</b>请稍后重试。</div>`; return; }
+  if(!data || !data.length){ box.innerHTML = `<div class="empty"><b>还没有收藏</b>在任意配方行点右侧 ☆ 即可收藏。</div>`; return; }
+  box.innerHTML = data.map(r=>`<div class="recipe"><div class="recipe-head favrow" data-key="${esc(r.recipe_key)}">
+    <span class="rn">${esc(r.recipe_name)}</span>
+    <span class="rt">${esc(r.group_name || "")}</span>
+    <button class="unfav" data-key="${esc(r.recipe_key)}">移除</button>
+  </div></div>`).join("");
+}
+
+/* ---------- AI 问答 ---------- */
+const chatSheet = document.getElementById("chatSheet");
+const chatLog = document.getElementById("chatLog");
+const chatText = document.getElementById("chatText");
+const chatSend = document.getElementById("chatSend");
+let modelId = null, chatBusy = false, chatCtrl = null, chatRecipe = null;
+let convoId = newConvoId(), hist = [], lastSentAt = 0;
+function newConvoId(){ return "c-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
+function appendMsg(role, text){
+  const el = document.createElement("div");
+  el.className = "msg " + role;
+  el.textContent = text;
+  chatLog.appendChild(el);
+  scrollChat();
+  return el;
+}
+function scrollChat(){ chatLog.scrollTop = chatLog.scrollHeight; }
+function setSendState(){
+  chatSend.disabled = false;
+  chatSend.textContent = chatBusy ? "停止" : "发送";
+}
+function sysPrompt(){
+  let s = "你是「美食知识库」的饮品与菜谱助手。回答简短、具体、可操作，围绕家庭 DIY 复刻（材料替代、比例换算、步骤细节、失败排查）。不编造配方数字；与美食饮品无关的问题礼貌拒绝。";
+  if(chatRecipe){
+    s += "\n用户当前正在查看的配方：「" + chatRecipe.name + "」（" + groupOf(chatRecipe) + "）。茶底/类型：" + (chatRecipe.tea || "—")
+      + "。配料：" + chatRecipe.items.map(i=>i[0]+" "+i[1]).join("；") + "。小诀窍：" + chatRecipe.tips;
+  }
+  return s;
+}
+async function ensureModel(){
+  if(modelId) return true;
+  if(!cloud){ appendMsg("assistant", "云服务未加载，请检查网络后刷新页面。"); return false; }
+  const models = await cloud.llm.models.list();
+  const m = (models || []).find(x => x.disabled !== true);
+  if(!m){ appendMsg("assistant", "当前没有可用模型，请稍后再试。"); return false; }
+  modelId = m.id;
+  return true;
+}
+function openChat(recipe){
+  if(recipe && (!chatRecipe || keyOf(recipe) !== keyOf(chatRecipe))){
+    chatRecipe = recipe;
+    convoId = newConvoId();
+    hist = [];
+    chatLog.innerHTML = "";
+    appendMsg("assistant", "我在看「" + recipe.name + "」这道配方。可以问我：材料替代、比例换算（大杯/热饮）、步骤细节、失败排查。");
+    document.getElementById("chatTitle").textContent = "问 AI · " + recipe.name;
+  } else if(!recipe && !chatRecipe){
+    document.getElementById("chatTitle").textContent = "问 AI";
+    if(!chatLog.children.length)
+      appendMsg("assistant", "你好，我是美食知识库助手。问我任何关于配方、替代材料、步骤的问题。");
+  }
+  chatSheet.hidden = false;
+  setSendState();
+}
+function closeChat(){ chatSheet.hidden = true; if(chatCtrl) chatCtrl.abort(); }
+document.getElementById("aiFab").addEventListener("click", async ()=>{ if(await requireLogin()) openChat(); });
+document.getElementById("favBtn").addEventListener("click", ()=>{ show("favorites"); renderFavList(); });
+document.getElementById("chatClose").addEventListener("click", closeChat);
+document.getElementById("chatNew").addEventListener("click", ()=>{
+  chatRecipe = null; convoId = newConvoId(); hist = [];
+  chatLog.innerHTML = "";
+  document.getElementById("chatTitle").textContent = "问 AI";
+  appendMsg("assistant", "新对话已开始。问我任何关于配方、替代材料、步骤的问题。");
+});
+
+async function requireLogin(){
+  if(!cloudReady()) return false;
+  const { data: session } = await cloud.auth.getSession();
+  if(session) return true;
+  toast("登录后可使用 AI 问答");
+  openLogin();
+  return false;
+}
+async function sendChat(){
+  const text = chatText.value.trim();
+  if(!text || chatBusy) return;
+  if(!cloudReady()) return;
+  const { data: session } = await cloud.auth.getSession();
+  if(!session){ closeChat(); toast("登录已过期，请重新登录"); openLogin(); return; }
+  if(Date.now() - lastSentAt < 1500){ toast("请稍等片刻再发问"); return; }
+  lastSentAt = Date.now();
+  chatText.value = "";
+  appendMsg("user", text);
+  chatBusy = true; setSendState();
+  if(!(await ensureModel())){ chatBusy = false; setSendState(); return; }
+  hist.push({ role: "user", content: text });
+  const messages = [{ role: "system", content: sysPrompt() }, ...hist.slice(-10)];
+  chatCtrl = new AbortController();
+  const aiEl = appendMsg("assistant", "…");
+  let acc = "";
+  try{
+    for await (const chunk of cloud.llm.chat.completions.create({
+      model: modelId,
+      messages,
+      stream: true,
+      conversationId: convoId,
+      signal: chatCtrl.signal
+    })){
+      const delta = chunk.choices && chunk.choices[0] && chunk.choices[0].delta;
+      if(delta && delta.content){
+        acc += delta.content;
+        aiEl.textContent = acc;
+        scrollChat();
+      }
+    }
+    hist.push({ role: "assistant", content: acc });
+    if(!acc) aiEl.textContent = "（无回复，可重试）";
+  }catch(err){
+    const code = (err && err.error && err.error.code) || "";
+    let msg;
+    if(err && err.name === "AbortError") msg = acc ? acc + "\n（已停止）" : "（已停止生成）";
+    else if(code.indexOf("quota_") === 0) msg = "额度已用完或触发限流，请稍后再试。";
+    else if(code.indexOf("auth_") === 0) msg = "调用鉴权失败，请刷新页面重试。";
+    else if(code.indexOf("gateway_") === 0 || code.indexOf("model_") === 0) msg = "模型服务暂时不可用，请稍后重试。";
+    else msg = "调用失败，请重试。";
+    aiEl.textContent = acc ? acc : msg;
+  }finally{
+    chatBusy = false; chatCtrl = null; setSendState(); scrollChat();
+  }
+}
+chatSend.addEventListener("click", ()=>{
+  if(chatBusy){ if(chatCtrl) chatCtrl.abort(); }
+  else sendChat();
+});
+chatText.addEventListener("keydown", e=>{ if(e.key === "Enter"){ e.preventDefault(); if(!chatBusy) sendChat(); } });
+
+/* ---------- 星标 / 问AI / 收藏行 全局委托 ---------- */
+document.addEventListener("click", e=>{
+  const star = e.target.closest(".star");
+  if(star){ e.stopPropagation(); toggleFav(star.dataset.key); return; }
+  const ai = e.target.closest(".ask-ai");
+  if(ai){ e.stopPropagation(); const d = recipeByKey(ai.dataset.key); if(d){ requireLogin().then(ok=>{ if(ok) openChat(d); }); } return; }
+  const unf = e.target.closest(".unfav");
+  if(unf){ e.stopPropagation(); toggleFav(unf.dataset.key); return; }
+  const row = e.target.closest(".favrow");
+  if(row){
+    const d = recipeByKey(row.dataset.key);
+    if(d){
+      openGroup(catOf(d), groupOf(d));
+      setTimeout(()=>{
+        const t = document.querySelector('#grList .recipe[data-name="' + CSS.escape(d.name) + '"]');
+        if(t){ t.classList.add("open"); t.scrollIntoView({ behavior: "smooth", block: "center" }); }
+      }, 80);
+    }
+  }
+});
+
+/* ================= 启动 ================= */
+renderNav();
+renderHome();
+renderBrandsPanels();
+showSoft("home");
+if(/MicroMessenger/i.test(navigator.userAgent)){
+  const tip = document.createElement("div");
+  tip.className = "wx-tip";
+  tip.textContent = "微信内如遇异常，请点右上角「···」选择「在浏览器打开」";
+  document.body.insertBefore(tip, document.body.firstChild);
+}
+syncDrawerTop();
+window.addEventListener("resize", syncDrawerTop);
+if(cloud){
+  initCloud();
+}else{
+  let tries = 0;
+  const t = setInterval(()=>{
+    tries++;
+    if(retryCloud() || tries >= 6){
+      clearInterval(t);
+      if(cloud) initCloud();
+    }
+  }, 1500);
+}
+function syncDrawerTop(){
+  const tb = document.querySelector(".topbar");
+  if(tb) document.documentElement.style.setProperty("--topbar-h", tb.offsetHeight + "px");
+}
+
+async function initCloud(){
+  await restoreAuth();
+  cloud.auth.onAuthStateChange((ev, s)=>{
+    currentUser = (s && s.user) || null;
+    renderChip();
+    loadFavs().then(()=>{
+      refreshStars();
+      if(currentView === "favorites") renderFavList();
+    });
+  });
+}
+async function restoreAuth(){
+  const url = new URL(location.href);
+  if(!url.searchParams.has("code") && !url.searchParams.has("error")){
+    await continueNormalStartup();
+    return;
+  }
+  const provider = url.searchParams.get("provider");
+  if(provider !== "wechat"){
+    toast("授权回调缺少有效的登录方式，请重新登录");
+    await continueNormalStartup();
+    return;
+  }
+  const handler = cloud.auth.handleWechatWebCallback;
+  if(typeof handler !== "function"){
+    toast("当前环境暂不支持微信登录，请联系应用管理员");
+    await continueNormalStartup();
+    return;
+  }
+  const { data: session, error } = await handler.call(cloud.auth);
+  if(error){
+    toast("微信登录失败：" + (error.message || "请重试"));
+    openLogin();
+    loginErr.textContent = error.message || "微信登录失败，请重试";
+  } else if(session){
+    for(const key of ["code","state","provider"]) url.searchParams.delete(key);
+    history.replaceState(null, "", url.pathname + url.search + url.hash);
+    toast("微信登录成功");
+  }
+  await continueNormalStartup();
+}
+async function continueNormalStartup(){
+  const { data: session } = await cloud.auth.getSession();
+  currentUser = (session && session.user) || null;
+  renderChip();
+  await loadFavs();
+  refreshStars();
+}
+</script>
+</body>
+</html>
