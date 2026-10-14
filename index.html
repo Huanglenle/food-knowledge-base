@@ -1444,7 +1444,7 @@ const drawerMask = document.getElementById("drawerMask");
 /* ================= 视图路由（含返回栈） ================= */
 const VIEW_IDS = ["home","channel","group","search","toolbox","brands","favorites","trash"];
 let currentView = "home", returnView = "home";
-let currentCat = null, currentGroup = null;
+let currentCat = null, currentGroup = null, currentChTab = "all";
 let navStack = [];
 
 function showSoft(v){
@@ -1612,6 +1612,7 @@ function openChannel(catId){
   show("channel");
 }
 function setChTab(t){
+  currentChTab = t;
   document.querySelectorAll("#chTabs button").forEach(b=>
     b.classList.toggle("active", b.dataset.tab===t));
   document.getElementById("chPrimer").hidden = t!=="primer";
@@ -1663,7 +1664,7 @@ function recipeHTML(d, showGroup){
       <div class="trick"><b>小诀窍</b>${esc(d.tips)}</div>
       <div class="body-actions">
         <button class="ask-ai" data-key="${esc(key)}">问 AI 做这道</button>
-        <button class="dislike" data-key="${esc(key)}">${dislikeSet.has(key) ? "恢复显示" : "不好吃"}</button>
+        <button class="dislike" data-key="${esc(key)}">不好吃</button>
       </div>
     </div>
   </div>`;
@@ -1959,7 +1960,6 @@ function refreshStars(){
 function refreshDislikes(){
   document.querySelectorAll(".dislike").forEach(s=>{
     const on = dislikeSet.has(s.dataset.key);
-    s.textContent = on ? "✓" : "×";
     s.classList.toggle("on", on);
   });
 }
@@ -2016,6 +2016,7 @@ async function toggleDislike(key){
   if(currentView === "trash") renderTrashList();
   if(currentView === "favorites") renderFavList();
   if(currentView === "group") openGroup(currentCat, currentGroup);
+  if(currentView === "channel" && currentChTab === "all") renderChAll();
   if(currentView === "search" && qEl.value.trim()) renderSearch(qEl.value.trim());
 }
 async function renderFavList(){
