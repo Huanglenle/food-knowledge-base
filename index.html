@@ -257,9 +257,12 @@
   /* ---------- 云服务：登录 / 收藏 / AI ---------- */
   .uchip{flex:0 0 auto;font-size:12.5px;font-weight:700;color:var(--accent-dark);border:1px solid var(--line-strong);border-radius:999px;padding:5px 13px;cursor:pointer;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis;background:var(--card);}
   .uchip.on{background:var(--accent-soft);border-color:var(--accent-soft);}
-  .star{cursor:pointer;color:var(--muted);font-size:15px;flex:0 0 auto;padding:0 2px;line-height:1;}
-  .star:hover{color:var(--accent);}
-  .star.on{color:#d9a441;}
+.star{cursor:pointer;color:var(--muted);font-size:15px;flex:0 0 auto;padding:0 2px;line-height:1;}
+.star:hover{color:var(--accent);}
+.star.on{color:#d9a441;}
+.dislike{cursor:pointer;color:var(--muted);font-size:15px;flex:0 0 auto;padding:0 2px;line-height:1;}
+.dislike:hover{color:#b3452e;}
+.dislike.on{color:#b3452e;}
   .body-actions{margin-top:10px;text-align:right;}
   .ask-ai{border:1px solid var(--line-strong);background:var(--card);border-radius:6px;font-size:12px;font-weight:600;color:var(--accent-dark);padding:5px 12px;cursor:pointer;font-family:inherit;}
   .ask-ai:hover{border-color:var(--accent);}
@@ -337,6 +340,7 @@
     <button class="clear-btn" id="clearBtn">清空</button>
   </div>
   <div class="uchip" id="favBtn" title="我的收藏">★ 收藏</div>
+  <div class="uchip" id="trashBtn" title="垃圾箱">× 不好吃</div>
   <div class="uchip" id="uChip">登录</div>
 </div>
 
@@ -399,6 +403,16 @@
       </div>
       <p class="page-desc">星标的配方会出现在这里，云端同步。</p>
       <div id="favList"></div>
+    </section>
+
+    <!-- 垃圾箱：被我标记为不好吃的配方 -->
+    <section id="view-trash" hidden>
+      <div class="pagehead">
+        <button class="pageback" data-pageback>‹ 返回</button>
+        <h1 class="page-title">垃圾箱</h1>
+      </div>
+      <p class="page-desc">被你标记为「不好吃」的配方会隐藏在所有列表页，在这里可以恢复显示。</p>
+      <div id="trashList"></div>
     </section>
 
     <!-- 工具箱（饮品频道工具页） -->
@@ -1412,7 +1426,7 @@ function groupsOfCat(catId){
   return seen;
 }
 function countOf(catId, group){
-  return DATA.filter(d=>catOf(d)===catId && (!group || groupOf(d)===group)).length;
+  return DATA.filter(d=>catOf(d)===catId && (!group || groupOf(d)===group) && !dislikeSet.has(keyOf(d))).length;
 }
 
 /* ================= 工具 ================= */
@@ -1427,7 +1441,7 @@ const sidebar = document.getElementById("sidebar");
 const drawerMask = document.getElementById("drawerMask");
 
 /* ================= 视图路由（含返回栈） ================= */
-const VIEW_IDS = ["home","channel","group","search","toolbox","brands","favorites"];
+const VIEW_IDS = ["home","channel","group","search","toolbox","brands","favorites","trash"];
 let currentView = "home", returnView = "home";
 let currentCat = null, currentGroup = null;
 let navStack = [];
@@ -1471,7 +1485,8 @@ function renderNav(){
   sidebar.innerHTML =
     `<div class="nav-group">导航</div>
      <a class="nav-item active" data-v="home">首页</a>
-     <a class="nav-item" data-v="favorites">我的收藏</a>` +
+     <a class="nav-item" data-v="favorites">我的收藏</a>
+     <a class="nav-item" data-v="trash">垃圾箱</a>` +
     ready.map(c=>{
       const groups = groupsOfCat(c.id);
       let html = `<div class="nav-group">${esc(c.t)}</div>
@@ -1496,6 +1511,7 @@ function renderNav(){
       else {
         show(n.dataset.v);
         if(n.dataset.v === "favorites") renderFavList();
+        if(n.dataset.v === "trash") renderTrashList();
       }
     });
   });
@@ -1620,6 +1636,7 @@ function recipeHTML(d, showGroup){
       <span class="rn">${esc(d.name)}</span>
       <span class="tag type">${esc(d.type)}</span>
       <span class="tag ${lv.cls}">${lv.txt}</span>
+      <span class="dislike" data-key="${esc(key)}" title="不好吃，隐藏到垃圾箱">×</span>
       <span class="star" data-key="${esc(key)}" title="收藏">☆</span>
     </div>
     <div class="recipe-body">
@@ -1646,7 +1663,7 @@ function openGroup(catId, group){
   const cat = CATEGORIES.find(c=>c.id===catId);
   if(!cat) return;
   currentCat = catId; currentGroup = group;
-  const list = DATA.filter(d=>catOf(d)===catId && groupOf(d)===group);
+  const list = DATA.filter(d=>catOf(d)===catId && groupOf(d)===group && !dislikeSet.has(keyOf(d)));
   const m = GROUP_META[group]||{};
   document.getElementById("grName").textContent = group;
   document.getElementById("grDesc").textContent = (m.desc||"") + (m.desc?" · ":"") + "共 " + list.length + " 条，点击逐条展开";
@@ -1702,7 +1719,7 @@ function recipeMatch(d, words){
 function renderSearch(q){
   const words = q.toLowerCase().split(/\s+/).filter(Boolean);
 
-  const rec = DATA.filter(d=>recipeMatch(d,words));
+  const rec = DATA.filter(d=>recipeMatch(d,words) && !dislikeSet.has(keyOf(d)));
 
   const ings = [];
   BRANDS_DATA.forEach(c=>c.rows.forEach(r=>{
@@ -1898,6 +1915,7 @@ uChip.addEventListener("click", async ()=>{
 
 /* ---------- 收藏 ---------- */
 let favSet = new Set();
+let dislikeSet = new Set();
 const keyOf = d => catOf(d) + "|" + groupOf(d) + "|" + d.name;
 const recipeByKey = k => DATA.find(d => keyOf(d) === k);
 
@@ -1908,10 +1926,24 @@ async function loadFavs(){
   const { data, error } = await cloud.database.from("favorites").select("recipe_key").limit(500);
   if(!error && data) favSet = new Set(data.map(r => r.recipe_key));
 }
+async function loadDislikes(){
+  if(!cloud) return;
+  const { data: session } = await cloud.auth.getSession();
+  if(!session){ dislikeSet = new Set(); return; }
+  const { data, error } = await cloud.database.from("dislikes").select("recipe_key").limit(500);
+  if(!error && data) dislikeSet = new Set(data.map(r => r.recipe_key));
+}
 function refreshStars(){
   document.querySelectorAll(".star").forEach(s=>{
     const on = favSet.has(s.dataset.key);
     s.textContent = on ? "★" : "☆";
+    s.classList.toggle("on", on);
+  });
+}
+function refreshDislikes(){
+  document.querySelectorAll(".dislike").forEach(s=>{
+    const on = dislikeSet.has(s.dataset.key);
+    s.textContent = on ? "✓" : "×";
     s.classList.toggle("on", on);
   });
 }
@@ -1941,6 +1973,35 @@ async function toggleFav(key){
   refreshStars();
   if(currentView === "favorites") renderFavList();
 }
+async function toggleDislike(key){
+  if(!cloudReady()) return;
+  const { data: session } = await cloud.auth.getSession();
+  if(!session){ openLogin(); return; }
+  const d = recipeByKey(key);
+  if(!d) return;
+  if(dislikeSet.has(key)){
+    const { error } = await cloud.database.from("dislikes").delete().eq("recipe_key", key).select();
+    if(error){ toast("操作失败，请重试"); return; }
+    dislikeSet.delete(key);
+  } else {
+    const { error } = await cloud.database.from("dislikes").insert({
+      recipe_key: key,
+      cat: catOf(d),
+      group_name: groupOf(d),
+      recipe_name: d.name,
+      owner_name: (session.user && session.user.name) || null
+    }).select();
+    if(error){
+      if(error.code === "23505"){ dislikeSet.add(key); }
+      else { toast("操作失败，请重试"); return; }
+    } else dislikeSet.add(key);
+  }
+  refreshDislikes();
+  if(currentView === "trash") renderTrashList();
+  if(currentView === "favorites") renderFavList();
+  if(currentView === "group") openGroup(currentCat, currentGroup);
+  if(currentView === "search" && qEl.value.trim()) renderSearch(qEl.value.trim());
+}
 async function renderFavList(){
   const box = document.getElementById("favList");
   if(!cloud){
@@ -1959,11 +2020,37 @@ async function renderFavList(){
     .select("recipe_key, recipe_name, group_name, cat, created_at")
     .order("created_at", { ascending: false }).limit(200);
   if(error){ box.innerHTML = `<div class="empty"><b>加载失败</b>请稍后重试。</div>`; return; }
-  if(!data || !data.length){ box.innerHTML = `<div class="empty"><b>还没有收藏</b>在任意配方行点右侧 ☆ 即可收藏。</div>`; return; }
-  box.innerHTML = data.map(r=>`<div class="recipe"><div class="recipe-head favrow" data-key="${esc(r.recipe_key)}">
+  const visible = (data || []).filter(r => !dislikeSet.has(r.recipe_key));
+  if(!visible.length){ box.innerHTML = `<div class="empty"><b>还没有收藏</b>在任意配方行点右侧 ☆ 即可收藏。</div>`; return; }
+  box.innerHTML = visible.map(r=>`<div class="recipe"><div class="recipe-head favrow" data-key="${esc(r.recipe_key)}">
     <span class="rn">${esc(r.recipe_name)}</span>
     <span class="rt">${esc(r.group_name || "")}</span>
     <button class="unfav" data-key="${esc(r.recipe_key)}">移除</button>
+  </div></div>`).join("");
+}
+async function renderTrashList(){
+  const box = document.getElementById("trashList");
+  if(!cloud){
+    box.innerHTML = `<div class="empty"><b>云服务未加载</b>请检查网络后刷新页面。</div>`;
+    return;
+  }
+  const { data: session } = await cloud.auth.getSession();
+  if(!session){
+    box.innerHTML = `<div class="empty"><b>登录后查看垃圾箱</b>手机号验证码登录，记录云端同步。<br><br><button class="primary-btn" id="trashLoginBtn" style="max-width:240px;margin:0 auto;">手机号登录</button></div>`;
+    const b = document.getElementById("trashLoginBtn");
+    if(b) b.addEventListener("click", openLogin);
+    return;
+  }
+  box.innerHTML = `<div class="empty">加载中…</div>`;
+  const { data, error } = await cloud.database.from("dislikes")
+    .select("recipe_key, recipe_name, group_name, cat, created_at")
+    .order("created_at", { ascending: false }).limit(200);
+  if(error){ box.innerHTML = `<div class="empty"><b>加载失败</b>请稍后重试。</div>`; return; }
+  if(!data || !data.length){ box.innerHTML = `<div class="empty"><b>垃圾箱是空的</b>在任意配方行点「× 不好吃」即可隐藏。</div>`; return; }
+  box.innerHTML = data.map(r=>`<div class="recipe"><div class="recipe-head favrow" data-key="${esc(r.recipe_key)}">
+    <span class="rn">${esc(r.recipe_name)}</span>
+    <span class="rt">${esc(r.group_name || "")}</span>
+    <button class="unfav" data-key="${esc(r.recipe_key)}">恢复显示</button>
   </div></div>`).join("");
 }
 
@@ -2025,6 +2112,7 @@ function openChat(recipe){
 function closeChat(){ chatSheet.hidden = true; if(chatCtrl) chatCtrl.abort(); }
 document.getElementById("aiFab").addEventListener("click", async ()=>{ if(await requireLogin()) openChat(); });
 document.getElementById("favBtn").addEventListener("click", ()=>{ show("favorites"); renderFavList(); });
+document.getElementById("trashBtn").addEventListener("click", ()=>{ show("trash"); renderTrashList(); });
 document.getElementById("chatClose").addEventListener("click", closeChat);
 document.getElementById("chatNew").addEventListener("click", ()=>{
   chatRecipe = null; convoId = newConvoId(); hist = [];
@@ -2095,18 +2183,25 @@ chatSend.addEventListener("click", ()=>{
 chatText.addEventListener("keydown", e=>{ if(e.key === "Enter"){ e.preventDefault(); if(!chatBusy) sendChat(); } });
 
 /* ---------- 星标 / 问AI / 收藏行 全局委托 ---------- */
-document.addEventListener("click", e=>{
+document.addEventListener("click", async e=>{
   const star = e.target.closest(".star");
   if(star){ e.stopPropagation(); toggleFav(star.dataset.key); return; }
+  const dislike = e.target.closest(".dislike");
+  if(dislike){ e.stopPropagation(); toggleDislike(dislike.dataset.key); return; }
   const ai = e.target.closest(".ask-ai");
   if(ai){ e.stopPropagation(); const d = recipeByKey(ai.dataset.key); if(d){ requireLogin().then(ok=>{ if(ok) openChat(d); }); } return; }
   const unf = e.target.closest(".unfav");
-  if(unf){ e.stopPropagation(); toggleFav(unf.dataset.key); return; }
+  if(unf){ e.stopPropagation(); if(currentView === "trash") toggleDislike(unf.dataset.key); else toggleFav(unf.dataset.key); return; }
   const row = e.target.closest(".favrow");
   if(row){
     const d = recipeByKey(row.dataset.key);
     if(d){
-      openGroup(catOf(d), groupOf(d));
+      if(currentView === "trash"){
+        await toggleDislike(row.dataset.key);
+        openGroup(catOf(d), groupOf(d));
+      } else {
+        openGroup(catOf(d), groupOf(d));
+      }
       setTimeout(()=>{
         const t = document.querySelector('#grList .recipe[data-name="' + CSS.escape(d.name) + '"]');
         if(t){ t.classList.add("open"); t.scrollIntoView({ behavior: "smooth", block: "center" }); }
@@ -2154,6 +2249,12 @@ async function initCloud(){
       refreshStars();
       if(currentView === "favorites") renderFavList();
     });
+    loadDislikes().then(()=>{
+      refreshDislikes();
+      if(currentView === "trash") renderTrashList();
+      if(currentView === "group") openGroup(currentCat, currentGroup);
+      if(currentView === "search" && qEl.value.trim()) renderSearch(qEl.value.trim());
+    });
   });
 }
 async function restoreAuth(){
@@ -2192,6 +2293,8 @@ async function continueNormalStartup(){
   renderChip();
   await loadFavs();
   refreshStars();
+  await loadDislikes();
+  refreshDislikes();
 }
 </script>
 </body>
