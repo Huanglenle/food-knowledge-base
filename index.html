@@ -257,12 +257,13 @@
   /* ---------- 云服务：登录 / 收藏 / AI ---------- */
   .uchip{flex:0 0 auto;font-size:12.5px;font-weight:700;color:var(--accent-dark);border:1px solid var(--line-strong);border-radius:999px;padding:5px 13px;cursor:pointer;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis;background:var(--card);}
   .uchip.on{background:var(--accent-soft);border-color:var(--accent-soft);}
-.star{cursor:pointer;color:var(--muted);font-size:15px;flex:0 0 auto;padding:0 2px;line-height:1;}
+.star{cursor:pointer;color:var(--muted);font-size:15px;flex:0 0 auto;padding:0 4px;line-height:1;}
 .star:hover{color:var(--accent);}
 .star.on{color:#d9a441;}
-.dislike{cursor:pointer;color:var(--muted);font-size:15px;flex:0 0 auto;padding:0 2px;line-height:1;}
+.dislike{cursor:pointer;color:var(--muted);font-size:15px;flex:0 0 auto;padding:0 4px;line-height:1;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}
 .dislike:hover{color:#b3452e;}
 .dislike.on{color:#b3452e;}
+.dislike.hold{background:#f9e8e2;border-radius:50%;transition:background .15s;}
   .body-actions{margin-top:10px;text-align:right;}
   .ask-ai{border:1px solid var(--line-strong);background:var(--card);border-radius:6px;font-size:12px;font-weight:600;color:var(--accent-dark);padding:5px 12px;cursor:pointer;font-family:inherit;}
   .ask-ai:hover{border-color:var(--accent);}
@@ -1657,6 +1658,29 @@ function bindRecipeToggles(root){
     h.addEventListener("click",()=>h.parentElement.classList.toggle("open"));
   });
 }
+function bindDislikeLongPress(root){
+  root.querySelectorAll(".dislike").forEach(btn=>{
+    let timer = null, triggered = false;
+    const clear = ()=>{ if(timer){ clearTimeout(timer); timer = null; } btn.classList.remove("hold"); };
+    const start = (e)=>{
+      clear(); triggered = false;
+      btn.classList.add("hold");
+      timer = setTimeout(()=>{
+        triggered = true; clear();
+        if(navigator.vibrate) navigator.vibrate(40);
+        toggleDislike(btn.dataset.key);
+      }, 600);
+    };
+    btn.addEventListener("touchstart", start, {passive:true});
+    btn.addEventListener("touchend", clear, {passive:true});
+    btn.addEventListener("touchcancel", clear, {passive:true});
+    btn.addEventListener("mousedown", start);
+    btn.addEventListener("mouseup", clear);
+    btn.addEventListener("mouseleave", clear);
+    btn.addEventListener("click", e=>{ e.preventDefault(); e.stopPropagation(); });
+    btn.addEventListener("contextmenu", e=>{ e.preventDefault(); });
+  });
+}
 
 /* ================= 分组页（通用） ================= */
 function openGroup(catId, group){
@@ -1671,6 +1695,7 @@ function openGroup(catId, group){
   const listEl = document.getElementById("grList");
   listEl.innerHTML = list.map(d=>recipeHTML(d,false)).join("");
   bindRecipeToggles(listEl);
+  bindDislikeLongPress(listEl);
   show("group");
 }
 document.getElementById("expandAll").addEventListener("click",()=>{
@@ -1767,6 +1792,7 @@ function renderSearch(q){
   const out = document.getElementById("searchOut");
   out.innerHTML = html;
   bindRecipeToggles(out);
+  bindDislikeLongPress(out);
   out.querySelectorAll(".hit[data-v]").forEach(hEl=>{
     hEl.addEventListener("click",()=>show(hEl.dataset.v));
   });
@@ -1967,7 +1993,7 @@ async function toggleFav(key){
     }).select();
     if(error){
       if(error.code === "23505"){ favSet.add(key); }
-      else { toast("收藏失败，请重试"); return; }
+      else { toast("收藏失败：" + (error.message || "请重试")); return; }
     } else favSet.add(key);
   }
   refreshStars();
@@ -1981,8 +2007,8 @@ async function toggleDislike(key){
   if(!d) return;
   if(dislikeSet.has(key)){
     const { error } = await cloud.database.from("dislikes").delete().eq("recipe_key", key).select();
-    if(error){ toast("操作失败，请重试"); return; }
-    dislikeSet.delete(key);
+    if(error){ toast("恢复失败：" + (error.message || "请重试")); return; }
+    dislikeSet.delete(key); toast("已恢复显示");
   } else {
     const { error } = await cloud.database.from("dislikes").insert({
       recipe_key: key,
@@ -1993,8 +2019,8 @@ async function toggleDislike(key){
     }).select();
     if(error){
       if(error.code === "23505"){ dislikeSet.add(key); }
-      else { toast("操作失败，请重试"); return; }
-    } else dislikeSet.add(key);
+      else { toast("标记失败：" + (error.message || "请重试")); return; }
+    } else { dislikeSet.add(key); toast("已标记为不好吃，可在垃圾箱恢复"); }
   }
   refreshDislikes();
   if(currentView === "trash") renderTrashList();
@@ -2187,7 +2213,7 @@ document.addEventListener("click", async e=>{
   const star = e.target.closest(".star");
   if(star){ e.stopPropagation(); toggleFav(star.dataset.key); return; }
   const dislike = e.target.closest(".dislike");
-  if(dislike){ e.stopPropagation(); toggleDislike(dislike.dataset.key); return; }
+  if(dislike){ e.preventDefault(); e.stopPropagation(); toast("长按可标记为不好吃"); return; }
   const ai = e.target.closest(".ask-ai");
   if(ai){ e.stopPropagation(); const d = recipeByKey(ai.dataset.key); if(d){ requireLogin().then(ok=>{ if(ok) openChat(d); }); } return; }
   const unf = e.target.closest(".unfav");
