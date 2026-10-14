@@ -260,11 +260,10 @@
 .star{cursor:pointer;color:var(--muted);font-size:15px;flex:0 0 auto;padding:0 4px;line-height:1;}
 .star:hover{color:var(--accent);}
 .star.on{color:#d9a441;}
-.dislike{cursor:pointer;color:var(--muted);font-size:15px;flex:0 0 auto;padding:0 4px;line-height:1;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}
-.dislike:hover{color:#b3452e;}
-.dislike.on{color:#b3452e;}
-.dislike.hold{background:#f9e8e2;border-radius:50%;transition:background .15s;}
-  .body-actions{margin-top:10px;text-align:right;}
+.dislike{cursor:pointer;color:var(--muted);font-size:12px;font-weight:600;border:1px solid var(--line-strong);background:var(--card);border-radius:6px;padding:5px 12px;line-height:1;font-family:inherit;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}
+.dislike:hover{color:#b3452e;border-color:#dca89c;}
+.dislike.on{color:#b3452e;border-color:#dca89c;background:#f9e8e2;}
+  .body-actions{margin-top:12px;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;}
   .ask-ai{border:1px solid var(--line-strong);background:var(--card);border-radius:6px;font-size:12px;font-weight:600;color:var(--accent-dark);padding:5px 12px;cursor:pointer;font-family:inherit;}
   .ask-ai:hover{border-color:var(--accent);}
   .unfav{border:1px solid var(--line-strong);background:var(--card);border-radius:6px;font-size:11px;font-weight:600;color:#b3452e;padding:3px 9px;cursor:pointer;font-family:inherit;flex:0 0 auto;}
@@ -369,6 +368,7 @@
       <div class="tabs" id="chTabs" hidden></div>
       <div id="chPrimer" hidden></div>
       <div class="kgrid" id="chGroups"></div>
+      <div id="chAll" hidden></div>
       <div class="kgrid" id="chTools" hidden></div>
     </section>
 
@@ -1594,20 +1594,21 @@ function openChannel(catId){
   // Tab 栏（多于一个面板才显示，默认落在分组面板）
   const panels = [];
   if(hasPrimer) panels.push({id:"primer", label:"常识科普"});
+  panels.push({id:"all", label:"全部"});
   panels.push({id:"groups", label:cat.groupLabel || "配方"});
   if(hasTools) panels.push({id:"tools", label:"工具箱"});
   const tabsEl = document.getElementById("chTabs");
   if(panels.length > 1){
     tabsEl.hidden = false;
     tabsEl.innerHTML = panels.map(p=>
-      `<button data-tab="${p.id}" class="${p.id==="groups"?"active":""}">${esc(p.label)}</button>`).join("");
+      `<button data-tab="${p.id}" class="${p.id==="all"?"active":""}">${esc(p.label)}</button>`).join("");
     tabsEl.querySelectorAll("button").forEach(b=>
       b.addEventListener("click",()=>setChTab(b.dataset.tab)));
   } else {
     tabsEl.hidden = true;
     tabsEl.innerHTML = "";
   }
-  setChTab("groups");
+  setChTab("all");
   show("channel");
 }
 function setChTab(t){
@@ -1615,7 +1616,19 @@ function setChTab(t){
     b.classList.toggle("active", b.dataset.tab===t));
   document.getElementById("chPrimer").hidden = t!=="primer";
   document.getElementById("chGroups").hidden = t!=="groups";
+  document.getElementById("chAll").hidden = t!=="all";
   document.getElementById("chTools").hidden = t!=="tools";
+  if(t === "all") renderChAll();
+}
+function renderChAll(){
+  const box = document.getElementById("chAll");
+  const list = DATA.filter(d => catOf(d) === currentCat && !dislikeSet.has(keyOf(d)));
+  if(!list.length){
+    box.innerHTML = `<div class="empty"><b>暂无配方</b></div>`;
+    return;
+  }
+  box.innerHTML = `<p class="page-desc">共 ${list.length} 条配方 · 点击展开查看</p>` + list.map(d => recipeHTML(d, true)).join("");
+  bindRecipeToggles(box);
 }
 document.getElementById("view-channel").addEventListener("click",e=>{
   const card = e.target.closest(".kcard");
@@ -1637,7 +1650,6 @@ function recipeHTML(d, showGroup){
       <span class="rn">${esc(d.name)}</span>
       <span class="tag type">${esc(d.type)}</span>
       <span class="tag ${lv.cls}">${lv.txt}</span>
-      <span class="dislike" data-key="${esc(key)}" title="不好吃，隐藏到垃圾箱">×</span>
       <span class="star" data-key="${esc(key)}" title="收藏">☆</span>
     </div>
     <div class="recipe-body">
@@ -1649,7 +1661,10 @@ function recipeHTML(d, showGroup){
         }).join("")}
       </div>
       <div class="trick"><b>小诀窍</b>${esc(d.tips)}</div>
-      <div class="body-actions"><button class="ask-ai" data-key="${esc(key)}">问 AI 做这道</button></div>
+      <div class="body-actions">
+        <button class="ask-ai" data-key="${esc(key)}">问 AI 做这道</button>
+        <button class="dislike" data-key="${esc(key)}">${dislikeSet.has(key) ? "恢复显示" : "不好吃"}</button>
+      </div>
     </div>
   </div>`;
 }
@@ -1658,30 +1673,6 @@ function bindRecipeToggles(root){
     h.addEventListener("click",()=>h.parentElement.classList.toggle("open"));
   });
 }
-function bindDislikeLongPress(root){
-  root.querySelectorAll(".dislike").forEach(btn=>{
-    let timer = null, triggered = false;
-    const clear = ()=>{ if(timer){ clearTimeout(timer); timer = null; } btn.classList.remove("hold"); };
-    const start = (e)=>{
-      clear(); triggered = false;
-      btn.classList.add("hold");
-      timer = setTimeout(()=>{
-        triggered = true; clear();
-        if(navigator.vibrate) navigator.vibrate(40);
-        toggleDislike(btn.dataset.key);
-      }, 600);
-    };
-    btn.addEventListener("touchstart", start, {passive:true});
-    btn.addEventListener("touchend", clear, {passive:true});
-    btn.addEventListener("touchcancel", clear, {passive:true});
-    btn.addEventListener("mousedown", start);
-    btn.addEventListener("mouseup", clear);
-    btn.addEventListener("mouseleave", clear);
-    btn.addEventListener("click", e=>{ e.preventDefault(); e.stopPropagation(); });
-    btn.addEventListener("contextmenu", e=>{ e.preventDefault(); });
-  });
-}
-
 /* ================= 分组页（通用） ================= */
 function openGroup(catId, group){
   const cat = CATEGORIES.find(c=>c.id===catId);
@@ -1695,7 +1686,6 @@ function openGroup(catId, group){
   const listEl = document.getElementById("grList");
   listEl.innerHTML = list.map(d=>recipeHTML(d,false)).join("");
   bindRecipeToggles(listEl);
-  bindDislikeLongPress(listEl);
   show("group");
 }
 document.getElementById("expandAll").addEventListener("click",()=>{
@@ -2213,7 +2203,7 @@ document.addEventListener("click", async e=>{
   const star = e.target.closest(".star");
   if(star){ e.stopPropagation(); toggleFav(star.dataset.key); return; }
   const dislike = e.target.closest(".dislike");
-  if(dislike){ e.preventDefault(); e.stopPropagation(); toast("长按可标记为不好吃"); return; }
+  if(dislike){ e.stopPropagation(); toggleDislike(dislike.dataset.key); return; }
   const ai = e.target.closest(".ask-ai");
   if(ai){ e.stopPropagation(); const d = recipeByKey(ai.dataset.key); if(d){ requireLogin().then(ok=>{ if(ok) openChat(d); }); } return; }
   const unf = e.target.closest(".unfav");
