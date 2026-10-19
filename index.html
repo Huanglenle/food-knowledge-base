@@ -365,6 +365,8 @@
     <section id="view-home">
       <h1 class="page-title">美食知识库</h1>
       <p class="page-desc">轻油 · 轻盐 · 轻糖，不做油炸。</p>
+      <div class="sec-title">每周菜单 · 1–2 人 · 当季食材</div>
+      <div class="kgrid" id="homeMenu"></div>
       <div class="sec-title">按难易程度学配方</div>
       <div class="kgrid" id="homeDiff"></div>
       <div class="sec-title">按美食分类选配方</div>
@@ -454,6 +456,17 @@
       </div>
       <p class="page-desc">你标记为「已做过」的配方，云端同步，按难易程度归类。</p>
       <div id="doneList"></div>
+    </section>
+
+    <!-- 每周菜单（本周/下周 · 1-2 人 · 当季食材） -->
+    <section id="view-menu" hidden>
+      <div class="pagehead">
+        <button class="pageback" data-pageback>‹ 返回</button>
+        <h1 class="page-title">每周菜单</h1>
+      </div>
+      <p class="page-desc">1–2 人分量 · 当季食材优先 · 每周五自动生成下周菜单。点菜名直接看做法。</p>
+      <div class="tabs" id="menuTabs"></div>
+      <div id="menuList"></div>
     </section>
 
     <!-- 工具箱（饮品频道工具页） -->
@@ -643,6 +656,8 @@ function cloudReady(){
  *    - 可选：分类加 tools:[{id,t,d}] 并在 PAGE_RENDERERS 注册一个工具页渲染函数。
  * 4. 加原料品牌：BRANDS_DATA 对应面板 rows.push({item, brand, note, use, kw})。
  * 5. 配料想自动带「荐」：往 ING_BRAND 顶部插 ["关键词","推荐品牌"]（上面的规则优先匹配）。
+ * 6. 每周菜单：WEEK_MENUS 维护 2 条（本周/下周），id 用 ISO 周，dishes 填配方名（必须全局唯一）。
+ *    由「每周五」的定时任务自动滚动生成下周菜单，手工新增配方后无需动它。
  * ============================================================ */
 
 /* ================= 分类（知识库入口） ================= */
@@ -1408,7 +1423,7 @@ const DATA = [
    level:"replica", src:"家常做法"},
 
   /* ---------- 粤菜（清蒸白灼 · 轻油） ---------- */
-  {cat:"yuecai", group:"清蒸白灼", name:"清蒸鲈鱼", type:"蒸菜", diff:2, tea:"—",
+  {cat:"yuecai", group:"清蒸白灼", name:"粤式清蒸鲈鱼", type:"蒸菜", diff:2, tea:"—",
    items:[["鲈鱼","1 条（约 500g）"],["姜","6 片"],["葱","2 根"],["蒸鱼豉油","2 勺"],["热油","1 勺（可减半）"]],
    steps:["鲈鱼两面改刀，铺姜片葱段，淋料酒。","水开后上锅，大火蒸 8 分钟。","倒掉盘中腥水，捡去旧姜葱。","铺新葱丝，淋一勺热油，再淋蒸鱼豉油即可。"],
    tips:"水开后再上锅，500g 鱼大火蒸 8 分钟关火虚蒸 2 分钟；倒掉盘中腥水再淋豉油。泼油减半更清爽，不减香。",
@@ -1423,7 +1438,7 @@ const DATA = [
    steps:["鸡蛋加 1.5 倍温水（约 40℃）与一小撮盐打散。","过筛后盖上保鲜膜扎几个孔。","水开后中火蒸 10 分钟。","关火焖 2 分钟，淋生抽、香油即可。"],
    tips:"蛋液过筛 + 盖保鲜膜扎孔，中火蒸 10 分钟焖 2 分钟，镜面不起蜂窝。水温 40℃ 左右，别用开水。",
    level:"replica", src:"家常做法"},
-  {cat:"yuecai", group:"清蒸白灼", name:"蒜蓉蒸丝瓜", type:"蒸菜", diff:2, tea:"—",
+  {cat:"yuecai", group:"清蒸白灼", name:"粤式蒜蓉蒸丝瓜", type:"蒸菜", diff:2, tea:"—",
    items:[["丝瓜","1 根"],["蒜","5 瓣"],["生抽","1 勺"],["油","1 小勺"]],
    steps:["丝瓜去皮切段，挖小槽。","填入蒜末与泡软的粉丝，淋生抽。","水开后蒸 6 分钟。","撒葱花即可。"],
    tips:"丝瓜去皮切段铺蒜蓉，水开蒸 5 分钟。蒜蓉先用水冲一下去辛辣，蒸出来不苦。",
@@ -1516,12 +1531,12 @@ const DATA = [
    steps:["虾仁用盐抓洗去腥，吸干水分。","鸡蛋加盐、白胡椒打散。","1.5 勺油滑熟虾仁。","倒入蛋液，半凝固即关火，用余温推成滑蛋即可。"],
    tips:"虾仁用盐抓洗去腥、吸干水分；鸡蛋打散加盐和白胡椒。1.5 勺油滑熟虾仁，倒蛋液半凝固即关火用余温推成滑蛋。少油版，蛋嫩虾鲜。",
    level:"replica", src:"港式茶餐厅复刻"},
-  {cat:"yuecai", group:"茶餐厅", name:"豉汁蒸排骨", type:"蒸点", diff:3, tea:"—",
+  {cat:"yuecai", group:"茶餐厅", name:"粤式豉汁蒸排骨", type:"蒸点", diff:3, tea:"—",
    items:[["肋排","400g"],["豆豉","1 勺"],["蒜","4 瓣"],["生抽","1 勺"],["淀粉","1 小勺"],["油","半勺"],["糖","3g"]],
    steps:["排骨斩小块，加豆豉、蒜末、生抽、淀粉、几滴油抓匀腌 15 分钟。","平铺在盘中。","水开后大火蒸 20 分钟即可。"],
    tips:"排骨斩小块，豆豉蒜蓉生抽淀粉糖抓匀腌 20 分钟，水开蒸 12 分钟。蒸制零额外油，豆豉提味减盐；糖只 3g 去腥提鲜。茶餐厅招牌蒸点。",
    level:"replica", src:"港式茶餐厅复刻"},
-  {cat:"yuecai", group:"茶餐厅", name:"蜜汁叉烧", type:"烧味", diff:3, tea:"—",
+  {cat:"yuecai", group:"茶餐厅", name:"粤式蜜汁叉烧", type:"烧味", diff:3, tea:"—",
    items:[["梅花肉","400g"],["叉烧酱","2 勺"],["生抽","1 勺"],["蜂蜜","10g（刷面）"],["蒜","3 瓣"],["料酒","1 勺"]],
    steps:["梅花肉用叉烧酱、生抽、蒜末腌 2 小时。","摆入空气炸锅，180℃ 烤 15 分钟。","翻面刷一层蜂蜜。","再烤 8 分钟，切片即可。"],
    tips:"梅花肉用叉烧酱生抽蒜料酒腌 4 小时以上；烤箱 200℃ 烤 25 分钟，中途翻面刷蜂蜜水（蜂蜜压到 10g）。家庭版比餐厅少刷糖，蜜色亮、甜度可控。",
@@ -1568,7 +1583,7 @@ const DATA = [
    steps:["鸡腿冷水下锅加姜葱浸熟，关火焖 10 分钟。","捞出立刻过冰水，让皮爽肉嫩。","去骨切块摆盘。","用煮鸡汤打底，加生抽、香醋、花椒油、减半红油、糖调汁。","淋上料汁，撒熟芝麻即可。"],
    tips:"鸡腿浸熟过冰水（同白切鸡手法）。料汁用 2 勺煮鸡汤打底，红油减到 1 勺，麻香不减、油腻大减。",
    level:"replica", src:"家常做法"},
-  {cat:"chuancai", group:"川味凉菜", name:"凉拌三丝", type:"凉菜", diff:2, tea:"—",
+  {cat:"chuancai", group:"川味凉菜", name:"黄瓜版凉拌三丝", type:"凉菜", diff:2, tea:"—",
    items:[["胡萝卜","半根"],["黄瓜","1 根"],["粉丝","1 把"],["蒜","3 瓣"],["生抽","1.5 勺"],["香醋","1 勺"],["香油","几滴"],["辣椒油","半勺（可省）"]],
    steps:["粉丝煮软过凉水，沥干。","胡萝卜、黄瓜切成细丝。","三丝与蒜末混合。","加生抽、香醋、香油、辣椒油拌匀即可。"],
    tips:"粉丝煮软过凉，三丝切细。酸辣口靠醋和蒜提味，辣椒油可省——这道本来就轻油。",
@@ -2005,7 +2020,7 @@ const DATA = [
    steps:["花甲吐净沙，焯至开口捞起。","1 勺油爆香蒜、姜、小米辣。","下花甲，淋生抽和啤酒。","翻炒 2 分钟即可。"],
    tips:"花甲吐净沙后焯至开口捞起；1 勺油爆香蒜姜小米辣，下花甲淋生抽和啤酒翻炒 2 分钟。用啤酒代替水去腥提鲜，比水煮版少油；辣度按喜好调。",
    level:"replica", src:"赣派辣炒"},
-  {cat:"jiangxi", group:"海鲜小炒", name:"蒜蓉粉丝蒸虾", type:"蒸菜", diff:3, tea:"—",
+  {cat:"jiangxi", group:"海鲜小炒", name:"赣式蒜蓉粉丝蒸虾", type:"蒸菜", diff:3, tea:"—",
    items:[["基围虾","300g"],["龙口粉丝","1 把"],["蒜","1 头"],["生抽","1 勺"],["葱花","少许"]],
    steps:["粉丝泡软垫底；虾开背去虾线铺上。","蒜末加生抽调成汁，淋在虾上。","水开后蒸 6 分钟。","撒葱花即可。"],
    tips:"虾开背去虾线，粉丝泡软垫底铺虾；蒜蓉（一半生一半炸金黄）铺面，水开蒸 6 分钟，淋生抽撒葱花。蒸制零油，蒜香十足；生抽少放，靠虾鲜。",
@@ -2045,7 +2060,7 @@ const DATA = [
    steps:["虾开背，土豆片煎软垫底。","1 勺油炒香干辣椒、花椒、蒜。","下虾和土豆翻炒。","淋生抽即可。"],
    tips:"虾开背、土豆片煎软垫底；1 勺油炒香干辣椒花椒蒜，下虾和土豆翻炒，淋生抽。土豆吸味、少油干香；辣度自调。",
    level:"replica", src:"干锅风味"},
-  {cat:"jiangxi", group:"海鲜小炒", name:"清蒸鲈鱼", type:"蒸菜", diff:3, tea:"—",
+  {cat:"jiangxi", group:"海鲜小炒", name:"赣式清蒸鲈鱼", type:"蒸菜", diff:3, tea:"—",
    items:[["鲈鱼","1 条（约 500g）"],["葱","2 根"],["姜","5 片"],["蒸鱼豉油","2 勺"],["油","1 勺（可省）"]],
    steps:["鲈鱼两面改刀，铺姜片葱段，淋料酒。","水开后上锅，大火蒸 8 分钟。","倒掉盘中腥水，捡去旧姜葱。","铺新葱丝，淋一勺热油，再淋蒸鱼豉油即可。"],
    tips:"鱼改刀铺姜葱，水开蒸 8 分钟虚蒸 2 分钟，倒腥水淋豉油，葱丝点缀。蒸制零油（或最后泼 1 勺热油增香），白绿配色、鲜嫩本味。",
@@ -2666,7 +2681,7 @@ const DATA = [
    steps:["牛里脊切 2cm 丁，加生抽腌 10 分钟。","拌入孜然粉、辣椒粉。","表面刷薄油，摆入空气炸锅。","200℃ 烤 8 分钟，中途翻一次即可。"],
    tips:"牛肉切 2cm 丁，生抽腌 10 分钟拌孜然辣椒；200℃ 8 分钟翻一次。高温快烤锁汁，孜然香气足，高蛋白低脂，1-2 人小聚刚好。",
    level:"replica", src:"网络复刻"},
-  {cat:"appliance", group:"空气炸锅", name:"蜜汁叉烧", type:"烤", diff:1, tea:"—",
+  {cat:"appliance", group:"空气炸锅", name:"空气炸锅蜜汁叉烧", type:"烤", diff:1, tea:"—",
    items:[["梅花肉","250g"],["叉烧酱","1.5 勺"],["生抽","半勺"],["蜂蜜","1 勺（刷面）"],["蒜末","2 瓣"]],
    steps:["梅花肉用叉烧酱、生抽、蒜末腌 2 小时。","摆入空气炸锅，180℃ 烤 15 分钟。","翻面刷一层蜂蜜。","再烤 8 分钟，切片即可。"],
    tips:"梅花肉（带点肥更润）用叉烧酱+生抽+蒜腌 2 小时，180℃ 烤 15 分钟翻面刷蜂蜜再 8 分钟。家庭版叉烧酱含糖，蜂蜜只刷薄层，比餐厅减糖；1-2 人切片即食。",
@@ -2683,7 +2698,7 @@ const DATA = [
    level:"replica", src:"网络复刻"},
 
   /* ---------- 电器类 · 蒸笼（1-2 人小碗小盅 · 零油清爽） ---------- */
-  {cat:"appliance", group:"蒸笼", name:"清蒸鲈鱼", type:"蒸", diff:2, tea:"—",
+  {cat:"appliance", group:"蒸笼", name:"蒸笼版清蒸鲈鱼", type:"蒸", diff:2, tea:"—",
    items:[["鲈鱼","1 条（约 400g）"],["姜","4 片"],["葱","1 根"],["蒸鱼豉油","1 勺"],["料酒","1 勺"]],
    steps:["鲈鱼两面改刀，铺姜片葱段，淋料酒。","水开后上锅，大火蒸 8 分钟。","倒掉盘中腥水，捡去旧姜葱。","铺新葱丝，淋一勺热油，再淋蒸鱼豉油即可。"],
    tips:"鲈鱼改刀铺姜葱淋料酒，水开后大火蒸 8 分钟倒掉腥水，铺新葱丝淋热油+蒸鱼豉油。蒸制零油，鱼肉嫩滑，1 条正好 1-2 人；豉油咸鲜，盐可不放。",
@@ -2693,7 +2708,7 @@ const DATA = [
    steps:["鸡蛋加 1.5 倍温水与少许盐打散，过筛。","盖上碟子，水开后中火蒸 8 分钟至半凝固。","铺上虾仁，再蒸 3 分钟。","出锅淋生抽、香油即可。"],
    tips:"蛋液加温水+少许盐过筛，盖碟中火蒸 8 分钟至半凝放虾仁再蒸 3 分钟；出锅淋生抽香油。蒸蛋零油嫩滑，虾仁补蛋白，1-2 人小盅刚好。",
    level:"replica", src:"粤式家常"},
-  {cat:"appliance", group:"蒸笼", name:"蒜蓉粉丝蒸虾", type:"蒸", diff:2, tea:"—",
+  {cat:"appliance", group:"蒸笼", name:"蒸笼版蒜蓉粉丝蒸虾", type:"蒸", diff:2, tea:"—",
    items:[["基围虾","8 只"],["龙口粉丝","1 小把"],["蒜末","5 瓣"],["生抽","1 勺"],["葱花","适量"]],
    steps:["粉丝泡软垫底；虾开背去虾线铺上。","蒜末加生抽调成汁，淋在虾上。","水开后蒸 6 分钟。","撒葱花即可。"],
    tips:"粉丝泡软垫底，虾开背去虾线铺上，蒜末+生抽调汁淋虾；水开蒸 6 分钟撒葱花。蒸比油焖省油，蒜香吊鲜，8 只 1-2 人宴客小菜。",
@@ -2703,7 +2718,7 @@ const DATA = [
    steps:["五花肉切薄片，加生抽、豆瓣酱腌 10 分钟。","裹上蒸肉米粉。","南瓜或红薯块垫底，铺上肉片。","大火蒸 40 分钟即可。"],
    tips:"五花肉薄片用生抽豆瓣腌 10 分钟裹蒸肉粉，铺在南瓜块上；大火蒸 40 分钟。米粉吸走部分油脂，垫菜吸肉香，1-2 人小碗份量刚好解馋不腻。",
    level:"replica", src:"赣川家常"},
-  {cat:"appliance", group:"蒸笼", name:"豉汁蒸排骨", type:"蒸", diff:2, tea:"—",
+  {cat:"appliance", group:"蒸笼", name:"蒸笼版豉汁蒸排骨", type:"蒸", diff:2, tea:"—",
    items:[["排骨","250g"],["豆豉","1 勺"],["蒜末","3 瓣"],["生抽","1 勺"],["淀粉","半勺"],["油","几滴"]],
    steps:["排骨斩小块，加豆豉、蒜末、生抽、淀粉、几滴油抓匀腌 15 分钟。","平铺在盘中。","水开后大火蒸 20 分钟即可。"],
    tips:"排骨斩小块用豆豉蒜末生抽淀粉抓匀腌 15 分钟，平铺大火蒸 20 分钟。只放几滴油，豆豉提香不出水，肉质软嫩脱骨，广式茶楼味 1-2 人份。",
@@ -2718,7 +2733,7 @@ const DATA = [
    steps:["五花肉煮到定型，煎皮上色后切片，皮朝下铺碗。","梅干菜泡发洗净炒香，加生抽、冰糖、八角铺在肉上。","大火蒸 50 分钟。","倒扣到盘中即可。"],
    tips:"五花肉煮定型煎皮上色，切片铺碗，梅干菜泡发炒香铺面加生抽冰糖八角，蒸 50 分钟倒扣。蒸让油脂回润梅菜，冰糖只 5g，1-2 人小份解馋。",
    level:"replica", src:"粤式经典"},
-  {cat:"appliance", group:"蒸笼", name:"蒜蓉蒸丝瓜", type:"蒸", diff:2, tea:"—",
+  {cat:"appliance", group:"蒸笼", name:"蒸笼版蒜蓉蒸丝瓜", type:"蒸", diff:2, tea:"—",
    items:[["丝瓜","1 根"],["蒜末","4 瓣"],["生抽","1 勺"],["粉丝","1 小把"],["葱花","适量"]],
    steps:["丝瓜去皮切段，挖小槽。","填入蒜末与泡软的粉丝，淋生抽。","水开后蒸 6 分钟。","撒葱花即可。"],
    tips:"丝瓜切段挖槽填蒜末粉丝，淋生抽蒸 6 分钟撒葱花。丝瓜清甜多汁，蒸法零油锁鲜，夏天 1-2 人开胃菜，低脂高纤。",
@@ -3502,7 +3517,7 @@ const DATA = [
    level:"replica", src:"家常做法"},
 
   /* ---------- 川菜 · 川味凉菜（1-3星家常） ---------- */
-  {cat:"chuancai", group:"川味凉菜", name:"凉拌三丝", type:"凉菜", diff:1, tea:"—",
+  {cat:"chuancai", group:"川味凉菜", name:"海带版凉拌三丝", type:"凉菜", diff:1, tea:"—",
    items:[["海带丝","100g"],["胡萝卜","1 根"],["粉丝","1 把"],["蒜","3 瓣"],["生抽","1 勺"],["香醋","1 勺"],["香油","半勺"],["辣椒油","半勺"],["糖","2g"]],
    steps:[
      "海带丝焯水 2 分钟，粉丝泡软焯水，胡萝卜擦丝。",
@@ -3861,6 +3876,32 @@ const PRIMERS = {
   ]
 };
 
+/* ================= 每周菜单（本周/下周 · 1-2 人 · 当季食材 · 每周五自动滚动） ================= */
+const WEEK_MENUS = [
+  { id:"2026-W43", t:"本周菜单", range:"10.19 – 10.25", season:"深秋",
+    note:"深秋时令：莲藕、白萝卜、菜心、油麦菜、鲈鱼、虾仁、雪梨。1–2 人采购参考：鲈鱼 1 条约 400g、排骨 300g、肉馅 250g、虾仁 150g、绿叶菜各 300g；周五酸菜鱼买草鱼约 800g。",
+    days:[
+      { d:"周一", date:"10.19", dishes:["粤式清蒸鲈鱼","白灼菜心"] },
+      { d:"周二", date:"10.20", dishes:["梅菜蒸肉饼","蒜蓉炒时蔬"] },
+      { d:"周三", date:"10.21", dishes:["南昌排骨藕汤（瓦罐煨）","豆豉鲮鱼油麦菜"] },
+      { d:"周四", date:"10.22", dishes:["滑蛋虾仁","番茄炒蛋"] },
+      { d:"周五", date:"10.23", dishes:["酸菜鱼","醋溜白菜"] },
+      { d:"周六", date:"10.24", dishes:["客家酿豆腐","冬瓜花蛤瓦罐汤"] },
+      { d:"周日", date:"10.25", dishes:["三杯鸡（少油版）","冰糖炖雪梨"] },
+    ]},
+  { id:"2026-W44", t:"下周菜单", range:"10.26 – 11.1", season:"深秋",
+    note:"深秋时令：白萝卜、花菜、大白菜、梭子蟹、虾、秋刀鱼、老鸭。1–2 人采购参考：梭子蟹 1–2 只约 400g、猪脚 300g、虾 300g、秋刀鱼 2 条、老鸭半只（可分两天吃）。",
+    days:[
+      { d:"周一", date:"10.26", dishes:["香煎鲈鱼","清炒白萝卜丝"] },
+      { d:"周二", date:"10.27", dishes:["黄豆猪脚瓦罐汤","干锅花菜"] },
+      { d:"周三", date:"10.28", dishes:["梭子蟹炒年糕（甜辣版）","凉拌木耳"] },
+      { d:"周四", date:"10.29", dishes:["青椒肉丝","酸辣土豆丝"] },
+      { d:"周五", date:"10.30", dishes:["干锅香辣虾","拍黄瓜"] },
+      { d:"周六", date:"10.31", dishes:["茶树菇老鸭瓦罐汤","蒸水蛋"] },
+      { d:"周日", date:"11.1", dishes:["日式烤秋刀鱼","烤时蔬杂烩"] },
+    ]},
+];
+
 /* ================= 配料 → 品牌推荐（自动关联，按序匹配） ================= */
 const ING_BRAND = [
   ["生晒参","生晒参片 / 人参片"],["红参","红参片"],["参须","人参须"],["制黄精","制黄精（九蒸九晒）"],["黄精","制黄精（九蒸九晒）"],
@@ -3958,7 +3999,7 @@ const sidebar = document.getElementById("sidebar");
 const drawerMask = document.getElementById("drawerMask");
 
 /* ================= 视图路由（含返回栈） ================= */
-const VIEW_IDS = ["home","channel","group","search","toolbox","brands","favorites","trash","diff","done"];
+const VIEW_IDS = ["home","channel","group","search","toolbox","brands","favorites","trash","diff","done","menu"];
 let currentView = "home", returnView = "home";
 let currentCat = null, currentGroup = null, currentChTab = "all";
 let navStack = [];
@@ -4002,6 +4043,7 @@ function renderNav(){
   sidebar.innerHTML =
     `<div class="nav-group">导航</div>
      <a class="nav-item active" data-v="home">首页</a>
+     <a class="nav-item" data-v="menu">每周菜单</a>
      <a class="nav-item" data-v="favorites">我的收藏</a>
      <a class="nav-item" data-v="done">已做过</a>
      <a class="nav-item" data-v="trash">垃圾箱</a>` +
@@ -4028,6 +4070,7 @@ function renderNav(){
       else if(n.dataset.ch) openChannel(n.dataset.ch);
       else {
         show(n.dataset.v);
+        if(n.dataset.v === "menu") openMenu();
         if(n.dataset.v === "favorites") renderFavList();
         if(n.dataset.v === "done") renderDoneList();
         if(n.dataset.v === "trash") renderTrashList();
@@ -4038,6 +4081,16 @@ function renderNav(){
 
 /* ================= 首页：总入口 ================= */
 function renderHome(){
+  // 每周菜单入口（本周/下周）
+  document.getElementById("homeMenu").innerHTML = WEEK_MENUS.map(w=>
+    `<div class="kcard" data-menu="${esc(w.id)}">
+      <div class="t"><span style="display:flex;align-items:center;min-width:0;"><span class="sq" style="--c:#7d9a6a">${esc(w.t[0])}</span>${esc(w.t)}</span><span class="n">${esc(w.range)}</span></div>
+      <div class="d">${esc(w.season)} · ${esc(w.note.slice(0,44))}${w.note.length>44?"…":""}</div>
+    </div>`).join("");
+  document.getElementById("homeMenu").addEventListener("click",e=>{
+    const card = e.target.closest(".kcard");
+    if(card && card.dataset.menu) openMenu(card.dataset.menu);
+  });
   // 难度板块（按难易程度学配方）
   document.getElementById("homeDiff").innerHTML = DIFF_LEVELS.map(l=>{
     const n = countDiff(l.id), c = DIFF_TAG[l.id].c;
@@ -4243,6 +4296,49 @@ document.getElementById("view-diff").addEventListener("click",e=>{
   const card = e.target.closest(".kcard");
   if(card && card.dataset.df){ renderDiffList(card.dataset.mode, card.dataset.df); }
 });
+
+/* ================= 每周菜单（本周/下周 · 1-2 人 · 当季食材） ================= */
+let currentMenuId = WEEK_MENUS[0] ? WEEK_MENUS[0].id : null;
+function openMenu(id){
+  if(id && WEEK_MENUS.find(w=>w.id===id)) currentMenuId = id;
+  const tabsEl = document.getElementById("menuTabs");
+  tabsEl.innerHTML = WEEK_MENUS.map(w=>
+    `<button data-tab="${esc(w.id)}" class="${w.id===currentMenuId?"active":""}">${esc(w.t)} · ${esc(w.range)}</button>`).join("");
+  tabsEl.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{ currentMenuId = b.dataset.tab; renderMenu(); }));
+  renderMenu();
+  show("menu");
+}
+function renderMenu(){
+  const w = WEEK_MENUS.find(x=>x.id===currentMenuId) || WEEK_MENUS[0];
+  const box = document.getElementById("menuList");
+  if(!w){ box.innerHTML = `<div class="empty"><b>菜单还没有生成</b>每周五自动更新下周菜单。</div>`; return; }
+  const now = new Date();
+  const today = (now.getMonth()+1) + "." + now.getDate();
+  document.querySelectorAll("#menuTabs button").forEach(b=>b.classList.toggle("active", b.dataset.tab===w.id));
+  let html = `<div class="panel" style="margin-bottom:12px;">
+    <h3>${esc(w.t)} · ${esc(w.range)} · ${esc(w.season)}</h3>
+    <p style="margin:6px 0 0;font-size:13px;color:var(--ink-soft);line-height:1.7;">${esc(w.note)}</p>
+  </div>`;
+  html += w.days.map(day=>{
+    const isToday = day.date === today;
+    const rows = day.dishes.map(name=>{
+      const d = DATA.find(x=>x.name===name);
+      if(!d) return `<div class="recipe"><div class="recipe-head"><span class="rn">${esc(name)}</span><span class="rt">未收录</span></div></div>`;
+      const k = keyOf(d);
+      const dc = d.diff ? (DIFF_TAG[d.diff]||{c:"#9a8f7a"}).c : "#9a8f7a";
+      const catT = (CATEGORIES.find(c=>c.id===catOf(d))||{t:""}).t;
+      return `<div class="recipe"><div class="recipe-head favrow" data-key="${esc(k)}">
+        <span class="rn">${esc(name)}</span>
+        <span class="rt">${esc(catT)} · ${esc(groupOf(d))}</span>
+        <span class="rt" style="color:${dc}">${d.diff?diffStars(d.diff):""}</span>
+        <span class="star" data-key="${esc(k)}" title="收藏">☆</span>
+      </div></div>`;
+    }).join("");
+    return `<div class="sec-title" style="margin-top:14px;">${esc(day.d)} · ${esc(day.date)}${isToday?` <span style="color:#b0402a;font-size:12px;font-weight:700;">· 今天</span>`:""}</div>` + rows;
+  }).join("");
+  box.innerHTML = html;
+  if(typeof refreshStars === "function") refreshStars();
+}
 
 /* ================= 配方折叠列表（配料含品牌推荐 + 小诀窍） ================= */
 const R_CHEV = '<span class="chev"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>';
