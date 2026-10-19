@@ -464,7 +464,7 @@
         <button class="pageback" data-pageback>‹ 返回</button>
         <h1 class="page-title">每周菜单</h1>
       </div>
-      <p class="page-desc">1–2 人分量 · 当季食材优先 · 每周五自动生成下周菜单。点菜名直接看做法。</p>
+      <p class="page-desc">1–2 人分量 · 当季食材优先 · 每周五自动生成下周菜单。点击展开做法。</p>
       <div class="tabs" id="menuTabs"></div>
       <div id="menuList"></div>
     </section>
@@ -4323,21 +4323,13 @@ function renderMenu(){
     const isToday = day.date === today;
     const rows = day.dishes.map(name=>{
       const d = DATA.find(x=>x.name===name);
-      if(!d) return `<div class="recipe"><div class="recipe-head"><span class="rn">${esc(name)}</span><span class="rt">未收录</span></div></div>`;
-      const k = keyOf(d);
-      const dc = d.diff ? (DIFF_TAG[d.diff]||{c:"#9a8f7a"}).c : "#9a8f7a";
-      const catT = (CATEGORIES.find(c=>c.id===catOf(d))||{t:""}).t;
-      return `<div class="recipe"><div class="recipe-head favrow" data-key="${esc(k)}">
-        <span class="rn">${esc(name)}</span>
-        <span class="rt">${esc(catT)} · ${esc(groupOf(d))}</span>
-        <span class="rt" style="color:${dc}">${d.diff?diffStars(d.diff):""}</span>
-        <span class="star" data-key="${esc(k)}" title="收藏">☆</span>
-      </div></div>`;
+      return d ? recipeHTML(d,true)
+               : `<div class="recipe"><div class="recipe-head"><span class="rn">${esc(name)}</span><span class="rt">未收录</span></div></div>`;
     }).join("");
     return `<div class="sec-title" style="margin-top:14px;">${esc(day.d)} · ${esc(day.date)}${isToday?` <span style="color:#b0402a;font-size:12px;font-weight:700;">· 今天</span>`:""}</div>` + rows;
   }).join("");
   box.innerHTML = html;
-  if(typeof refreshStars === "function") refreshStars();
+  bindRecipeToggles(box);
 }
 
 /* ================= 配方折叠列表（配料含品牌推荐 + 小诀窍） ================= */
