@@ -272,6 +272,10 @@
 .dislike{cursor:pointer;color:var(--muted);font-size:12px;font-weight:600;border:1px solid var(--line-strong);background:var(--card);border-radius:6px;padding:5px 12px;line-height:1;font-family:inherit;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}
 .dislike:hover{color:#b3452e;border-color:#dca89c;}
 .dislike.on{color:#b3452e;border-color:#dca89c;background:#f9e8e2;}
+.done{cursor:pointer;color:var(--muted);font-size:12px;font-weight:600;border:1px solid var(--line-strong);background:var(--card);border-radius:6px;padding:5px 12px;line-height:1;font-family:inherit;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}
+.done.on{color:#2e7d46;border-color:#a9d3b6;background:#e6f4ea;}
+.done-toggle{margin-left:auto;cursor:pointer;font-size:11.5px;font-weight:600;color:var(--muted);border:1px solid var(--line-strong);background:var(--card);border-radius:999px;padding:5px 12px;font-family:inherit;line-height:1;user-select:none;-webkit-user-select:none;}
+.done-toggle.on{color:#2e7d46;border-color:#a9d3b6;background:#e6f4ea;}
   .body-actions{margin-top:12px;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;}
   .ask-ai{border:1px solid var(--line-strong);background:var(--card);border-radius:6px;font-size:12px;font-weight:600;color:var(--accent-dark);padding:5px 12px;cursor:pointer;font-family:inherit;}
   .ask-ai:hover{border-color:var(--accent);}
@@ -372,6 +376,7 @@
       <div class="pagehead">
         <button class="pageback" data-pageback>‹ 返回</button>
         <h1 class="page-title" id="dfName"></h1>
+        <button class="done-toggle" data-donetoggle>已做过 · 显示中</button>
       </div>
       <p class="page-desc" id="dfDesc"></p>
       <div id="dfPrimer" hidden></div>
@@ -386,6 +391,7 @@
       <div class="pagehead">
         <button class="pageback" data-pageback>‹ 返回</button>
         <h1 class="page-title" id="chName"></h1>
+        <button class="done-toggle" data-donetoggle>已做过 · 显示中</button>
       </div>
       <p class="page-desc" id="chDesc"></p>
       <div class="tabs" id="chTabs" hidden></div>
@@ -400,6 +406,7 @@
       <div class="pagehead">
         <button class="pageback" data-pageback>‹ 返回</button>
         <h1 class="page-title" id="grName"></h1>
+        <button class="done-toggle" data-donetoggle>已做过 · 显示中</button>
       </div>
       <p class="page-desc" id="grDesc"></p>
       <div class="page-actions">
@@ -437,6 +444,16 @@
       </div>
       <p class="page-desc">被你标记为「不好吃」的配方会隐藏在所有列表页，在这里可以恢复显示。</p>
       <div id="trashList"></div>
+    </section>
+
+    <!-- 已做过：按难易程度归类 -->
+    <section id="view-done" hidden>
+      <div class="pagehead">
+        <button class="pageback" data-pageback>‹ 返回</button>
+        <h1 class="page-title">已做过</h1>
+      </div>
+      <p class="page-desc">你标记为「已做过」的配方，云端同步，按难易程度归类。</p>
+      <div id="doneList"></div>
     </section>
 
     <!-- 工具箱（饮品频道工具页） -->
@@ -752,7 +769,7 @@ const GROUP_META = {
   "客家菜":{desc:"客家三件宝 · 酿豆腐、盐焗鸡、梅菜扣肉为代表"}
 };
 
-/* ================= 配方（403 条；cat 省略 = drinks，group = 品牌/分组） ================= */
+/* ================= 配方（432 条；cat 省略 = drinks，group = 品牌/分组） ================= */
 const DATA = [
   {brand:"霸王茶姬", name:"官方公开成分占比", type:"通用", diff:2, tea:"—",
    items:[["原叶茶汤","66%"],["优质牛乳","19%"],["冰勃朗非氢化基底乳","8%"],["风味糖浆（自选）","7%"]],
@@ -3033,6 +3050,312 @@ const DATA = [
      "180℃ 烤 10 分钟至金黄酥脆。"
    ],
    tips:"蘸液别泡太久，蘸一下就起；糖可省，烤好蘸炼乳或果酱吃。",
+   level:"replica", src:"家常做法"},
+
+  /* ---------- 川菜 · 少油热菜（1-3星家常） ---------- */
+  {cat:"chuancai", group:"少油热菜", name:"青椒肉丝", type:"小炒", diff:2, tea:"—",
+   items:[["猪里脊","200g"],["青椒","3 个"],["生抽","1 勺"],["淀粉","1 小勺"],["料酒","半勺"],["蒜","2 瓣"],["盐","2g"],["油","1.5 勺"]],
+   steps:[
+     "里脊切细丝，加生抽、料酒、淀粉抓匀腌 10 分钟。",
+     "青椒去籽切细丝备用。",
+     "热锅 1.5 勺油，下肉丝大火滑炒到变色盛出。",
+     "原锅爆香蒜，下青椒丝大火炒 1 分钟。",
+     "倒回肉丝，加盐翻匀即可出锅。"
+   ],
+   tips:"肉丝上浆（生抽+淀粉）才嫩；先炒肉盛出再炒青椒，肉不老。",
+   level:"replica", src:"家常做法"},
+  {cat:"chuancai", group:"少油热菜", name:"酸辣土豆丝", type:"小炒", diff:1, tea:"—",
+   items:[["土豆","2 个"],["干辣椒","3 个"],["蒜","2 瓣"],["香醋","1.5 勺"],["盐","2g"],["花椒","几粒（可省）"],["油","1 勺"]],
+   steps:[
+     "土豆切细丝，清水淘洗两遍去淀粉，沥干。",
+     "热锅 1 勺油，下花椒、干辣椒、蒜爆香。",
+     "下土豆丝大火快炒 1 分钟。",
+     "沿锅边淋香醋，加盐翻匀即出锅。"
+   ],
+   tips:"土豆丝洗去淀粉才脆不粘；醋高温沿锅边淋，酸香才足。",
+   level:"replica", src:"家常做法"},
+  {cat:"chuancai", group:"少油热菜", name:"宫保鸡丁", type:"小炒", diff:3, tea:"—",
+   items:[["鸡腿肉","250g"],["花生米","40g"],["干辣椒","5 个"],["花椒","1 小勺"],["葱","1 根"],["生抽","1 勺"],["香醋","1 勺"],["糖","5g"],["淀粉","1 小勺"],["油","2 勺"]],
+   steps:[
+     "鸡腿肉切丁，加生抽、淀粉腌 10 分钟；调碗汁（生抽+香醋+糖+淀粉+少许水）。",
+     "花生米小火炸脆（或烤脆）盛出。",
+     "热锅 2 勺油，下花椒、干辣椒小火炒香。",
+     "下鸡丁大火滑炒到变色。",
+     "倒入碗汁大火收浓，下葱段与花生米翻匀出锅。"
+   ],
+   tips:"宫保味=糊辣+荔枝口（糖醋），碗汁提前调好是快手的秘诀；花生最后放保脆。",
+   level:"replica", src:"家常做法"},
+  {cat:"chuancai", group:"少油热菜", name:"鱼香茄子", type:"小炒", diff:3, tea:"—",
+   items:[["茄子","2 根"],["猪肉末","80g（可省）"],["蒜","3 瓣"],["姜","少许"],["豆瓣酱","半勺"],["生抽","1 勺"],["香醋","1 勺"],["糖","4g"],["淀粉","1 小勺"],["油","1.5 勺"]],
+   steps:[
+     "茄子切条，撒盐腌 10 分钟挤掉黑水（省油不腻）。",
+     "调鱼香汁：生抽+香醋+糖+淀粉+半碗水。",
+     "热锅 1.5 勺油，下茄条煎软盛出。",
+     "原锅爆香姜蒜与豆瓣酱，下肉末炒散。",
+     "倒回茄子，淋鱼香汁，大火收汁即可。"
+   ],
+   tips:"茄子先盐腌挤水，能少吃一半油；鱼香味来自「泡辣椒/豆瓣+糖醋」的黄金比例。",
+   level:"replica", src:"家常做法"},
+  {cat:"chuancai", group:"少油热菜", name:"蚂蚁上树", type:"小炒", diff:2, tea:"—",
+   items:[["红薯粉丝","100g"],["猪肉末","100g"],["豆瓣酱","半勺"],["蒜","2 瓣"],["生抽","1 勺"],["老抽","半勺"],["葱花","适量"],["油","1 勺"]],
+   steps:[
+     "粉丝温水泡软，剪成段。",
+     "热锅 1 勺油，下肉末炒散到微黄。",
+     "加蒜末、豆瓣酱炒出红油。",
+     "下粉丝，加生抽、老抽与半碗水，翻炒到粉丝吸饱汤汁。",
+     "撒葱花出锅。"
+   ],
+   tips:"粉丝别煮，直接下锅吸汁才有「蚂蚁上树」的干爽；水一次加够，中途别加。",
+   level:"replica", src:"家常做法"},
+  {cat:"chuancai", group:"少油热菜", name:"干煸豆角", type:"小炒", diff:3, tea:"—",
+   items:[["四季豆","300g"],["猪肉末","60g"],["芽菜或冬菜","1 勺（可省）"],["干辣椒","3 个"],["蒜","3 瓣"],["生抽","1 勺"],["盐","2g"],["油","2 勺"]],
+   steps:[
+     "四季豆撕去老筋，掰成段，彻底沥干。",
+     "热锅 2 勺油，下豆角中火煸炒到表皮起皱微焦，盛出。",
+     "原锅下肉末炒散，加干辣椒、蒜、芽菜炒香。",
+     "倒回豆角，加生抽、盐大火翻匀即可。"
+   ],
+   tips:"豆角务必煸熟煸透（生豆角有毒）；表皮起皱才入味，是干煸的灵魂。",
+   level:"replica", src:"家常做法"},
+  {cat:"chuancai", group:"少油热菜", name:"虎皮青椒", type:"小炒", diff:2, tea:"—",
+   items:[["青椒","5 个"],["蒜","3 瓣"],["豆豉","半勺（可省）"],["生抽","1 勺"],["香醋","半勺"],["糖","2g"],["油","1 勺"]],
+   steps:[
+     "青椒去蒂去籽，用刀轻拍扁。",
+     "热锅 1 勺油，下青椒中火煎到两面起虎皮斑。",
+     "推到锅边，下蒜末、豆豉炒香。",
+     "加生抽、香醋、糖，翻匀焖 1 分钟即可。"
+   ],
+   tips:"青椒拍扁受热面积大才起虎皮；煎比炸省油，照样出虎皮。",
+   level:"replica", src:"家常做法"},
+  {cat:"chuancai", group:"少油热菜", name:"家常豆腐", type:"小炒", diff:2, tea:"—",
+   items:[["老豆腐","1 块"],["青椒","1 个"],["木耳","几朵"],["豆瓣酱","半勺"],["蒜","2 瓣"],["生抽","1 勺"],["糖","2g"],["油","1.5 勺"]],
+   steps:[
+     "豆腐切三角厚片，木耳泡发，青椒切块。",
+     "热锅 1.5 勺油，把豆腐两面煎到金黄定型，盛出。",
+     "原锅爆香蒜与豆瓣酱，下木耳、青椒炒 1 分钟。",
+     "倒回豆腐，加生抽、糖与少许水，小火焖 3 分钟入味即可。"
+   ],
+   tips:"豆腐先煎定型再烧不易碎；老豆腐比嫩豆腐更耐煎、更入味。",
+   level:"replica", src:"家常做法"},
+  {cat:"chuancai", group:"少油热菜", name:"回锅肉", type:"小炒", diff:3, tea:"—",
+   items:[["五花肉","300g"],["蒜苗","3 根"],["豆瓣酱","1 勺"],["姜","3 片"],["料酒","1 勺"],["甜面酱","半勺（可省）"],["糖","2g"],["油","半勺"]],
+   steps:[
+     "五花肉冷水下锅，加姜片、料酒煮 20 分钟到八成熟，捞出放凉。",
+     "切成 2mm 薄片，蒜苗斜切段（白绿分开）。",
+     "热锅半勺油，下肉片中小火煸到出油微卷（灯盏窝）。",
+     "下豆瓣酱、甜面酱炒出红油，下蒜白翻炒。",
+     "下蒜叶，加糖，大火翻匀即出锅。"
+   ],
+   tips:"回锅肉的「灯盏窝」靠中小火把肥肉煸出油；豆瓣酱已咸，基本不用再加盐。",
+   level:"replica", src:"家常做法"},
+
+  /* ---------- 川菜 · 川味凉菜（1-3星家常） ---------- */
+  {cat:"chuancai", group:"川味凉菜", name:"凉拌三丝", type:"凉菜", diff:1, tea:"—",
+   items:[["海带丝","100g"],["胡萝卜","1 根"],["粉丝","1 把"],["蒜","3 瓣"],["生抽","1 勺"],["香醋","1 勺"],["香油","半勺"],["辣椒油","半勺"],["糖","2g"]],
+   steps:[
+     "海带丝焯水 2 分钟，粉丝泡软焯水，胡萝卜擦丝。",
+     "全部过凉水，彻底沥干。",
+     "加蒜泥、生抽、香醋、糖、香油、辣椒油。",
+     "拌匀即可上桌。"
+   ],
+   tips:"三丝都要沥干水分，否则调味被稀释；比例可按手边食材灵活换。",
+   level:"replica", src:"家常做法"},
+  {cat:"chuancai", group:"川味凉菜", name:"蒜泥黄瓜", type:"凉菜", diff:1, tea:"—",
+   items:[["黄瓜","2 根"],["蒜","5 瓣"],["生抽","1 勺"],["香醋","1 勺"],["香油","半勺"],["辣椒油","半勺"],["盐","1 小撮"],["糖","2g"]],
+   steps:[
+     "黄瓜拍裂切段，加少许盐腌 5 分钟。",
+     "蒜捣成蒜泥。",
+     "倒掉黄瓜腌出的水。",
+     "加蒜泥、生抽、香醋、香油、辣椒油、糖拌匀即可。"
+   ],
+   tips:"蒜泥现捣最香；黄瓜先盐腌杀水，口感更脆、更挂味。",
+   level:"replica", src:"家常做法"},
+  {cat:"chuancai", group:"川味凉菜", name:"酸辣蕨根粉", type:"凉菜", diff:1, tea:"—",
+   items:[["蕨根粉","100g"],["小米辣","3 个"],["蒜","3 瓣"],["香醋","2 勺"],["生抽","1 勺"],["香油","半勺"],["糖","2g"],["葱花","适量"],["熟花生碎","1 勺"]],
+   steps:[
+     "蕨根粉沸水煮 8 分钟到无硬芯，过凉水沥干。",
+     "小米辣切圈，蒜捣泥。",
+     "香醋、生抽、糖、香油、小米辣、蒜泥调成酸辣汁。",
+     "蕨根粉拌入酸辣汁，撒葱花与花生碎即可。"
+   ],
+   tips:"蕨根粉煮透才爽口；酸辣汁按 2:1 的醋:生抽调，酸辣开胃。",
+   level:"replica", src:"家常做法"},
+  {cat:"chuancai", group:"川味凉菜", name:"棒棒鸡丝", type:"凉菜", diff:2, tea:"—",
+   items:[["鸡胸肉","1 块"],["黄瓜","1 根"],["姜","2 片"],["料酒","1 勺"],["生抽","1.5 勺"],["香醋","半勺"],["辣椒油","1 勺"],["花椒粉","少许"],["糖","2g"],["蒜","2 瓣"]],
+   steps:[
+     "鸡胸肉冷水下锅，加姜片、料酒煮 12 分钟，焖 5 分钟。",
+     "捞出放凉，用擀面杖敲松后撕成细丝（「棒棒」由此得名）。",
+     "黄瓜切丝垫底，铺上鸡丝。",
+     "生抽、香醋、辣椒油、花椒粉、糖、蒜泥调成汁，淋上即可。"
+   ],
+   tips:"鸡胸焖比煮更嫩；敲松再撕，丝更蓬松更挂汁。",
+   level:"replica", src:"家常做法"},
+  {cat:"chuancai", group:"川味凉菜", name:"烧椒皮蛋", type:"凉菜", diff:1, tea:"—",
+   items:[["皮蛋","3 个"],["青椒","3 个"],["蒜","3 瓣"],["生抽","1 勺"],["香醋","半勺"],["香油","半勺"]],
+   steps:[
+     "青椒放明火上（或干锅）烧到表皮起焦斑，撕去焦皮。",
+     "烧椒撕成条，皮蛋去壳切瓣。",
+     "蒜捣泥，与烧椒一起舂碎（或切碎拌匀）。",
+     "铺在皮蛋上，淋生抽、香醋、香油即可。"
+   ],
+   tips:"烧椒的焦香是灵魂，可用干锅烙代替明火；皮蛋用溏心的口感更好。",
+   level:"replica", src:"家常做法"},
+
+  /* ---------- 粤菜 · 清蒸白灼 / 粤式小炒 / 粤式凉菜（1-3星补充） ---------- */
+  {cat:"yuecai", group:"清蒸白灼", name:"白灼菜心", type:"白灼", diff:2, tea:"—",
+   items:[["菜心","400g"],["蒜","3 瓣"],["生抽","1.5 勺"],["蚝油","半勺"],["油","1 勺"],["盐","1 小撮"]],
+   steps:[
+     "菜心洗净，切去老根。",
+     "锅中烧水，加一小撮盐和几滴油（保持翠绿）。",
+     "下菜心焯 1 分钟，捞出摆盘。",
+     "淋上生抽与蚝油。",
+     "蒜切末铺面，浇一勺热油激香即可。"
+   ],
+   tips:"焯水加盐和油是菜心翠绿的关键；最后那勺热油是白灼的灵魂。",
+   level:"replica", src:"家常做法"},
+  {cat:"yuecai", group:"清蒸白灼", name:"梅菜蒸肉饼", type:"蒸菜", diff:2, tea:"—",
+   items:[["猪肉糜","250g"],["梅干菜","40g"],["马蹄","3 个（可省）"],["生抽","1 勺"],["淀粉","1 小勺"],["糖","2g"],["香油","半勺"]],
+   steps:[
+     "梅干菜泡软洗净，挤干切碎；马蹄切细粒。",
+     "肉糜加生抽、淀粉、糖，顺一个方向搅上劲。",
+     "拌入梅干菜与马蹄，淋香油，压成肉饼。",
+     "水开后上锅，大火蒸 15 分钟即可。"
+   ],
+   tips:"梅干菜已带咸鲜，基本不用再加盐；加马蹄肉饼不发柴。",
+   level:"replica", src:"家常做法"},
+  {cat:"yuecai", group:"粤式小炒", name:"蚝油生菜", type:"小炒", diff:1, tea:"—",
+   items:[["生菜","2 棵"],["蒜","3 瓣"],["蚝油","1.5 勺"],["生抽","半勺"],["糖","2g"],["油","1 勺"]],
+   steps:[
+     "生菜洗净，对半剖开，沥干。",
+     "热锅 1 勺油，爆香蒜末。",
+     "下生菜大火快炒 30 秒到刚塌秧。",
+     "加蚝油、生抽、糖，翻匀即出锅。"
+   ],
+   tips:"生菜下锅到出锅不超过 1 分钟，久了发黄出水；蚝油已咸鲜，别再加盐。",
+   level:"replica", src:"家常做法"},
+  {cat:"yuecai", group:"粤式小炒", name:"豆豉鲮鱼油麦菜", type:"小炒", diff:2, tea:"—",
+   items:[["油麦菜","400g"],["豆豉鲮鱼罐头","半罐"],["蒜","3 瓣"],["油","1 勺"],["糖","2g（可省）"]],
+   steps:[
+     "油麦菜洗净切段，豆豉鲮鱼撕成小块。",
+     "热锅 1 勺油，爆香蒜片。",
+     "下豆豉鲮鱼（连罐头里的油和豆豉）炒香。",
+     "下油麦菜大火快炒 1 分钟，加糖翻匀即可。"
+   ],
+   tips:"用罐头里的豆豉油来炒菜最香，所以基本不用额外调味；鲮鱼罐头已咸，慎加盐。",
+   level:"replica", src:"家常做法"},
+  {cat:"yuecai", group:"粤式小炒", name:"芥兰炒牛肉", type:"小炒", diff:3, tea:"—",
+   items:[["牛里脊","200g"],["芥兰","300g"],["生抽","1 勺"],["蚝油","半勺"],["淀粉","1 小勺"],["蒜","2 瓣"],["姜","少许"],["糖","2g"],["油","1.5 勺"]],
+   steps:[
+     "牛肉逆纹切薄片，加生抽、淀粉、少许油抓匀腌 10 分钟。",
+     "芥兰去老叶削皮，斜刀切段，焯水 30 秒捞出。",
+     "热锅 1.5 勺油，下牛肉大火滑炒到七成熟盛出。",
+     "原锅爆香姜蒜，下芥兰大火翻炒。",
+     "倒回牛肉，加蚝油、糖，大火翻匀出锅。"
+   ],
+   tips:"牛肉逆纹切+上浆才嫩；芥兰先焯水去苦味，再大火快炒保脆。",
+   level:"replica", src:"家常做法"},
+  {cat:"yuecai", group:"粤式凉菜", name:"凉拌海蜇", type:"凉菜", diff:1, tea:"—",
+   items:[["即食海蜇丝","200g"],["黄瓜","1 根"],["蒜","3 瓣"],["生抽","1 勺"],["香醋","1 勺"],["香油","半勺"],["糖","3g"],["小米辣","1 个（可省）"]],
+   steps:[
+     "即食海蜇丝用清水冲洗、浸泡 10 分钟去咸味，沥干。",
+     "黄瓜切丝，蒜捣泥。",
+     "海蜇与黄瓜丝、蒜泥、小米辣混合。",
+     "加生抽、香醋、香油、糖拌匀即可。"
+   ],
+   tips:"海蜇务必泡去多余盐分再拌，否则齁咸；现拌现吃才脆。",
+   level:"replica", src:"家常做法"},
+  {cat:"yuecai", group:"粤式小炒", name:"西芹炒百合", type:"小炒", diff:2, tea:"—",
+   items:[["西芹","2 根"],["鲜百合","1 头"],["胡萝卜","半根"],["蒜","2 瓣"],["盐","2g"],["糖","1 小撮"],["油","1 勺"]],
+   steps:[
+     "西芹撕去老筋，斜刀切菱形片；百合掰瓣洗净；胡萝卜切片。",
+     "西芹与胡萝卜焯水 30 秒，捞出。",
+     "热锅 1 勺油，爆香蒜片。",
+     "下西芹、胡萝卜大火炒 1 分钟，再下百合炒 30 秒。",
+     "加盐、一小撮糖翻匀即出锅。"
+   ],
+   tips:"百合最后下、炒 30 秒就够，久了发黑发面；一小撮糖能提蔬菜的清甜。",
+   level:"replica", src:"家常做法"},
+
+  /* ---------- 江西小炒 · 经典小炒 / 海鲜小炒（1-3星补充） ---------- */
+  {cat:"jiangxi", group:"经典小炒", name:"蒜蓉空心菜", type:"小炒", diff:1, tea:"—",
+   items:[["空心菜","400g"],["蒜","5 瓣"],["盐","2g"],["油","1 勺"],["腐乳汁","半勺（可省）"]],
+   steps:[
+     "空心菜洗净，摘成段，梗叶分开。",
+     "热锅 1 勺油，下蒜末爆香。",
+     "先下菜梗大火炒 30 秒，再下菜叶。",
+     "加盐（可淋半勺腐乳汁），大火翻匀即出锅。"
+   ],
+   tips:"梗叶分开下锅，受热均匀；广式加一点腐乳汁，是空心菜的灵魂。",
+   level:"replica", src:"家常做法"},
+  {cat:"jiangxi", group:"经典小炒", name:"酸辣藕丁", type:"小炒", diff:1, tea:"—",
+   items:[["莲藕","1 节"],["干辣椒","2 个"],["蒜","2 瓣"],["香醋","1 勺"],["生抽","半勺"],["糖","2g"],["盐","2g"],["油","1 勺"]],
+   steps:[
+     "莲藕去皮切丁，泡清水去淀粉，沥干。",
+     "热锅 1 勺油，爆香干辣椒与蒜。",
+     "下藕丁大火翻炒 2 分钟。",
+     "加香醋、生抽、糖、盐，翻匀即可出锅。"
+   ],
+   tips:"藕丁泡水去淀粉才脆不粘锅；想更脆可先把藕丁焯水 30 秒再炒。",
+   level:"replica", src:"家常做法"},
+  {cat:"jiangxi", group:"经典小炒", name:"木耳炒鸡蛋", type:"小炒", diff:1, tea:"—",
+   items:[["干木耳","15g"],["鸡蛋","3 个"],["小葱","2 根"],["盐","2g"],["油","1.5 勺"]],
+   steps:[
+     "木耳泡发洗净，撕小朵；鸡蛋打散。",
+     "热锅 1 勺油，把鸡蛋炒成大块，盛出。",
+     "原锅补少许油，下木耳大火翻炒 1 分钟。",
+     "倒回鸡蛋，加盐、葱花翻匀即可。"
+   ],
+   tips:"木耳炒的时候会噼啪溅，火别太大；鸡蛋先盛出再回锅更嫩。",
+   level:"replica", src:"家常做法"},
+  {cat:"jiangxi", group:"经典小炒", name:"丝瓜炒蛋", type:"小炒", diff:1, tea:"—",
+   items:[["丝瓜","1 根"],["鸡蛋","3 个"],["蒜","2 瓣"],["盐","2g"],["油","1.5 勺"]],
+   steps:[
+     "丝瓜去皮切滚刀块，泡淡盐水防黑。",
+     "鸡蛋炒成大块盛出。",
+     "热锅少许油，爆香蒜末，下丝瓜大火炒软。",
+     "倒回鸡蛋，加盐翻匀即可。"
+   ],
+   tips:"丝瓜泡淡盐水不发黑；炒到微微出水最鲜甜，别炒太烂。",
+   level:"replica", src:"家常做法"},
+  {cat:"jiangxi", group:"经典小炒", name:"酸辣大白菜", type:"小炒", diff:1, tea:"—",
+   items:[["大白菜","半棵"],["干辣椒","3 个"],["蒜","3 瓣"],["香醋","1.5 勺"],["生抽","半勺"],["糖","2g"],["盐","2g"],["油","1 勺"]],
+   steps:[
+     "大白菜帮叶分开，帮切片、叶撕块。",
+     "热锅 1 勺油，爆香干辣椒与蒜。",
+     "先下菜帮大火炒 1 分钟，再下菜叶。",
+     "沿锅边淋香醋，加生抽、糖、盐翻匀即出锅。"
+   ],
+   tips:"菜帮难熟先下锅；醋高温沿锅边淋，酸辣味才足。",
+   level:"replica", src:"家常做法"},
+  {cat:"jiangxi", group:"经典小炒", name:"酸菜炒粉皮", type:"小炒", diff:2, tea:"—",
+   items:[["酸菜","150g"],["红薯粉皮","100g"],["猪肉末","60g（可省）"],["蒜","2 瓣"],["小米辣","2 个"],["生抽","1 勺"],["糖","2g"],["油","1 勺"]],
+   steps:[
+     "粉皮温水泡软，酸菜洗净挤干切碎。",
+     "热锅 1 勺油，下肉末炒散。",
+     "加蒜、小米辣、酸菜炒香。",
+     "下粉皮，加生抽、糖与少许水，翻炒到粉皮透亮吸味即可。"
+   ],
+   tips:"酸菜先挤干再炒香，更出味；粉皮吸水快，水要一次加够。",
+   level:"replica", src:"家常做法"},
+  {cat:"jiangxi", group:"经典小炒", name:"干锅花菜", type:"小炒", diff:3, tea:"—",
+   items:[["花菜","400g"],["五花肉片","80g"],["干辣椒","3 个"],["蒜","3 瓣"],["豆瓣酱","半勺"],["生抽","1 勺"],["糖","2g"],["油","1.5 勺"]],
+   steps:[
+     "花菜掰小朵，盐水泡 10 分钟，彻底沥干。",
+     "热锅 1.5 勺油，下花菜中火煸炒到边缘微焦，盛出。",
+     "原锅下五花肉片煸出油，加干辣椒、蒜、豆瓣酱炒香。",
+     "倒回花菜，加生抽、糖，大火翻炒入味即可。"
+   ],
+   tips:"花菜先煸到微焦是干锅的香口关键；豆瓣酱已咸，盐基本不用加。",
+   level:"replica", src:"家常做法"},
+  {cat:"jiangxi", group:"海鲜小炒", name:"葱姜炒蛏子", type:"小炒", diff:2, tea:"—",
+   items:[["蛏子","500g"],["姜","4 片"],["葱","2 根"],["蒜","3 瓣"],["料酒","1 勺"],["生抽","1 勺"],["油","1.5 勺"]],
+   steps:[
+     "蛏子泡淡盐水吐沙 1 小时，刷洗干净。",
+     "热锅 1.5 勺油，爆香姜片、蒜。",
+     "下蛏子大火翻炒，淋料酒。",
+     "炒到蛏子全部开口，加生抽、葱段翻匀即出锅。"
+   ],
+   tips:"蛏子吐沙要彻底；开口即熟，炒久了肉老缩水。没开口的要扔掉。",
    level:"replica", src:"家常做法"}
 ];
 
@@ -3260,7 +3583,7 @@ function groupsOfCat(catId){
   return seen;
 }
 function countOf(catId, group){
-  return DATA.filter(d=>catOf(d)===catId && (!group || groupOf(d)===group) && !dislikeSet.has(keyOf(d))).length;
+  return DATA.filter(d=>catOf(d)===catId && (!group || groupOf(d)===group) && visibleRecipes(d)).length;
 }
 
 /* ================= 工具 ================= */
@@ -3275,7 +3598,7 @@ const sidebar = document.getElementById("sidebar");
 const drawerMask = document.getElementById("drawerMask");
 
 /* ================= 视图路由（含返回栈） ================= */
-const VIEW_IDS = ["home","channel","group","search","toolbox","brands","favorites","trash","diff"];
+const VIEW_IDS = ["home","channel","group","search","toolbox","brands","favorites","trash","diff","done"];
 let currentView = "home", returnView = "home";
 let currentCat = null, currentGroup = null, currentChTab = "all";
 let navStack = [];
@@ -3320,6 +3643,7 @@ function renderNav(){
     `<div class="nav-group">导航</div>
      <a class="nav-item active" data-v="home">首页</a>
      <a class="nav-item" data-v="favorites">我的收藏</a>
+     <a class="nav-item" data-v="done">已做过</a>
      <a class="nav-item" data-v="trash">垃圾箱</a>` +
     ready.map(c=>{
       const groups = groupsOfCat(c.id);
@@ -3345,6 +3669,7 @@ function renderNav(){
       else {
         show(n.dataset.v);
         if(n.dataset.v === "favorites") renderFavList();
+        if(n.dataset.v === "done") renderDoneList();
         if(n.dataset.v === "trash") renderTrashList();
       }
     });
@@ -3468,7 +3793,7 @@ function setChTab(t){
 }
 function renderChAll(){
   const box = document.getElementById("chAll");
-  const list = DATA.filter(d => catOf(d) === currentCat && !dislikeSet.has(keyOf(d)));
+  const list = DATA.filter(d => catOf(d) === currentCat && visibleRecipes(d));
   if(!list.length){
     box.innerHTML = `<div class="empty"><b>暂无配方</b></div>`;
     return;
@@ -3504,7 +3829,7 @@ function openDiff(levelId){
   show("diff");
 }
 function diffList(levelId){
-  return DATA.filter(d => d3(d.diff) === levelId && !dislikeSet.has(keyOf(d)));
+  return DATA.filter(d => d3(d.diff) === levelId && visibleRecipes(d));
 }
 function countDiff(levelId){ return diffList(levelId).length; }
 function setDiffTab(t){
@@ -3590,6 +3915,7 @@ function recipeHTML(d, showGroup){
       <div class="body-actions">
         <button class="ask-ai" data-key="${esc(key)}">问 AI 做这道</button>
         <button class="dislike" data-key="${esc(key)}">不好吃</button>
+        <button class="done" data-key="${esc(key)}">已做过</button>
       </div>
     </div>
   </div>`;
@@ -3598,13 +3924,14 @@ function bindRecipeToggles(root){
   root.querySelectorAll(".recipe-head").forEach(h=>{
     h.addEventListener("click",()=>h.parentElement.classList.toggle("open"));
   });
+  refreshStars(); refreshDislikes(); refreshCooked();
 }
 /* ================= 分组页（通用） ================= */
 function openGroup(catId, group){
   const cat = CATEGORIES.find(c=>c.id===catId);
   if(!cat) return;
   currentCat = catId; currentGroup = group;
-  const list = DATA.filter(d=>catOf(d)===catId && groupOf(d)===group && !dislikeSet.has(keyOf(d)));
+  const list = DATA.filter(d=>catOf(d)===catId && groupOf(d)===group && visibleRecipes(d));
   const m = GROUP_META[group]||{};
   document.getElementById("grName").textContent = group;
   document.getElementById("grDesc").textContent = (m.desc||"") + (m.desc?" · ":"") + "共 " + list.length + " 条，点击逐条展开";
@@ -3660,7 +3987,7 @@ function recipeMatch(d, words){
 function renderSearch(q){
   const words = q.toLowerCase().split(/\s+/).filter(Boolean);
 
-  const rec = DATA.filter(d=>recipeMatch(d,words) && !dislikeSet.has(keyOf(d)));
+  const rec = DATA.filter(d=>recipeMatch(d,words) && visibleRecipes(d));
 
   const ings = [];
   BRANDS_DATA.forEach(c=>c.rows.forEach(r=>{
@@ -3858,7 +4185,10 @@ uChip.addEventListener("click", async ()=>{
 /* ---------- 收藏 ---------- */
 let favSet = new Set();
 let dislikeSet = new Set();
+let doneSet = new Set();
+let hideDone = localStorage.getItem("hideDone") === "1";
 const keyOf = d => catOf(d) + "|" + groupOf(d) + "|" + d.name;
+const visibleRecipes = d => visibleRecipes(d) && (!hideDone || !doneSet.has(keyOf(d)));
 const recipeByKey = k => DATA.find(d => keyOf(d) === k);
 
 async function loadFavs(){
@@ -3886,6 +4216,20 @@ function refreshDislikes(){
   document.querySelectorAll(".dislike").forEach(s=>{
     const on = dislikeSet.has(s.dataset.key);
     s.classList.toggle("on", on);
+  });
+}
+async function loadCooked(){
+  if(!cloud) return;
+  const { data: session } = await cloud.auth.getSession();
+  if(!session){ doneSet = new Set(); return; }
+  const { data, error } = await cloud.database.from("cooked").select("recipe_key").limit(500);
+  if(!error && data) doneSet = new Set(data.map(r => r.recipe_key));
+}
+function refreshCooked(){
+  document.querySelectorAll(".done").forEach(s=>{
+    const on = doneSet.has(s.dataset.key);
+    s.classList.toggle("on", on);
+    s.textContent = on ? "✓ 已做过" : "已做过";
   });
 }
 async function toggleFav(key){
@@ -3994,6 +4338,89 @@ async function renderTrashList(){
     <span class="rt">${esc(r.group_name || "")}</span>
     <button class="unfav" data-key="${esc(r.recipe_key)}">恢复显示</button>
   </div></div>`).join("");
+}
+async function toggleDone(key){
+  if(!cloudReady()) return;
+  const { data: session } = await cloud.auth.getSession();
+  if(!session){ openLogin(); return; }
+  const d = recipeByKey(key);
+  if(!d) return;
+  if(doneSet.has(key)){
+    const { error } = await cloud.database.from("cooked").delete().eq("recipe_key", key).select();
+    if(error){ toast("操作失败，请重试"); return; }
+    doneSet.delete(key); toast("已取消「已做过」标记");
+  } else {
+    const { error } = await cloud.database.from("cooked").insert({
+      recipe_key: key,
+      cat: catOf(d),
+      group_name: groupOf(d),
+      recipe_name: d.name,
+      owner_name: (session.user && session.user.name) || null
+    }).select();
+    if(error){
+      if(error.code === "23505"){ doneSet.add(key); }
+      else { toast("标记失败：" + (error.message || "请重试")); return; }
+    } else { doneSet.add(key); toast("已标记为「已做过」"); }
+  }
+  refreshCooked();
+  if(currentView === "done") renderDoneList();
+  if(hideDone){
+    if(currentView === "group") openGroup(currentCat, currentGroup);
+    if(currentView === "channel" && currentChTab === "all") renderChAll();
+    if(currentView === "diff") setDiffTab(currentDiffTab);
+    if(currentView === "search" && qEl.value.trim()) renderSearch(qEl.value.trim());
+  }
+}
+async function renderDoneList(){
+  const box = document.getElementById("doneList");
+  if(!cloud){ box.innerHTML = `<div class="empty"><b>云服务未加载</b>请检查网络后刷新页面。</div>`; return; }
+  const { data: session } = await cloud.auth.getSession();
+  if(!session){
+    box.innerHTML = `<div class="empty"><b>登录后查看已做过</b>手机号验证码登录，记录云端同步。<br><br><button class="primary-btn" id="doneLoginBtn" style="max-width:240px;margin:0 auto;">手机号登录</button></div>`;
+    const b = document.getElementById("doneLoginBtn"); if(b) b.addEventListener("click", openLogin);
+    return;
+  }
+  box.innerHTML = `<div class="empty">加载中…</div>`;
+  const { data, error } = await cloud.database.from("cooked")
+    .select("recipe_key, recipe_name, group_name, cat, created_at")
+    .order("created_at", { ascending: false }).limit(300);
+  if(error){ box.innerHTML = `<div class="empty"><b>加载失败</b>请稍后重试。</div>`; return; }
+  const rows = data || [];
+  if(!rows.length){ box.innerHTML = `<div class="empty"><b>还没有标记</b>在任意配方详情点「已做过」即可记录。</div>`; return; }
+  const groups = {1:[],2:[],3:[],4:[],5:[]}; const unk = [];
+  rows.forEach(r=>{ const d = recipeByKey(r.recipe_key); if(d) groups[d3(d.diff)].push(r); else unk.push(r); });
+  let html = "";
+  DIFF_LEVELS.forEach(l=>{
+    const list = groups[l.id]; if(!list.length) return;
+    const c = DIFF_TAG[l.id].c;
+    html += `<div class="sec-title" style="color:${c};margin-top:18px;">${esc(l.t)} · ${esc(l.s)}（${list.length}）</div>` +
+      list.map(r=>`<div class="recipe"><div class="recipe-head favrow" data-key="${esc(r.recipe_key)}">
+        <span class="rn">${esc(r.recipe_name)}</span>
+        <span class="rt">${esc(r.group_name || "")}</span>
+        <button class="unfav" data-key="${esc(r.recipe_key)}">移除</button>
+      </div></div>`).join("");
+  });
+  if(unk.length){
+    html += `<div class="sec-title" style="margin-top:18px;">其他（${unk.length}）</div>` +
+      unk.map(r=>`<div class="recipe"><div class="recipe-head favrow" data-key="${esc(r.recipe_key)}">
+        <span class="rn">${esc(r.recipe_name)}</span>
+        <span class="rt">${esc(r.group_name || "")}</span>
+        <button class="unfav" data-key="${esc(r.recipe_key)}">移除</button>
+      </div></div>`).join("");
+  }
+  box.innerHTML = html;
+}
+function setHideDone(v){
+  hideDone = v;
+  localStorage.setItem("hideDone", hideDone ? "1" : "0");
+  document.querySelectorAll(".done-toggle").forEach(b=>{
+    b.textContent = "已做过 · " + (hideDone ? "已隐藏" : "显示中");
+    b.classList.toggle("on", hideDone);
+  });
+  if(currentView === "channel") openChannel(currentCat);
+  else if(currentView === "group") openGroup(currentCat, currentGroup);
+  else if(currentView === "diff") setDiffTab(currentDiffTab);
+  else if(currentView === "search" && qEl.value.trim()) renderSearch(qEl.value.trim());
 }
 
 /* ---------- AI 问答 ---------- */
@@ -4128,10 +4555,14 @@ document.addEventListener("click", async e=>{
   if(star){ e.stopPropagation(); toggleFav(star.dataset.key); return; }
   const dislike = e.target.closest(".dislike");
   if(dislike){ e.stopPropagation(); toggleDislike(dislike.dataset.key); return; }
+  const done = e.target.closest(".done");
+  if(done){ e.stopPropagation(); toggleDone(done.dataset.key); return; }
+  const dtag = e.target.closest("[data-donetoggle]");
+  if(dtag){ e.stopPropagation(); setHideDone(!hideDone); return; }
   const ai = e.target.closest(".ask-ai");
   if(ai){ e.stopPropagation(); const d = recipeByKey(ai.dataset.key); if(d){ requireLogin().then(ok=>{ if(ok) openChat(d); }); } return; }
   const unf = e.target.closest(".unfav");
-  if(unf){ e.stopPropagation(); if(currentView === "trash") toggleDislike(unf.dataset.key); else toggleFav(unf.dataset.key); return; }
+  if(unf){ e.stopPropagation(); if(currentView === "trash") toggleDislike(unf.dataset.key); else if(currentView === "done") toggleDone(unf.dataset.key); else toggleFav(unf.dataset.key); return; }
   const row = e.target.closest(".favrow");
   if(row){
     const d = recipeByKey(row.dataset.key);
@@ -4235,6 +4666,9 @@ async function continueNormalStartup(){
   refreshStars();
   await loadDislikes();
   refreshDislikes();
+  await loadCooked();
+  refreshCooked();
+  setHideDone(hideDone);
 }
 </script>
 </body>
