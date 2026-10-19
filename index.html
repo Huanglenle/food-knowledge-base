@@ -4188,7 +4188,7 @@ let dislikeSet = new Set();
 let doneSet = new Set();
 let hideDone = localStorage.getItem("hideDone") === "1";
 const keyOf = d => catOf(d) + "|" + groupOf(d) + "|" + d.name;
-const visibleRecipes = d => visibleRecipes(d) && (!hideDone || !doneSet.has(keyOf(d)));
+const visibleRecipes = d => !dislikeSet.has(keyOf(d)) && (!hideDone || !doneSet.has(keyOf(d)));
 const recipeByKey = k => DATA.find(d => keyOf(d) === k);
 
 async function loadFavs(){
