@@ -123,6 +123,7 @@
 
   /* ---------- 卡片 ---------- */
   .sec-title{font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.06em;margin:26px 0 10px;}
+  .sec-sub{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.05em;margin:14px 2px 8px;}
   .sec-title:first-of-type{margin-top:0;}
   .sec-desc{font-size:12px;color:var(--muted);margin:-4px 0 12px;line-height:1.6;}
   .kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;}
@@ -370,7 +371,7 @@
       <div class="sec-title">按难易程度学配方</div>
       <div class="kgrid" id="homeDiff"></div>
       <div class="sec-title">按美食分类选配方</div>
-      <div class="kgrid" id="homeCats"></div>
+      <div id="homeCats"></div>
     </section>
 
     <!-- 难度等级页（按难易程度学配方） -->
@@ -651,7 +652,7 @@ function cloudReady(){
  *    - 没写 cat 时默认 "drinks"；新 group 名会自动出现在该分类的频道页和左侧导航，无需改别的。
  *    - level 可选："official" 官方公开 / "sop" 门店SOP / "replica" 网络复刻；special:true 置顶高亮。
  * 2. 给分组写简介（可选）：GROUP_META["分组名"] = { desc:"..." }。
- * 3. 开新分类：CATEGORIES 里把对应项 ready 改 true，补 groupLabel（分组区标题，如"经典调酒"）。
+ * 3. 开新分类：CATEGORIES 里把对应项 ready 改 true，补 groupLabel（分组区标题，如"经典调酒"）；并把 id 归入 CAT_CLUSTERS 对应簇（首页与侧边栏按簇分组展示）。
  *    - 可选：PRIMERS["分类id"] = [{q,a}...]（常识科普，作为 Tab 面板显示在一级分组页/频道页，二级分组页与配方详情不放，无则不显示）；
  *    - 可选：分类加 tools:[{id,t,d}] 并在 PAGE_RENDERERS 注册一个工具页渲染函数。
  * 4. 加原料品牌：BRANDS_DATA 对应面板 rows.push({item, brand, note, use, kw})。
@@ -675,6 +676,13 @@ const CATEGORIES = [
   {id:"appliance", t:"电器类", c:"#5b8fb0", d:"空气炸锅 · 蒸笼 · 烤箱 的 1-2 人快手菜", ready:true, groupLabel:"电器菜谱"},
   {id:"filling", t:"馅料", c:"#8a7b52", d:"饺子 · 馄饨 · 包子 · 馅饼锅贴 · 汤圆 的馅心配比与打水技巧", ready:true, groupLabel:"馅料配方"},
   {id:"snack", t:"小吃面食", c:"#c77f4a", d:"快手小吃 · 面条米粉 · 简易面点 · 一星新手友好", ready:true, groupLabel:"小吃面食"}
+];
+
+/* ================= 分类簇（首页与侧边栏按簇分组展示） ================= */
+const CAT_CLUSTERS = [
+  { t:"茶饮甜点", cats:["drinks","cocktail","healthtea","dessert"] },
+  { t:"家常菜谱", cats:["yuecai","chuancai","jiangxi"] },
+  { t:"厨房助手", cats:["sauce","appliance","filling","snack"] },
 ];
 
 /* ================= 难度等级（按难易程度学配方） ================= */
@@ -3879,25 +3887,25 @@ const PRIMERS = {
 /* ================= 每周菜单（本周/下周 · 1-2 人 · 当季食材 · 每周五自动滚动） ================= */
 const WEEK_MENUS = [
   { id:"2026-W43", t:"本周菜单", range:"10.19 – 10.25", season:"深秋",
-    note:"深秋时令：莲藕、白萝卜、菜心、油麦菜、鲈鱼、虾仁、雪梨。1–2 人采购参考：鲈鱼 1 条约 400g、排骨 300g、肉馅 250g、虾仁 150g、绿叶菜各 300g；周五酸菜鱼买草鱼约 800g。",
+    note:"深秋时令：莲藕、白萝卜、菜心、油麦菜、鲈鱼、虾仁、蛏子、雪梨。1–2 人采购参考：鲈鱼 1 条约 400g、排骨 300g、肉馅 250g、虾仁 150g、蛏子 300g、绿叶菜各 300g；周五酸菜鱼买草鱼约 800g。",
     days:[
       { d:"周一", date:"10.19", dishes:["粤式清蒸鲈鱼","白灼菜心"] },
       { d:"周二", date:"10.20", dishes:["梅菜蒸肉饼","蒜蓉炒时蔬"] },
       { d:"周三", date:"10.21", dishes:["南昌排骨藕汤（瓦罐煨）","豆豉鲮鱼油麦菜"] },
       { d:"周四", date:"10.22", dishes:["滑蛋虾仁","番茄炒蛋"] },
       { d:"周五", date:"10.23", dishes:["酸菜鱼","醋溜白菜"] },
-      { d:"周六", date:"10.24", dishes:["客家酿豆腐","冬瓜花蛤瓦罐汤"] },
+      { d:"周六", date:"10.24", dishes:["葱姜炒蛏子","莲子百合银耳瓦罐甜汤"] },
       { d:"周日", date:"10.25", dishes:["三杯鸡（少油版）","冰糖炖雪梨"] },
     ]},
   { id:"2026-W44", t:"下周菜单", range:"10.26 – 11.1", season:"深秋",
-    note:"深秋时令：白萝卜、花菜、大白菜、梭子蟹、虾、秋刀鱼、老鸭。1–2 人采购参考：梭子蟹 1–2 只约 400g、猪脚 300g、虾 300g、秋刀鱼 2 条、老鸭半只（可分两天吃）。",
+    note:"深秋时令：白萝卜、花菜、大白菜、梭子蟹、虾、秋刀鱼、土鸡。1–2 人采购参考：梭子蟹 1–2 只约 400g、土鸡半只（可分两天吃）、基围虾 300g、龙口粉丝 1 把、秋刀鱼 2 条。",
     days:[
       { d:"周一", date:"10.26", dishes:["香煎鲈鱼","清炒白萝卜丝"] },
-      { d:"周二", date:"10.27", dishes:["黄豆猪脚瓦罐汤","干锅花菜"] },
+      { d:"周二", date:"10.27", dishes:["高山金钱香菇炖土鸡汤","干锅花菜"] },
       { d:"周三", date:"10.28", dishes:["梭子蟹炒年糕（甜辣版）","凉拌木耳"] },
       { d:"周四", date:"10.29", dishes:["青椒肉丝","酸辣土豆丝"] },
       { d:"周五", date:"10.30", dishes:["干锅香辣虾","拍黄瓜"] },
-      { d:"周六", date:"10.31", dishes:["茶树菇老鸭瓦罐汤","蒸水蛋"] },
+      { d:"周六", date:"10.31", dishes:["赣式蒜蓉粉丝蒸虾","蒸水蛋"] },
       { d:"周日", date:"11.1", dishes:["日式烤秋刀鱼","烤时蔬杂烩"] },
     ]},
 ];
@@ -4047,19 +4055,22 @@ function renderNav(){
      <a class="nav-item" data-v="favorites">我的收藏</a>
      <a class="nav-item" data-v="done">已做过</a>
      <a class="nav-item" data-v="trash">垃圾箱</a>` +
-    ready.map(c=>{
-      const groups = groupsOfCat(c.id);
-      let html = `<div class="nav-group">${esc(c.t)}</div>
-        <a class="nav-item" data-ch="${c.id}">${esc(c.t)}首页</a>`;
-      if(groups.length){
-        html += `<div class="nav-sub">${esc(c.groupLabel||"配方")}</div>` +
-          groups.map(g=>`<a class="nav-item indent" data-ch="${c.id}" data-group="${esc(g)}">${esc(g)}<span class="n">${countOf(c.id,g)}</span></a>`).join("");
-      }
-      if(c.tools && c.tools.length){
-        html += `<div class="nav-sub">工具</div>` +
-          c.tools.map(t=>`<a class="nav-item indent" data-v="${t.id}">${esc(t.t)}</a>`).join("");
-      }
-      return html;
+    CAT_CLUSTERS.map(cl=>{
+      const cats = cl.cats.map(id=>ready.find(c=>c.id===id)).filter(Boolean);
+      if(!cats.length) return "";
+      return `<div class="nav-group">${esc(cl.t)}</div>` + cats.map(c=>{
+        const groups = groupsOfCat(c.id);
+        let html = `<a class="nav-item" data-ch="${c.id}">${esc(c.t)}首页</a>`;
+        if(groups.length){
+          html += `<div class="nav-sub">${esc(c.groupLabel||"配方")}</div>` +
+            groups.map(g=>`<a class="nav-item indent" data-ch="${c.id}" data-group="${esc(g)}">${esc(g)}<span class="n">${countOf(c.id,g)}</span></a>`).join("");
+        }
+        if(c.tools && c.tools.length){
+          html += `<div class="nav-sub">工具</div>` +
+            c.tools.map(t=>`<a class="nav-item indent" data-v="${t.id}">${esc(t.t)}</a>`).join("");
+        }
+        return html;
+      }).join("");
     }).join("") +
     (soon.length ? `<div class="nav-group">更多分类</div>` +
       soon.map(c=>`<a class="nav-item soon" data-soon="${esc(c.t)}">${esc(c.t)}<span class="n">筹备中</span></a>`).join("") : "");
@@ -4103,14 +4114,17 @@ function renderHome(){
     const card = e.target.closest(".kcard");
     if(card && card.dataset.diff) openDiff(parseInt(card.dataset.diff,10));
   });
-  document.getElementById("homeCats").innerHTML = CATEGORIES.map(c=>{
-    const n = c.ready
-      ? groupsOfCat(c.id).length + " 分组 · " + countOf(c.id) + " 条"
-      : "筹备中";
-    return `<div class="kcard cat${c.ready?"":" soon"}" data-cat="${c.id}" data-ready="${c.ready?1:0}" data-t="${esc(c.t)}">
-      <div class="t"><span style="display:flex;align-items:center;min-width:0;"><span class="sq" style="--c:${c.c}">${esc(c.t[0])}</span>${esc(c.t)}</span><span class="n">${n}</span></div>
-      <div class="d">${esc(c.d)}</div>
-    </div>`;
+  document.getElementById("homeCats").innerHTML = CAT_CLUSTERS.map(cl=>{
+    const cards = cl.cats.map(id=>CATEGORIES.find(c=>c.id===id)).filter(Boolean).map(c=>{
+      const n = c.ready
+        ? groupsOfCat(c.id).length + " 分组 · " + countOf(c.id) + " 条"
+        : "筹备中";
+      return `<div class="kcard cat${c.ready?"":" soon"}" data-cat="${c.id}" data-ready="${c.ready?1:0}" data-t="${esc(c.t)}">
+        <div class="t"><span style="display:flex;align-items:center;min-width:0;"><span class="sq" style="--c:${c.c}">${esc(c.t[0])}</span>${esc(c.t)}</span><span class="n">${n}</span></div>
+        <div class="d">${esc(c.d)}</div>
+      </div>`;
+    }).join("");
+    return `<div class="sec-sub">${esc(cl.t)}</div><div class="kgrid">${cards}</div>`;
   }).join("");
   document.getElementById("homeCats").addEventListener("click",e=>{
     const card = e.target.closest(".kcard");
