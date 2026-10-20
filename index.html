@@ -278,6 +278,10 @@
 .done.on{color:#2e7d46;border-color:#a9d3b6;background:#e6f4ea;}
 .done-toggle{margin-left:auto;cursor:pointer;font-size:11.5px;font-weight:600;color:var(--muted);border:1px solid var(--line-strong);background:var(--card);border-radius:999px;padding:5px 12px;font-family:inherit;line-height:1;user-select:none;-webkit-user-select:none;}
 .done-toggle.on{color:#2e7d46;border-color:#a9d3b6;background:#e6f4ea;}
+.sortbar{display:flex;justify-content:flex-end;gap:8px;margin:-10px 0 14px;flex-wrap:wrap;}
+.sort-toggle{cursor:pointer;font-size:11.5px;font-weight:600;color:var(--muted);border:1px solid var(--line-strong);background:var(--card);border-radius:999px;padding:5px 12px;font-family:inherit;line-height:1;user-select:none;-webkit-user-select:none;}
+.sort-toggle:hover{color:var(--ink-soft);}
+.sort-toggle.act{color:var(--accent-dark);border-color:var(--accent);background:var(--accent-soft);}
   .body-actions{margin-top:12px;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;}
   .ask-ai{border:1px solid var(--line-strong);background:var(--card);border-radius:6px;font-size:12px;font-weight:600;color:var(--accent-dark);padding:5px 12px;cursor:pointer;font-family:inherit;}
   .ask-ai:hover{border-color:var(--accent);}
@@ -383,6 +387,7 @@
         <button class="done-toggle" data-donetoggle>已做过 · 显示中</button>
       </div>
       <p class="page-desc" id="dfDesc"></p>
+      <div class="sortbar"><button class="sort-toggle" data-sorttoggle>排序 · 默认</button></div>
       <div id="dfPrimer" hidden></div>
       <div class="tabs" id="dfTabs" hidden></div>
       <div id="dfAll"></div>
@@ -398,6 +403,7 @@
         <button class="done-toggle" data-donetoggle>已做过 · 显示中</button>
       </div>
       <p class="page-desc" id="chDesc"></p>
+      <div class="sortbar"><button class="sort-toggle" data-sorttoggle>排序 · 默认</button></div>
       <div class="tabs" id="chTabs" hidden></div>
       <div id="chPrimer" hidden></div>
       <div class="kgrid" id="chGroups"></div>
@@ -413,6 +419,7 @@
         <button class="done-toggle" data-donetoggle>已做过 · 显示中</button>
       </div>
       <p class="page-desc" id="grDesc"></p>
+      <div class="sortbar"><button class="sort-toggle" data-sorttoggle>排序 · 默认</button></div>
       <div class="page-actions">
         <button id="expandAll">全部展开</button>
         <button id="collapseAll">全部收起</button>
@@ -427,6 +434,7 @@
         <h1 class="page-title">搜索结果</h1>
       </div>
       <p class="page-desc" id="sStats"></p>
+      <div class="sortbar"><button class="sort-toggle" data-sorttoggle>排序 · 默认</button></div>
       <div id="searchOut"></div>
     </section>
 
@@ -437,6 +445,7 @@
         <h1 class="page-title">我的收藏</h1>
       </div>
       <p class="page-desc">星标的配方会出现在这里，云端同步。</p>
+      <div class="sortbar"><button class="sort-toggle" data-sorttoggle>排序 · 默认</button></div>
       <div id="favList"></div>
     </section>
 
@@ -457,6 +466,7 @@
         <h1 class="page-title">已做过</h1>
       </div>
       <p class="page-desc">你标记为「已做过」的配方，云端同步，按难易程度归类。</p>
+      <div class="sortbar"><button class="sort-toggle" data-sorttoggle>排序 · 默认</button></div>
       <div id="doneList"></div>
     </section>
 
@@ -4473,7 +4483,7 @@ function setChTab(t){
 }
 function renderChAll(){
   const box = document.getElementById("chAll");
-  const list = DATA.filter(d => catOf(d) === currentCat && visibleRecipes(d));
+  const list = sortRecipes(DATA.filter(d => catOf(d) === currentCat && visibleRecipes(d)));
   if(!list.length){
     box.innerHTML = `<div class="empty"><b>暂无配方</b></div>`;
     return;
@@ -4523,7 +4533,7 @@ function setDiffTab(t){
 }
 function renderDiffAll(){
   const box = document.getElementById("dfAll");
-  const list = diffList(currentDiff);
+  const list = sortRecipes(diffList(currentDiff));
   if(!list.length){ box.innerHTML = `<div class="empty"><b>暂无配方</b></div>`; return; }
   box.innerHTML = `<p class="page-desc">共 ${list.length} 条配方 · 点击展开查看</p>` + list.map(d=>recipeHTML(d,true)).join("");
   bindRecipeToggles(box);
@@ -4547,7 +4557,7 @@ function renderDiffCards(mode){
 }
 function renderDiffList(mode, key){
   currentDiffFilter = {mode, key};
-  const list = diffList(currentDiff).filter(d=> mode==="way" ? wayOf(d)===key : catOf(d)===key);
+  const list = sortRecipes(diffList(currentDiff).filter(d=> mode==="way" ? wayOf(d)===key : catOf(d)===key));
   const label = mode==="way" ? key : (CATEGORIES.find(c=>c.id===key)||{t:key}).t;
   const box = document.getElementById("dfList");
   document.getElementById("dfCards").hidden = true;
@@ -4646,7 +4656,7 @@ function openGroup(catId, group){
   const cat = CATEGORIES.find(c=>c.id===catId);
   if(!cat) return;
   currentCat = catId; currentGroup = group;
-  const list = DATA.filter(d=>catOf(d)===catId && groupOf(d)===group && visibleRecipes(d));
+  const list = sortRecipes(DATA.filter(d=>catOf(d)===catId && groupOf(d)===group && visibleRecipes(d)));
   const m = GROUP_META[group]||{};
   document.getElementById("grName").textContent = group;
   document.getElementById("grDesc").textContent = (m.desc||"") + (m.desc?" · ":"") + "共 " + list.length + " 条，点击逐条展开";
@@ -4702,7 +4712,7 @@ function recipeMatch(d, words){
 function renderSearch(q){
   const words = q.toLowerCase().split(/\s+/).filter(Boolean);
 
-  const rec = DATA.filter(d=>recipeMatch(d,words) && visibleRecipes(d));
+  const rec = sortRecipes(DATA.filter(d=>recipeMatch(d,words) && visibleRecipes(d)));
 
   const ings = [];
   BRANDS_DATA.forEach(c=>c.rows.forEach(r=>{
@@ -4750,7 +4760,6 @@ function renderSearch(q){
   const out = document.getElementById("searchOut");
   out.innerHTML = html;
   bindRecipeToggles(out);
-  bindDislikeLongPress(out);
   out.querySelectorAll(".hit[data-v]").forEach(hEl=>{
     hEl.addEventListener("click",()=>show(hEl.dataset.v));
   });
@@ -4904,6 +4913,65 @@ let doneSet = new Set();
 let hideDone = localStorage.getItem("hideDone") === "1";
 const keyOf = d => catOf(d) + "|" + groupOf(d) + "|" + d.name;
 const visibleRecipes = d => !dislikeSet.has(keyOf(d)) && (!hideDone || !doneSet.has(keyOf(d)));
+
+/* ================= 列表排序（难度 / 名称） ================= */
+const SORT_MODES = [
+  {id:"default", label:"排序 · 默认"},
+  {id:"diffAsc", label:"难度 低 → 高"},
+  {id:"diffDesc", label:"难度 高 → 低"},
+  {id:"name", label:"按名称 A → Z"}
+];
+let sortMode = localStorage.getItem("sortMode") || "default";
+if(!SORT_MODES.some(m=>m.id===sortMode)) sortMode = "default";
+const diffRank = d => (d && d.diff) ? d3(d.diff) : 9;
+const cmpName = (a,b) => String(a).localeCompare(String(b), "zh-Hans-CN");
+function sortRecipes(list){
+  const arr = list.slice();
+  if(sortMode === "diffAsc") arr.sort((a,b)=> diffRank(a)-diffRank(b) || cmpName(a.name,b.name));
+  else if(sortMode === "diffDesc") arr.sort((a,b)=> diffRank(b)-diffRank(a) || cmpName(a.name,b.name));
+  else if(sortMode === "name") arr.sort((a,b)=> cmpName(a.name,b.name));
+  return arr;
+}
+/* 云表行（收藏 / 已做过）按对应配方的难度排序 */
+function sortRows(rows){
+  const arr = rows.slice();
+  const rk = r => diffRank(recipeByKey(r.recipe_key));
+  if(sortMode === "diffAsc") arr.sort((a,b)=> rk(a)-rk(b) || cmpName(a.recipe_name,b.recipe_name));
+  else if(sortMode === "diffDesc") arr.sort((a,b)=> rk(b)-rk(a) || cmpName(a.recipe_name,b.recipe_name));
+  else if(sortMode === "name") arr.sort((a,b)=> cmpName(a.recipe_name,b.recipe_name));
+  return arr;
+}
+function renderSortBtns(){
+  const m = SORT_MODES.find(x=>x.id===sortMode) || SORT_MODES[0];
+  document.querySelectorAll("[data-sorttoggle]").forEach(b=>{
+    b.textContent = m.label;
+    b.classList.toggle("act", sortMode !== "default");
+  });
+}
+function rerenderList(){
+  if(currentView === "channel" && currentChTab === "all") renderChAll();
+  else if(currentView === "group") openGroup(currentCat, currentGroup);
+  else if(currentView === "diff"){
+    if(currentDiffTab === "all") renderDiffAll();
+    else if(currentDiffFilter) renderDiffList(currentDiffFilter.mode, currentDiffFilter.key);
+  }
+  else if(currentView === "search" && qEl.value.trim()) renderSearch(qEl.value.trim());
+  else if(currentView === "favorites") renderFavList();
+  else if(currentView === "done") renderDoneList();
+}
+function setSortMode(id){
+  sortMode = id;
+  localStorage.setItem("sortMode", sortMode);
+  renderSortBtns();
+  rerenderList();
+}
+document.addEventListener("click", e=>{
+  const b = e.target.closest("[data-sorttoggle]");
+  if(!b) return;
+  e.preventDefault(); e.stopPropagation();
+  const i = SORT_MODES.findIndex(m=>m.id===sortMode);
+  setSortMode(SORT_MODES[(i+1) % SORT_MODES.length].id);
+});
 const recipeByKey = k => DATA.find(d => keyOf(d) === k);
 
 async function loadFavs(){
@@ -5021,7 +5089,7 @@ async function renderFavList(){
     .select("recipe_key, recipe_name, group_name, cat, created_at")
     .order("created_at", { ascending: false }).limit(200);
   if(error){ box.innerHTML = `<div class="empty"><b>加载失败</b>请稍后重试。</div>`; return; }
-  const visible = (data || []).filter(r => !dislikeSet.has(r.recipe_key));
+  const visible = sortRows((data || []).filter(r => !dislikeSet.has(r.recipe_key)));
   if(!visible.length){ box.innerHTML = `<div class="empty"><b>还没有收藏</b>在任意配方行点右侧 ☆ 即可收藏。</div>`; return; }
   box.innerHTML = visible.map(r=>`<div class="recipe"><div class="recipe-head favrow" data-key="${esc(r.recipe_key)}">
     <span class="rn">${esc(r.recipe_name)}</span>
@@ -5106,7 +5174,7 @@ async function renderDoneList(){
   rows.forEach(r=>{ const d = recipeByKey(r.recipe_key); if(d) groups[d3(d.diff)].push(r); else unk.push(r); });
   let html = "";
   DIFF_LEVELS.forEach(l=>{
-    const list = groups[l.id]; if(!list.length) return;
+    const list = sortRows(groups[l.id]); if(!list.length) return;
     const c = DIFF_TAG[l.id].c;
     html += `<div class="sec-title" style="color:${c};margin-top:18px;">${esc(l.t)} · ${esc(l.s)}（${list.length}）</div>` +
       list.map(r=>`<div class="recipe"><div class="recipe-head favrow" data-key="${esc(r.recipe_key)}">
@@ -5384,6 +5452,7 @@ async function continueNormalStartup(){
   await loadCooked();
   refreshCooked();
   setHideDone(hideDone);
+  renderSortBtns();
 }
 </script>
 </body>
