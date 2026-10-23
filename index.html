@@ -311,6 +311,7 @@
 .done-toggle:active{transform:scale(.96);}
 .done-toggle.on{color:#2a6b3d;border-color:#a9d3b6;background:#e6f4ea;}
 .listbar{display:flex;justify-content:flex-start;gap:8px;margin:-10px 0 14px;flex-wrap:wrap;max-width:100%;}
+.listbar .lcount{margin-left:auto;font-size:12px;color:var(--muted);align-self:center;white-space:nowrap;}
 .sort-toggle{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--ink-soft);border:1px solid var(--line-strong);background:var(--card);border-radius:999px;padding:8px 15px;font-family:inherit;line-height:1.2;user-select:none;-webkit-user-select:none;transition:border-color .14s,color .14s,background .14s,transform .1s;min-height:36px;}
 .sort-toggle:hover{border-color:var(--accent);color:var(--accent-dark);}
 .sort-toggle:active{transform:scale(.96);}
@@ -462,7 +463,7 @@
         <h1 class="page-title" id="dfName"></h1>
       </div>
       <p class="page-desc" id="dfDesc"></p>
-      <div class="listbar"><button class="sort-toggle" data-sorttoggle>排序 ▾</button><button class="done-toggle" data-donetoggle>已做过 · 显示中</button></div>
+      <div class="listbar"><button class="sort-toggle" data-sorttoggle>排序 ▾</button><button class="done-toggle" data-donetoggle>已做过 · 显示中</button><span class="lcount" id="lcDiff"></span></div>
       <div id="dfPrimer" hidden></div>
       <div class="tabs" id="dfTabs" hidden></div>
       <div id="dfAll"></div>
@@ -477,7 +478,7 @@
         <h1 class="page-title" id="chName"></h1>
       </div>
       <p class="page-desc" id="chDesc"></p>
-      <div class="listbar"><button class="sort-toggle" data-sorttoggle>排序 ▾</button><button class="done-toggle" data-donetoggle>已做过 · 显示中</button></div>
+      <div class="listbar"><button class="sort-toggle" data-sorttoggle>排序 ▾</button><button class="done-toggle" data-donetoggle>已做过 · 显示中</button><span class="lcount" id="lcChannel"></span></div>
       <div class="tabs" id="chTabs" hidden></div>
       <div id="chPrimer" hidden></div>
       <div class="kgrid" id="chGroups"></div>
@@ -492,7 +493,7 @@
         <h1 class="page-title" id="grName"></h1>
       </div>
       <p class="page-desc" id="grDesc"></p>
-      <div class="listbar"><button class="sort-toggle" data-sorttoggle>排序 ▾</button><button class="done-toggle" data-donetoggle>已做过 · 显示中</button></div>
+      <div class="listbar"><button class="sort-toggle" data-sorttoggle>排序 ▾</button><button class="done-toggle" data-donetoggle>已做过 · 显示中</button><span class="lcount" id="lcGroup"></span></div>
       <div class="page-actions">
         <button id="expandAll">全部展开</button>
         <button id="collapseAll">全部收起</button>
@@ -4573,7 +4574,8 @@ function renderChAll(){
     box.innerHTML = `<div class="empty"><b>暂无配方</b></div>`;
     return;
   }
-  box.innerHTML = `<p class="page-desc">共 ${list.length} 条</p>` + list.map(d => recipeHTML(d, true)).join("");
+  document.getElementById("lcChannel").textContent = "共 " + list.length + " 条";
+  box.innerHTML = list.map(d => recipeHTML(d, true)).join("");
   bindRecipeToggles(box);
 }
 document.getElementById("view-channel").addEventListener("click",e=>{
@@ -4621,10 +4623,12 @@ function renderDiffAll(){
   const box = document.getElementById("dfAll");
   const list = sortRecipes(diffList(currentDiff));
   if(!list.length){ box.innerHTML = `<div class="empty"><b>暂无配方</b></div>`; return; }
-  box.innerHTML = `<p class="page-desc">共 ${list.length} 条</p>` + list.map(d=>recipeHTML(d,true)).join("");
+  document.getElementById("lcDiff").textContent = "";
+  box.innerHTML = list.map(d=>recipeHTML(d,true)).join("");
   bindRecipeToggles(box);
 }
 function renderDiffCards(mode){
+  document.getElementById("lcDiff").textContent = "";
   const box = document.getElementById("dfCards");
   const list = diffList(currentDiff);
   const map = {};
@@ -4648,8 +4652,8 @@ function renderDiffList(mode, key){
   const box = document.getElementById("dfList");
   document.getElementById("dfCards").hidden = true;
   box.hidden = false;
+  document.getElementById("lcDiff").textContent = label + " · 共 " + list.length + " 条";
   box.innerHTML = `<button class="pageback" id="dfBack" style="margin-bottom:10px;">‹ 返回${mode==="way"?"做法":"分类"}</button>` +
-    `<p class="page-desc">${esc(label)} · 共 ${list.length} 条</p>` +
     list.map(d=>recipeHTML(d,true)).join("");
   bindRecipeToggles(box);
   window.scrollTo({top:0});
@@ -4746,7 +4750,8 @@ function openGroup(catId, group){
   const list = sortRecipes(DATA.filter(d=>catOf(d)===catId && groupOf(d)===group && visibleRecipes(d)));
   const m = GROUP_META[group]||{};
   document.getElementById("grName").textContent = group;
-  document.getElementById("grDesc").textContent = (m.desc||"") + (m.desc?" · ":"") + "共 " + list.length + " 条";
+  document.getElementById("grDesc").textContent = m.desc || "";
+  document.getElementById("lcGroup").textContent = "共 " + list.length + " 条";
 
   const listEl = document.getElementById("grList");
   listEl.innerHTML = list.map(d=>recipeHTML(d,false)).join("");
