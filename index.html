@@ -4667,7 +4667,7 @@ function openMenu(id){
   if(id && WEEK_MENUS.find(w=>w.id===id)) currentMenuId = id;
   const tabsEl = document.getElementById("menuTabs");
   tabsEl.innerHTML = WEEK_MENUS.map(w=>
-    `<button data-tab="${esc(w.id)}" class="${w.id===currentMenuId?"active":""}">${esc(w.t)} · ${esc(w.range)}</button>`).join("");
+    `<button data-tab="${esc(w.id)}" class="${w.id===currentMenuId?"active":""}">${esc(w.t)}</button>`).join("");
   tabsEl.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{ currentMenuId = b.dataset.tab; renderMenu(); window.scrollTo({top:0}); }));
   renderMenu();
   show("menu");
@@ -4681,7 +4681,7 @@ function renderMenu(){
   document.querySelectorAll("#menuTabs button").forEach(b=>b.classList.toggle("active", b.dataset.tab===w.id));
   let html = `<div class="panel" style="margin-bottom:12px;">
     <h3>${esc(w.t)} · ${esc(w.season)}</h3>
-    <p style="margin:6px 0 0;font-size:13px;color:var(--ink-soft);line-height:1.7;">${esc(w.note)}</p>
+    <p style="margin:6px 0 0;font-size:13px;color:var(--ink-soft);line-height:1.7;">${esc((w.note.match(/^.+?。/) || [w.note])[0])}</p>
   </div>`;
   html += w.days.map(day=>{
     const isToday = day.date === today;
@@ -4690,7 +4690,7 @@ function renderMenu(){
       return d ? recipeHTML(d,true)
                : `<div class="recipe"><div class="recipe-head"><span class="rn">${esc(name)}</span><span class="rt">未收录</span></div></div>`;
     }).join("");
-    return `<div class="sec-title" style="margin-top:14px;">${esc(day.d)} · ${esc(day.date)}${isToday?` <span style="color:#b0402a;font-size:12px;font-weight:700;">· 今天</span>`:""}</div>` + rows;
+    return `<div class="sec-title" style="margin-top:14px;">${esc(day.d)}${isToday?` <span style="color:#b0402a;font-size:12px;font-weight:700;">· 今天</span>`:""}</div>` + rows;
   }).join("");
   box.innerHTML = html;
   bindRecipeToggles(box);
