@@ -276,12 +276,22 @@
 .dislike.on{color:#b3452e;border-color:#dca89c;background:#f9e8e2;}
 .done{cursor:pointer;color:var(--muted);font-size:12px;font-weight:600;border:1px solid var(--line-strong);background:var(--card);border-radius:6px;padding:5px 12px;line-height:1;font-family:inherit;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}
 .done.on{color:#2e7d46;border-color:#a9d3b6;background:#e6f4ea;}
-.done-toggle{margin-left:auto;cursor:pointer;font-size:11.5px;font-weight:600;color:var(--muted);border:1px solid var(--line-strong);background:var(--card);border-radius:999px;padding:5px 12px;font-family:inherit;line-height:1;user-select:none;-webkit-user-select:none;}
+.done-toggle{cursor:pointer;font-size:11.5px;font-weight:600;color:var(--muted);border:1px solid var(--line-strong);background:var(--card);border-radius:999px;padding:5px 12px;font-family:inherit;line-height:1;user-select:none;-webkit-user-select:none;}
 .done-toggle.on{color:#2e7d46;border-color:#a9d3b6;background:#e6f4ea;}
-.sortbar{display:flex;justify-content:flex-end;gap:8px;margin:-10px 0 14px;flex-wrap:wrap;max-width:100%;}
+.listbar{display:flex;justify-content:flex-start;gap:8px;margin:-10px 0 14px;flex-wrap:wrap;max-width:100%;}
 .sort-toggle{cursor:pointer;font-size:11.5px;font-weight:600;color:var(--muted);border:1px solid var(--line-strong);background:var(--card);border-radius:999px;padding:5px 12px;font-family:inherit;line-height:1;user-select:none;-webkit-user-select:none;}
 .sort-toggle:hover{color:var(--ink-soft);}
 .sort-toggle.act{color:var(--accent-dark);border-color:var(--accent);background:var(--accent-soft);}
+.ssheet-mask{position:fixed;inset:0;z-index:80;background:rgba(28,25,23,.38);display:flex;align-items:flex-end;justify-content:center;}
+.ssheet{width:100%;max-width:480px;background:var(--card);border-radius:14px 14px 0 0;padding:8px 16px calc(14px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 30px rgba(0,0,0,.12);}
+.ssheet-grab{width:36px;height:4px;border-radius:99px;background:var(--line-strong);margin:4px auto 10px;}
+.ssheet-title{font-size:12px;font-weight:700;color:var(--muted);padding:0 4px 8px;}
+.ssheet-opt{display:flex;align-items:center;justify-content:space-between;width:100%;border:0;background:transparent;font-family:inherit;font-size:14.5px;color:var(--ink);padding:13px 8px;cursor:pointer;border-radius:8px;text-align:left;}
+.ssheet-opt:hover{background:var(--bg);}
+.ssheet-opt.on{color:var(--accent-dark);font-weight:700;}
+.ssheet-opt .ck{font-size:13px;color:var(--accent-dark);visibility:hidden;}
+.ssheet-opt.on .ck{visibility:visible;}
+@media(min-width:640px){.ssheet-mask{align-items:center;}.ssheet{border-radius:14px;padding:12px 16px 16px;}.ssheet-grab{display:none;}}
   .body-actions{margin-top:12px;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;}
   .ask-ai{border:1px solid var(--line-strong);background:var(--card);border-radius:6px;font-size:12px;font-weight:600;color:var(--accent-dark);padding:5px 12px;cursor:pointer;font-family:inherit;}
   .ask-ai:hover{border-color:var(--accent);}
@@ -384,10 +394,9 @@
       <div class="pagehead">
         <button class="pageback" data-pageback>‹ 返回</button>
         <h1 class="page-title" id="dfName"></h1>
-        <button class="done-toggle" data-donetoggle>已做过 · 显示中</button>
       </div>
       <p class="page-desc" id="dfDesc"></p>
-      <div class="sortbar"><button class="sort-toggle" data-sorttoggle>排序 · 默认</button></div>
+      <div class="listbar"><button class="sort-toggle" data-sorttoggle>排序 ▾</button><button class="done-toggle" data-donetoggle>已做过 · 显示中</button></div>
       <div id="dfPrimer" hidden></div>
       <div class="tabs" id="dfTabs" hidden></div>
       <div id="dfAll"></div>
@@ -400,10 +409,9 @@
       <div class="pagehead">
         <button class="pageback" data-pageback>‹ 返回</button>
         <h1 class="page-title" id="chName"></h1>
-        <button class="done-toggle" data-donetoggle>已做过 · 显示中</button>
       </div>
       <p class="page-desc" id="chDesc"></p>
-      <div class="sortbar"><button class="sort-toggle" data-sorttoggle>排序 · 默认</button></div>
+      <div class="listbar"><button class="sort-toggle" data-sorttoggle>排序 ▾</button><button class="done-toggle" data-donetoggle>已做过 · 显示中</button></div>
       <div class="tabs" id="chTabs" hidden></div>
       <div id="chPrimer" hidden></div>
       <div class="kgrid" id="chGroups"></div>
@@ -416,10 +424,9 @@
       <div class="pagehead">
         <button class="pageback" data-pageback>‹ 返回</button>
         <h1 class="page-title" id="grName"></h1>
-        <button class="done-toggle" data-donetoggle>已做过 · 显示中</button>
       </div>
       <p class="page-desc" id="grDesc"></p>
-      <div class="sortbar"><button class="sort-toggle" data-sorttoggle>排序 · 默认</button></div>
+      <div class="listbar"><button class="sort-toggle" data-sorttoggle>排序 ▾</button><button class="done-toggle" data-donetoggle>已做过 · 显示中</button></div>
       <div class="page-actions">
         <button id="expandAll">全部展开</button>
         <button id="collapseAll">全部收起</button>
@@ -434,7 +441,7 @@
         <h1 class="page-title">搜索结果</h1>
       </div>
       <p class="page-desc" id="sStats"></p>
-      <div class="sortbar"><button class="sort-toggle" data-sorttoggle>排序 · 默认</button></div>
+      <div class="listbar"><button class="sort-toggle" data-sorttoggle>排序 ▾</button></div>
       <div id="searchOut"></div>
     </section>
 
@@ -444,8 +451,8 @@
         <button class="pageback" data-pageback>‹ 返回</button>
         <h1 class="page-title">我的收藏</h1>
       </div>
-      <p class="page-desc">星标的配方会出现在这里，云端同步。</p>
-      <div class="sortbar"><button class="sort-toggle" data-sorttoggle>排序 · 默认</button></div>
+      <p class="page-desc">云端同步，换设备不丢。</p>
+      <div class="listbar"><button class="sort-toggle" data-sorttoggle>排序 ▾</button></div>
       <div id="favList"></div>
     </section>
 
@@ -455,7 +462,7 @@
         <button class="pageback" data-pageback>‹ 返回</button>
         <h1 class="page-title">垃圾箱</h1>
       </div>
-      <p class="page-desc">被你标记为「不好吃」的配方会隐藏在所有列表页，在这里可以恢复显示。</p>
+      <p class="page-desc">在这里恢复被隐藏的配方。</p>
       <div id="trashList"></div>
     </section>
 
@@ -465,8 +472,8 @@
         <button class="pageback" data-pageback>‹ 返回</button>
         <h1 class="page-title">已做过</h1>
       </div>
-      <p class="page-desc">你标记为「已做过」的配方，云端同步，按难易程度归类。</p>
-      <div class="sortbar"><button class="sort-toggle" data-sorttoggle>排序 · 默认</button></div>
+      <p class="page-desc">云端同步，按难度归类。</p>
+      <div class="listbar"><button class="sort-toggle" data-sorttoggle>排序 ▾</button></div>
       <div id="doneList"></div>
     </section>
 
@@ -476,7 +483,7 @@
         <button class="pageback" data-pageback>‹ 返回</button>
         <h1 class="page-title">每周菜单</h1>
       </div>
-      <p class="page-desc">1–2 人分量 · 当季食材优先 · 每周五自动生成下周菜单。点击展开做法。</p>
+      <p class="page-desc">1–2 人 · 当季 · 每周五更新</p>
       <div class="tabs" id="menuTabs"></div>
       <div id="menuList"></div>
     </section>
@@ -589,6 +596,15 @@
     </footer>
 
   </main>
+</div>
+
+<!-- 排序选项弹层 -->
+<div class="ssheet-mask" id="sortSheet" hidden>
+  <div class="ssheet" role="dialog" aria-label="排序方式">
+    <div class="ssheet-grab"></div>
+    <div class="ssheet-title">排序方式</div>
+    <div id="sortSheetOpts"></div>
+  </div>
 </div>
 
 <!-- 登录弹层 -->
@@ -4480,6 +4496,7 @@ function setChTab(t){
   document.getElementById("chAll").hidden = t!=="all";
   document.getElementById("chTools").hidden = t!=="tools";
   if(t === "all") renderChAll();
+  window.scrollTo({top:0});
 }
 function renderChAll(){
   const box = document.getElementById("chAll");
@@ -4488,7 +4505,7 @@ function renderChAll(){
     box.innerHTML = `<div class="empty"><b>暂无配方</b></div>`;
     return;
   }
-  box.innerHTML = `<p class="page-desc">共 ${list.length} 条配方 · 点击展开查看</p>` + list.map(d => recipeHTML(d, true)).join("");
+  box.innerHTML = `<p class="page-desc">共 ${list.length} 条</p>` + list.map(d => recipeHTML(d, true)).join("");
   bindRecipeToggles(box);
 }
 document.getElementById("view-channel").addEventListener("click",e=>{
@@ -4530,12 +4547,13 @@ function setDiffTab(t){
   document.getElementById("dfList").hidden = true;
   if(t==="all") renderDiffAll();
   else renderDiffCards(t);
+  window.scrollTo({top:0});
 }
 function renderDiffAll(){
   const box = document.getElementById("dfAll");
   const list = sortRecipes(diffList(currentDiff));
   if(!list.length){ box.innerHTML = `<div class="empty"><b>暂无配方</b></div>`; return; }
-  box.innerHTML = `<p class="page-desc">共 ${list.length} 条配方 · 点击展开查看</p>` + list.map(d=>recipeHTML(d,true)).join("");
+  box.innerHTML = `<p class="page-desc">共 ${list.length} 条</p>` + list.map(d=>recipeHTML(d,true)).join("");
   bindRecipeToggles(box);
 }
 function renderDiffCards(mode){
@@ -4563,13 +4581,14 @@ function renderDiffList(mode, key){
   document.getElementById("dfCards").hidden = true;
   box.hidden = false;
   box.innerHTML = `<button class="pageback" id="dfBack" style="margin-bottom:10px;">‹ 返回${mode==="way"?"做法":"分类"}</button>` +
-    `<p class="page-desc">${esc(label)} · 共 ${list.length} 条 · 点击展开查看</p>` +
+    `<p class="page-desc">${esc(label)} · 共 ${list.length} 条</p>` +
     list.map(d=>recipeHTML(d,true)).join("");
   bindRecipeToggles(box);
+  window.scrollTo({top:0});
 }
 document.getElementById("view-diff").addEventListener("click",e=>{
   const back = e.target.closest("#dfBack");
-  if(back){ setDiffTab(currentDiffTab); return; }
+  if(back){ setDiffTab(currentDiffTab); window.scrollTo({top:0}); return; }
   const card = e.target.closest(".kcard");
   if(card && card.dataset.df){ renderDiffList(card.dataset.mode, card.dataset.df); }
 });
@@ -4581,7 +4600,7 @@ function openMenu(id){
   const tabsEl = document.getElementById("menuTabs");
   tabsEl.innerHTML = WEEK_MENUS.map(w=>
     `<button data-tab="${esc(w.id)}" class="${w.id===currentMenuId?"active":""}">${esc(w.t)} · ${esc(w.range)}</button>`).join("");
-  tabsEl.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{ currentMenuId = b.dataset.tab; renderMenu(); }));
+  tabsEl.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{ currentMenuId = b.dataset.tab; renderMenu(); window.scrollTo({top:0}); }));
   renderMenu();
   show("menu");
 }
@@ -4659,7 +4678,7 @@ function openGroup(catId, group){
   const list = sortRecipes(DATA.filter(d=>catOf(d)===catId && groupOf(d)===group && visibleRecipes(d)));
   const m = GROUP_META[group]||{};
   document.getElementById("grName").textContent = group;
-  document.getElementById("grDesc").textContent = (m.desc||"") + (m.desc?" · ":"") + "共 " + list.length + " 条，点击逐条展开";
+  document.getElementById("grDesc").textContent = (m.desc||"") + (m.desc?" · ":"") + "共 " + list.length + " 条";
 
   const listEl = document.getElementById("grList");
   listEl.innerHTML = list.map(d=>recipeHTML(d,false)).join("");
@@ -4780,6 +4799,23 @@ function toast(msg){
 
 /* ================= 事件绑定 ================= */
 document.querySelectorAll("[data-pageback]").forEach(b=>b.addEventListener("click",goBack));
+
+/* ---------- 横滑返回（左滑/右滑均可） ---------- */
+let _swX=0, _swY=0, _swT=0, _swEl=null;
+document.addEventListener("touchstart", e=>{
+  const t = e.touches[0];
+  _swX = t.clientX; _swY = t.clientY; _swT = Date.now(); _swEl = e.target;
+}, {passive:true});
+document.addEventListener("touchend", e=>{
+  if(!_swT) return;
+  const t = e.changedTouches[0];
+  const dx = t.clientX - _swX, dy = t.clientY - _swY, dt = Date.now() - _swT;
+  _swT = 0;
+  if(dt > 600 || Math.abs(dx) < 72 || Math.abs(dx) < Math.abs(dy) * 2.2) return;
+  if(_swEl && _swEl.closest && _swEl.closest(".panel, table, .tabs, .sidebar")) return;
+  if(sidebar.classList.contains("open")){ closeDrawer(); return; }
+  if(currentView === "search" || navStack.length > 0) goBack();
+}, {passive:true});
 document.querySelectorAll("[data-go='home']").forEach(a=>a.addEventListener("click",()=>show("home")));
 document.querySelectorAll("[data-go-ch]").forEach(a=>a.addEventListener("click",()=>openChannel(a.dataset.goCh)));
 document.getElementById("logoHome").addEventListener("click",()=>show("home"));
@@ -4916,10 +4952,10 @@ const visibleRecipes = d => !dislikeSet.has(keyOf(d)) && (!hideDone || !doneSet.
 
 /* ================= 列表排序（难度 / 名称） ================= */
 const SORT_MODES = [
-  {id:"default", label:"排序 · 默认"},
-  {id:"diffAsc", label:"难度 低 → 高"},
-  {id:"diffDesc", label:"难度 高 → 低"},
-  {id:"name", label:"按名称 A → Z"}
+  {id:"default", short:"排序", label:"默认顺序"},
+  {id:"diffAsc", short:"难度 ↑", label:"难度 · 低 → 高"},
+  {id:"diffDesc", short:"难度 ↓", label:"难度 · 高 → 低"},
+  {id:"name", short:"名称", label:"名称 · A → Z"}
 ];
 let sortMode = localStorage.getItem("sortMode") || "default";
 if(!SORT_MODES.some(m=>m.id===sortMode)) sortMode = "default";
@@ -4944,10 +4980,25 @@ function sortRows(rows){
 function renderSortBtns(){
   const m = SORT_MODES.find(x=>x.id===sortMode) || SORT_MODES[0];
   document.querySelectorAll("[data-sorttoggle]").forEach(b=>{
-    b.textContent = m.label;
+    b.textContent = m.short + " ▾";
     b.classList.toggle("act", sortMode !== "default");
   });
 }
+/* ---------- 排序选项弹层 ---------- */
+const sortSheet = document.getElementById("sortSheet");
+const sortSheetOpts = document.getElementById("sortSheetOpts");
+function renderSortSheet(){
+  sortSheetOpts.innerHTML = SORT_MODES.map(m=>
+    `<button class="ssheet-opt${m.id===sortMode?" on":""}" data-sortopt="${m.id}"><span>${esc(m.label)}</span><span class="ck">✓</span></button>`).join("");
+}
+function openSortSheet(){ renderSortSheet(); sortSheet.hidden = false; }
+function closeSortSheet(){ sortSheet.hidden = true; }
+sortSheet.addEventListener("click", e=>{
+  if(e.target === sortSheet){ closeSortSheet(); return; }
+  const opt = e.target.closest("[data-sortopt]");
+  if(opt){ setSortMode(opt.dataset.sortopt); closeSortSheet(); }
+});
+document.addEventListener("keydown", e=>{ if(e.key==="Escape" && !sortSheet.hidden) closeSortSheet(); });
 function rerenderList(){
   if(currentView === "channel" && currentChTab === "all") renderChAll();
   else if(currentView === "group") openGroup(currentCat, currentGroup);
@@ -4969,8 +5020,7 @@ document.addEventListener("click", e=>{
   const b = e.target.closest("[data-sorttoggle]");
   if(!b) return;
   e.preventDefault(); e.stopPropagation();
-  const i = SORT_MODES.findIndex(m=>m.id===sortMode);
-  setSortMode(SORT_MODES[(i+1) % SORT_MODES.length].id);
+  openSortSheet();
 });
 const recipeByKey = k => DATA.find(d => keyOf(d) === k);
 
