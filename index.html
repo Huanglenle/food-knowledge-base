@@ -127,6 +127,11 @@
   .sec-title:first-of-type{margin-top:0;}
   .sec-desc{font-size:12px;color:var(--muted);margin:-4px 0 12px;line-height:1.6;}
   .kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;}
+  .kgrid.cols2{grid-template-columns:repeat(2,1fr);}
+  .kgrid.dense{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));}
+  .kgrid.dense .kcard{padding:10px 12px;}
+  .kgrid.dense .kcard .t{font-size:13.5px;}
+  @media(max-width:640px){.kgrid.dense{grid-template-columns:repeat(3,1fr);gap:8px;}}
   .kcard{
     background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
     padding:13px 15px;cursor:pointer;transition:border-color .15s;
@@ -382,9 +387,9 @@
       <h1 class="page-title">美食知识库</h1>
       <p class="page-desc">轻油 · 轻盐 · 轻糖，不做油炸。</p>
       <div class="sec-title">每周菜单 · 1–2 人 · 当季食材</div>
-      <div class="kgrid" id="homeMenu"></div>
+      <div class="kgrid cols2" id="homeMenu"></div>
       <div class="sec-title">按难易程度学配方</div>
-      <div class="kgrid" id="homeDiff"></div>
+      <div class="kgrid dense" id="homeDiff"></div>
       <div class="sec-title">按美食分类选配方</div>
       <div id="homeCats"></div>
     </section>
@@ -4375,7 +4380,7 @@ function renderHome(){
   document.getElementById("homeMenu").innerHTML = WEEK_MENUS.map(w=>
     `<div class="kcard" data-menu="${esc(w.id)}">
       <div class="t"><span style="display:flex;align-items:center;min-width:0;"><span class="sq" style="--c:#7d9a6a">${esc(w.t[0])}</span>${esc(w.t)}</span><span class="n">${esc(w.range)}</span></div>
-      <div class="d">${esc(w.season)} · ${esc(w.note.slice(0,44))}${w.note.length>44?"…":""}</div>
+      <div class="d">${esc(w.season)} · ${esc(w.note.slice(0,16))}${w.note.length>16?"…":""}</div>
     </div>`).join("");
   document.getElementById("homeMenu").addEventListener("click",e=>{
     const card = e.target.closest(".kcard");
@@ -4385,8 +4390,8 @@ function renderHome(){
   document.getElementById("homeDiff").innerHTML = DIFF_LEVELS.map(l=>{
     const n = countDiff(l.id), c = DIFF_TAG[l.id].c;
     return `<div class="kcard" data-diff="${l.id}">
-      <div class="t"><span style="display:flex;align-items:center;min-width:0;"><span class="sq" style="--c:${c}">${l.id}</span>${esc(l.t)}</span><span class="n">${n} 条</span></div>
-      <div class="d">${esc(l.s)} · ${esc(l.d)}</div>
+      <div class="t"><span style="display:flex;align-items:center;min-width:0;"><span class="sq" style="--c:${c}">${l.id}</span>${esc(l.t.replace(/^[一二三四五]星/,""))}</span><span class="n">${n} 条</span></div>
+      <div class="d">${esc(l.s)}</div>
     </div>`;
   }).join("");
   document.getElementById("homeDiff").addEventListener("click",e=>{
