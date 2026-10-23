@@ -378,13 +378,13 @@
     .topbar-in{flex-wrap:wrap;padding:8px 10px 0;gap:8px;}
     .nav-item{min-height:44px;padding:10px;}
     .tabs button{min-height:44px;padding:12px 14px;}
-    .recipe-head{min-height:56px;padding:13px 14px;}
-    .sort-toggle,.done-toggle{min-height:44px;padding:11px 17px;font-size:13px;}
-    .pageback{min-height:44px;padding:10px 15px;}
-    .page-actions button{min-height:42px;padding:9px 13px;}
-    .done,.dislike,.ask-ai{min-height:44px;padding:10px 14px;}
-    .unfav{min-height:36px;}
-    .menu-btn{width:44px;height:44px;}
+    .recipe-head{min-height:52px;padding:12px 14px;}
+    .sort-toggle,.done-toggle{min-height:36px;padding:7px 14px;font-size:12.5px;}
+    .pageback{min-height:38px;padding:8px 14px;}
+    .page-actions button{min-height:36px;padding:7px 12px;}
+    .done,.dislike,.ask-ai{min-height:38px;padding:8px 13px;}
+    .unfav{min-height:30px;}
+    .menu-btn{width:40px;height:40px;}
     .sidebar{
       position:fixed;left:0;top:var(--topbar-h,52px);bottom:0;z-index:45;
       background:var(--bg);border-right:1px solid var(--line);
@@ -400,6 +400,25 @@
     .logo{font-size:13.5px;}
     .uchip{padding:4px 9px;font-size:11.5px;max-width:86px;}
     .panel{overflow-x:auto;}
+  }
+
+  /* ---------- 手机窄屏：头部两行布局 + 紧凑首页 ---------- */
+  @media(max-width:640px){
+    /* 配方头：名字独占一行永不挤压，星级/标签落到第二行 */
+    .recipe-head:not(.favrow){flex-wrap:wrap;gap:3px 8px;padding:10px 14px;min-height:0;}
+    .recipe-head:not(.favrow) .chev{order:0;margin-top:5px;}
+    .recipe-head:not(.favrow) .rn{order:1;flex:1 1 auto;min-width:calc(100% - 58px);}
+    .recipe-head:not(.favrow) .star{order:2;flex:0 0 auto;padding:2px 4px;font-size:15px;}
+    .recipe-head:not(.favrow) .dstars{order:3;margin-left:19px;font-size:10.5px;letter-spacing:0;line-height:20px;}
+    .recipe-head:not(.favrow) .tag{order:4;font-size:9px;padding:2px 5px;}
+    .recipe-head.favrow{padding:11px 14px;min-height:0;}
+    /* 首页卡片：隐藏计数角标，标题不再换行 */
+    .kgrid.cols2 .kcard .n,
+    .kgrid.dense .kcard .n{display:none;}
+    .kgrid.dense .kcard{padding:9px 10px;}
+    .kgrid.dense .kcard .t{font-size:12px;}
+    .kgrid.dense .kcard .sq{width:19px;height:19px;font-size:10.5px;margin-right:4px;}
+    .kgrid.cols2 .kcard{padding:11px 13px;}
   }
 </style>
 </head>
