@@ -4438,11 +4438,13 @@ function renderNav(){
 /* ================= 首页：总入口 ================= */
 function renderHome(){
   // 每周菜单入口（本周/下周）
-  document.getElementById("homeMenu").innerHTML = WEEK_MENUS.map(w=>
-    `<div class="kcard" data-menu="${esc(w.id)}">
-      <div class="t"><span style="display:flex;align-items:center;min-width:0;"><span class="sq" style="--c:#7d9a6a">${esc(w.t[0])}</span>${esc(w.t)}</span><span class="n">${esc(w.range)}</span></div>
-      <div class="d">${esc(w.season)} · ${esc(w.note.slice(0,16))}${w.note.length>16?"…":""}</div>
-    </div>`).join("");
+  document.getElementById("homeMenu").innerHTML = WEEK_MENUS.map(w=>{
+    const seasonal = (w.note.match(/时令：(.+?)。/) || [,""])[1];
+    return `<div class="kcard" data-menu="${esc(w.id)}">
+      <div class="t"><span style="display:flex;align-items:center;min-width:0;"><span class="sq" style="--c:#7d9a6a">${esc(w.t[0])}</span>${esc(w.t)}</span></div>
+      <div class="d">${seasonal ? "时令：" + esc(seasonal) : esc(w.season)}</div>
+    </div>`;
+  }).join("");
   document.getElementById("homeMenu").addEventListener("click",e=>{
     const card = e.target.closest(".kcard");
     if(card && card.dataset.menu) openMenu(card.dataset.menu);
@@ -4678,7 +4680,7 @@ function renderMenu(){
   const today = (now.getMonth()+1) + "." + now.getDate();
   document.querySelectorAll("#menuTabs button").forEach(b=>b.classList.toggle("active", b.dataset.tab===w.id));
   let html = `<div class="panel" style="margin-bottom:12px;">
-    <h3>${esc(w.t)} · ${esc(w.range)} · ${esc(w.season)}</h3>
+    <h3>${esc(w.t)} · ${esc(w.season)}</h3>
     <p style="margin:6px 0 0;font-size:13px;color:var(--ink-soft);line-height:1.7;">${esc(w.note)}</p>
   </div>`;
   html += w.days.map(day=>{
