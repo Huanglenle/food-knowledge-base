@@ -6654,18 +6654,58 @@ function pickDish(catId, wantMeat, used, avoidIng, excludeNames){
   }).sort((a,b) => b.s - a.s);
   return scored[0].d;
 }
-/* 换一道：更新 WEEK_MENUS 并持久化到文件不可能，因此改为运行时覆盖 + 本地记录 */
+/* 换一道：运行时覆盖，云端 menu_swaps 表持久化（登录后跨设备同步），本地 localStorage 作离线缓存 */
 const MENU_OVERRIDE_KEY = "menuOverrides";
 let menuOverrides = (function(){
   try { return JSON.parse(LS.get(MENU_OVERRIDE_KEY) || "{}") || {}; } catch(e){ return {}; }
 })();
 function saveMenuOverrides(){ try { LS.set(MENU_OVERRIDE_KEY, JSON.stringify(menuOverrides)); } catch(e){} }
-/* 生效菜名：优先本地覆盖 */
+/* 生效菜名：优先覆盖（云端 + 本地） */
 function effectiveDish(menuId, dayIdx, slot){
   const k = menuId + "|" + dayIdx + "|" + slot;
   if(menuOverrides[k]) return menuOverrides[k];
   const w = WEEK_MENUS.find(x => x.id === menuId);
   return (w && w.days[dayIdx] && w.days[dayIdx].dishes[slot]) || "";
+}
+/* 从云端拉取换菜记录（登录用户），与本地合并：云端优先，本地独有的补传 */
+async function loadMenuSwaps(){
+  if(!cloud) return;
+  try{
+    const { data: session } = await cloud.auth.getSession();
+    if(!session) return;
+    const { data, error } = await cloud.database.from("menu_swaps")
+      .select("menu_id,day_idx,slot,dish_name").limit(500);
+    if(error || !data) return;
+    const remote = {};
+    data.forEach(r => { remote[r.menu_id + "|" + r.day_idx + "|" + r.slot] = r.dish_name; });
+    // 合并：云端覆盖本地；本地有的云端没有 → 补传
+    const toUpload = [];
+    Object.keys(menuOverrides).forEach(k => {
+      if(!remote[k]) {
+        const p = k.split("|");
+        toUpload.push({ menu_id: p[0], day_idx: parseInt(p[1],10), slot: parseInt(p[2],10), dish_name: menuOverrides[k] });
+      }
+    });
+    menuOverrides = Object.assign({}, menuOverrides, remote);
+    saveMenuOverrides();
+    if(toUpload.length){
+      try { await cloud.database.from("menu_swaps").insert(toUpload); } catch(e){}
+    }
+  }catch(e){}
+}
+/* 写入一条换菜记录到云端（登录时） */
+async function pushMenuSwap(menuId, dayIdx, slot, dishName){
+  if(!cloud) return;
+  try{
+    const { data: session } = await cloud.auth.getSession();
+    if(!session) return;
+    // 先删后插，避开唯一约束冲突
+    await cloud.database.from("menu_swaps").delete()
+      .eq("menu_id", menuId).eq("day_idx", dayIdx).eq("slot", slot);
+    await cloud.database.from("menu_swaps").insert({
+      menu_id: menuId, day_idx: dayIdx, slot, dish_name: dishName
+    });
+  }catch(e){}
 }
 /* 换一道：按现有选菜规则重选，旧菜计数 +1，满 3 次永久排除 */
 function doSwap(menuId, dayIdx, slot){
@@ -6716,6 +6756,7 @@ function doSwap(menuId, dayIdx, slot){
   }
   menuOverrides[slotKey] = pick.name;
   saveMenuOverrides();
+  pushMenuSwap(menuId, dayIdx, slot, pick.name);   // 云端持久化（未登录自动跳过）
   // 记录当前展开的卡片位置，渲染后恢复，避免换菜时收起
   const openSlots = [];
   document.querySelectorAll("#menuList .recipe.open").forEach(el => {
@@ -7156,6 +7197,11 @@ async function initCloud(){
       if(currentView === "group") openGroup(currentCat, currentGroup);
       if(currentView === "search" && qEl.value.trim()) renderSearch(qEl.value.trim());
     });
+    loadWishlist().then(()=>refreshWish());
+    loadMenuSwaps().then(()=>{
+      if(currentView === "menu") renderMenu();
+      if(currentView === "home") renderHome();
+    });
   });
 }
 async function restoreAuth(){
@@ -7200,6 +7246,9 @@ async function continueNormalStartup(){
   refreshCooked();
   await loadWishlist();
   refreshWish();
+  await loadMenuSwaps();
+  if(currentView === "menu") renderMenu();
+  if(currentView === "home") renderHome();
   setHideDone(hideDone);
   renderSortBtns();
 }
