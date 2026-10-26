@@ -6773,6 +6773,10 @@ function doSwap(menuId, dayIdx, slot){
   } else {
     toast("已换成「" + pick.name + "」");
   }
+  // 未登录提示：换菜结果只存本机，清缓存/换设备会丢
+  if(!currentUser){
+    setTimeout(()=>toast("未登录：换菜结果仅存本机，登录后可跨设备同步"), 1400);
+  }
 }
 async function toggleFav(key){
   if(!cloudReady()) return;
