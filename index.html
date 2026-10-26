@@ -204,6 +204,8 @@
   .recipe.special{background:linear-gradient(160deg,#fffdf7,#fff);}
   .tag{font-size:10px;font-weight:700;border-radius:5px;padding:2px 6px;white-space:nowrap;}
   .tag.type{background:var(--accent-soft);color:var(--accent-dark);}
+  .tag.origin.b{background:#ece4f5;color:#6b4fa3;}
+  .tag.origin.r{background:#e4eef3;color:#3d6b96;}
   .tag.official{background:#e6f2e9;color:var(--ok);}
   .tag.sop{background:#e8eff7;color:var(--info);}
   .tag.replica{background:#faf0dd;color:var(--warn);}
@@ -4921,17 +4923,18 @@ const R_CHEV = '<span class="chev"><svg width="11" height="11" viewBox="0 0 24 2
 function recipeHTML(d, showGroup){
   const lv = LEVEL_TAG[d.level] || LEVEL_TAG.replica;
   const metaTea = (d.tea && d.tea!=="—") ? `茶底：<b>${esc(d.tea)}</b>` : "";
-  const o = originOf(d);
-  const metaGroup = (showGroup && o) ? `${o.kind}：<b>${esc(o.v)}</b>` : "";
+  const metaType = d.type ? `做法：<b>${esc(d.type)}</b>` : "";
   const dc = d.diff ? (DIFF_TAG[d.diff]||{c:"#9a8f7a"}).c : "#9a8f7a";
-  const meta = [metaGroup, metaTea].filter(Boolean).join(" · ");
+  const meta = [metaType, metaTea].filter(Boolean).join(" · ");
+  const o = originOf(d);
+  const oTag = o ? `<span class="tag origin ${o.kind==="品牌"?"b":"r"}">${esc(o.v)}</span>` : "";
   const key = keyOf(d);
   return `<div class="recipe${d.special?" special":""}" data-name="${esc(d.name)}">
     <div class="recipe-head">
       ${R_CHEV}
       <span class="rn">${esc(d.name)}</span>
       ${d.diff?`<span class="dstars" style="color:${dc}" title="难度 ${d.diff} 星">${diffStars(d.diff)}</span>`:""}
-      <span class="tag type">${esc(d.type)}</span>
+      ${oTag}
       <span class="tag ${lv.cls}">${lv.txt}</span>
       <span class="star" data-key="${esc(key)}" title="收藏">☆</span>
     </div>
