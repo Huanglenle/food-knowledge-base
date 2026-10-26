@@ -5040,21 +5040,15 @@ function openChannel(catId){
     </div>`;
   }).join("");
 
-  // 面板：地域卡（有地域标注才渲染；≥2 个地域时单开 Tab，只 1 个则并在「分类」面板末尾，避免一张卡的 Tab）
+  // 面板：地域卡（只有存在 ≥2 个地域标注的频道才渲染并单开 Tab；不足 2 个则整块不显示）
   const catRegions = regionsOfCat(catId);
-  const regionCardsHTML = catRegions.map(r=>{
+  document.getElementById("chRegions").innerHTML = catRegions.length >= 2 ? catRegions.map(r=>{
     const m = REGION_META[r]||{};
     return `<div class="kcard" data-region="${esc(r)}">
       <div class="t">${esc(r)}<span class="n">${countOfRegion(catId,r)} 条</span></div>
       <div class="d">${esc(m.desc||"")}</div>
     </div>`;
-  }).join("");
-  document.getElementById("chRegions").innerHTML = regionCardsHTML;
-  if(catRegions.length === 1){
-    document.getElementById("chGroups").innerHTML +=
-      `<div class="sec-sub">地方特色</div><div class="kgrid">${regionCardsHTML}</div>`;
-    document.getElementById("chRegions").innerHTML = "";
-  }
+  }).join("") : "";
 
   // 面板：工具卡（并入科普 Tab）
   const hasTools = !!(cat.tools && cat.tools.length);
