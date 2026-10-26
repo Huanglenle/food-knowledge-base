@@ -765,9 +765,9 @@ function cloudReady(){
  *       只有当某个"综合品类"确实无处可归、且预计会持续增长时，才新建分组。
  *    - level 可选："official" 官方公开 / "sop" 门店SOP / "replica" 网络复刻；special:true 置顶高亮。
  * 2. 给分组写简介（可选）：GROUP_META["分组名"] = { desc:"..." }。
- * 3. 开新分类：CATEGORIES 里把对应项 ready 改 true，补 groupLabel（分组区标题，如"经典调酒"）；并把 id 归入 CAT_CLUSTERS 对应簇（首页与侧边栏按簇分组展示）。
- *    - 可选：PRIMERS["分类id"] = [{q,a}...]（常识科普，作为 Tab 面板显示在一级分组页/频道页，二级分组页与配方详情不放，无则不显示）；
- *    - 可选：分类加 tools:[{id,t,d}] 并在 PAGE_RENDERERS 注册一个工具页渲染函数。
+ * 3. 开新分类：CATEGORIES 里把对应项 ready 改 true，补 groupLabel（统一写"分类"）；并把 id 归入 CAT_CLUSTERS 对应簇（首页与侧边栏按簇分组展示）。
+ *    - 可选：PRIMERS["分类id"] = [{q,a}...]（常识科普，与 tools 一起收在「科普」Tab 内，二级分组页与配方详情不放，无则不显示）；
+ *    - 可选：分类加 tools:[{id,t,d}] 并在 PAGE_RENDERERS 注册一个工具页渲染函数（展示在「科普」Tab 的「工具箱」子区）。
  * 4. 加原料品牌：BRANDS_DATA 对应面板 rows.push({item, brand, note, use, kw})。
  * 5. 配料想自动带「荐」：往 ING_BRAND 顶部插 ["关键词","推荐品牌"]（上面的规则优先匹配）。
  * 6. 每周菜单：WEEK_MENUS 维护 2 条（本周/下周），id 用 ISO 周，dishes 填配方名（必须全局唯一）。
@@ -776,23 +776,22 @@ function cloudReady(){
 
 /* ================= 分类（知识库入口） ================= */
 const CATEGORIES = [
-  {id:"drinks", t:"饮品", c:"#b5804a", d:"奶茶 · 花草茶 · 羹露 · 冰饮 · 原料与配比工具", ready:true, groupLabel:"奶茶配方",
+  {id:"drinks", t:"饮品", c:"#b5804a", d:"奶茶 · 花草茶 · 羹露 · 冰饮 · 原料与配比工具", ready:true, groupLabel:"分类",
    groupSections:[
-     {t:"按饮用形式", groups:["奶茶","花草茶","养生羹露","冰饮气泡","鲜果昔"]},
-     {t:"按品牌复刻", groups:["霸王茶姬","茉莉奶白","茶百道","喜茶","奈雪的茶","蜜雪冰城","古茗","沪上阿姨","茉酸奶","树夏"]}
+     {t:"", groups:["奶茶","花草茶","养生羹露","冰饮气泡","鲜果昔"]}
    ],
    tools:[{id:"toolbox", t:"通用配比工具箱", d:"万能公式 / 冲泡 / 糖浆 / 奶盖"},
           {id:"brands",  t:"原料品牌库",     d:"奶基底 / 茶叶 / 糖浆 / 小料"}]},
-  {id:"cocktail", t:"鸡尾酒", c:"#7a8ba8", d:"经典调酒 · 低糖家庭版", ready:true, groupLabel:"经典调酒"},
-  {id:"dessert", t:"甜点", c:"#b0727f", d:"低糖甜品 · 软欧面包 · 慕斯 · 免烤小点心", ready:true, groupLabel:"甜点配方"},
-  {id:"healthtea", t:"养生茶", c:"#7d9a6a", d:"养气 · 补血 · 美白 · 安神 · 消食 的功能茶饮", ready:true, groupLabel:"功能茶方"},
-  {id:"yuecai", t:"粤菜", c:"#6fa39a", d:"清蒸白灼 · 老火靓汤 · 轻油", ready:true, groupLabel:"家常菜谱"},
-  {id:"chuancai", t:"川菜", c:"#c26d5c", d:"麻辣轻负担 · 减油减盐版", ready:true, groupLabel:"家常菜谱"},
-  {id:"jiangxi", t:"江西小炒", c:"#b5502f", d:"鲜辣锅气 · 南昌·赣州名店家常复刻", ready:true, groupLabel:"家常菜谱"},
-  {id:"sauce", t:"调味酱料", c:"#c8a24a", d:"焖锅酱 · 火锅蘸料 · 辣椒酱 · 万能凉拌汁 · 烧烤料", ready:true, groupLabel:"调味酱料"},
-  {id:"appliance", t:"电器类", c:"#5b8fb0", d:"空气炸锅 · 蒸笼 · 烤箱 的 1-2 人快手菜", ready:true, groupLabel:"电器菜谱"},
-  {id:"filling", t:"馅料", c:"#8a7b52", d:"饺子 · 馄饨 · 包子 · 馅饼锅贴 · 汤圆 的馅心配比与打水技巧", ready:true, groupLabel:"馅料配方"},
-  {id:"snack", t:"小吃面食", c:"#c77f4a", d:"快手小吃 · 面条米粉 · 简易面点 · 一星新手友好", ready:true, groupLabel:"小吃面食"}
+  {id:"cocktail", t:"鸡尾酒", c:"#7a8ba8", d:"经典调酒 · 低糖家庭版", ready:true, groupLabel:"分类"},
+  {id:"dessert", t:"甜点", c:"#b0727f", d:"低糖甜品 · 软欧面包 · 慕斯 · 免烤小点心", ready:true, groupLabel:"分类"},
+  {id:"healthtea", t:"养生茶", c:"#7d9a6a", d:"养气 · 补血 · 美白 · 安神 · 消食 的功能茶饮", ready:true, groupLabel:"分类"},
+  {id:"yuecai", t:"粤菜", c:"#6fa39a", d:"清蒸白灼 · 老火靓汤 · 轻油", ready:true, groupLabel:"分类"},
+  {id:"chuancai", t:"川菜", c:"#c26d5c", d:"麻辣轻负担 · 减油减盐版", ready:true, groupLabel:"分类"},
+  {id:"jiangxi", t:"江西小炒", c:"#b5502f", d:"鲜辣锅气 · 南昌·赣州名店家常复刻", ready:true, groupLabel:"分类"},
+  {id:"sauce", t:"调味酱料", c:"#c8a24a", d:"焖锅酱 · 火锅蘸料 · 辣椒酱 · 万能凉拌汁 · 烧烤料", ready:true, groupLabel:"分类"},
+  {id:"appliance", t:"电器类", c:"#5b8fb0", d:"空气炸锅 · 蒸笼 · 烤箱 的 1-2 人快手菜", ready:true, groupLabel:"分类"},
+  {id:"filling", t:"馅料", c:"#8a7b52", d:"饺子 · 馄饨 · 包子 · 馅饼锅贴 · 汤圆 的馅心配比与打水技巧", ready:true, groupLabel:"分类"},
+  {id:"snack", t:"小吃面食", c:"#c77f4a", d:"快手小吃 · 面条米粉 · 简易面点 · 一星新手友好", ready:true, groupLabel:"分类"}
 ];
 
 /* ================= 分类簇（首页与侧边栏按簇分组展示） ================= */
@@ -4626,13 +4625,25 @@ const LEVEL_TAG = {
 /* ================= 归一化访问器（数据不写 cat/group 时的默认值） ================= */
 const catOf   = d => d.cat   || "drinks";
 const groupOf = d => d.group || d.brand;
+/* 把品牌复刻配方映射到饮用/食用形式分组，避免在「分类」Tab 里单独出现品牌区 */
+function formGroupOf(d){
+  if(d.group) return d.group;
+  if(!d.brand) return "";
+  const t = d.type || "";
+  if(t === "奶茶") return "奶茶";
+  if(t === "果茶") return "花草茶";
+  if(t === "酸奶奶昔" || t === "酸奶昔" || t === "奶昔") return "鲜果昔";
+  if(t === "冷萃酸奶") return "养生羹露";
+  if(t === "通用") return "奶茶";
+  return d.brand;
+}
 function groupsOfCat(catId){
   const seen = [];
-  DATA.forEach(d=>{ if(catOf(d)===catId){ const g=groupOf(d); if(seen.indexOf(g)===-1) seen.push(g); } });
+  DATA.forEach(d=>{ if(catOf(d)===catId){ const g=formGroupOf(d); if(g && seen.indexOf(g)===-1) seen.push(g); } });
   return seen;
 }
 function countOf(catId, group){
-  return DATA.filter(d=>catOf(d)===catId && (!group || groupOf(d)===group) && visibleRecipes(d)).length;
+  return DATA.filter(d=>catOf(d)===catId && (!group || formGroupOf(d)===group) && visibleRecipes(d)).length;
 }
 /* 频道内出现过的市场品牌（只统计真有 brand 字段的配方，家居/自制不算品牌） */
 function brandsOfCat(catId){
@@ -4735,7 +4746,7 @@ function renderNav(){
         const groups = groupsOfCat(c.id);
         let html = `<a class="nav-item" data-ch="${c.id}">${esc(c.t)}首页</a>`;
         if(groups.length){
-          html += `<div class="nav-sub">${esc(c.groupLabel||"配方")}</div>` +
+          html += `<div class="nav-sub">分类</div>` +
             groups.map(g=>`<a class="nav-item indent" data-ch="${c.id}" data-group="${esc(g)}">${esc(g)}<span class="n">${countOf(c.id,g)}</span></a>`).join("");
         }
         if(c.tools && c.tools.length){
@@ -4811,15 +4822,20 @@ function renderHome(){
 
 /* ================= 常识科普块（按分类渲染） ================= */
 const PQ_CHEV = '<span class="chev"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>';
-function primerHTML(catId, headless){
+function primerHTML(catId, headless, toolsHTML){
   const list = PRIMERS[catId];
-  if(!list || !list.length) return "";
+  const hasP = !!(list && list.length);
+  const hasT = !!(toolsHTML);
+  if(!hasP && !hasT) return "";
+  const countText = (hasP && hasT) ? `${list.length} 条常识 · 工具箱` : (hasP ? `${list.length} 条 · 点击展开` : "工具箱");
+  const head = headless ? "" : `<div class="primer-head">科普 · ${esc(countText)}</div>`;
   return `<div class="primer">
-    ${headless?"":`<div class="primer-head">常识科普 · 入门先搞懂这几件事<span class="n">${list.length} 条 · 点击展开</span></div>`}
-    ${list.map(p=>`<div class="pq">
+    ${head}
+    ${hasP ? `<div class="sec-sub">常识</div>${list.map(p=>`<div class="pq">
       <div class="pq-q">${PQ_CHEV}${esc(p.q)}</div>
       <div class="pq-a">${esc(p.a)}</div>
-    </div>`).join("")}
+    </div>`).join("")}` : ""}
+    ${hasT ? `<div class="sec-sub">工具箱</div><div class="kgrid">${toolsHTML}</div>` : ""}
   </div>`;
 }
 function bindPrimerToggles(root){
@@ -4836,7 +4852,7 @@ function openChannel(catId){
   document.getElementById("chName").textContent = cat.t;
   document.getElementById("chDesc").textContent = cat.d;
 
-  // 面板：分组卡（支持 groupSections 分区，如 饮品=品牌配方 / 按饮用形式）
+  // 面板：分组卡（按饮用/食用形式分组；品牌复刻配方通过 formGroupOf 分散进来）
   const allGroups = groupsOfCat(catId);
   const secs = cat.groupSections;
   const groupCard = g => {
@@ -4852,7 +4868,8 @@ function openChannel(catId){
       const gs = allGroups.filter(g=>s.groups.indexOf(g)>-1);
       claimed.push(...gs);
       if(!gs.length) return "";
-      return `<div class="sec-sub">${esc(s.t)}</div><div class="kgrid">${gs.map(groupCard).join("")}</div>`;
+      const sub = s.t ? `<div class="sec-sub">${esc(s.t)}</div>` : "";
+      return `${sub}<div class="kgrid">${gs.map(groupCard).join("")}</div>`;
     }).join("") + (()=>{
       const rest = allGroups.filter(g=>claimed.indexOf(g)===-1);
       return rest.length ? `<div class="sec-sub">其他</div><div class="kgrid">${rest.map(groupCard).join("")}</div>` : "";
@@ -4873,32 +4890,27 @@ function openChannel(catId){
     </div>`;
   }).join("");
 
-  // 面板：工具卡
+  // 面板：工具卡（并入科普 Tab）
   const hasTools = !!(cat.tools && cat.tools.length);
-  document.getElementById("chTools").innerHTML = hasTools ? cat.tools.map(t=>
+  const toolsHTML = hasTools ? cat.tools.map(t=>
     `<div class="kcard" data-v="${t.id}">
       <div class="t">${esc(t.t)}</div>
       <div class="d">${esc(t.d)}</div>
     </div>`).join("") : "";
 
-  // 面板：常识科普
+  // 面板：常识科普 + 工具箱
   const hasPrimer = !!(PRIMERS[catId] && PRIMERS[catId].length);
   const primerEl = document.getElementById("chPrimer");
-  if(hasPrimer){
-    primerEl.innerHTML = primerHTML(catId, true);
-    bindPrimerToggles(primerEl);
-  } else {
-    primerEl.innerHTML = "";
-  }
+  primerEl.innerHTML = primerHTML(catId, true, toolsHTML);
+  bindPrimerToggles(primerEl);
 
-  // Tab 栏（多于一个面板才显示，默认落在分组面板）
+  // Tab 栏（多于一个面板才显示，默认落在「全部」面板；统一顺序：全部 / 分类 / 品牌 / 科普）
   const panels = [];
-  if(hasPrimer) panels.push({id:"primer", label:"科普"});
   panels.push({id:"all", label:"全部"});
-  panels.push({id:"groups", label:cat.groupLabel || "配方"});
+  panels.push({id:"groups", label:cat.groupLabel || "分类"});
   const brandsHere = brandsOfCat(catId);
   if(brandsHere.length) panels.push({id:"brand", label:"品牌"});
-  if(hasTools) panels.push({id:"tools", label:"工具箱"});
+  if(hasPrimer || hasTools) panels.push({id:"primer", label:"科普"});
   const tabsEl = document.getElementById("chTabs");
   if(panels.length > 1){
     tabsEl.hidden = false;
@@ -4922,7 +4934,6 @@ function setChTab(t){
   const bb = document.getElementById("chBrands");
   if(bb) bb.hidden = t!=="brand";
   document.getElementById("chAll").hidden = t!=="all";
-  document.getElementById("chTools").hidden = t!=="tools";
   if(t === "all") renderChAll();
   window.scrollTo({top:0});
 }
@@ -5121,7 +5132,7 @@ function openGroup(catId, group){
   const cat = CATEGORIES.find(c=>c.id===catId);
   if(!cat) return;
   currentCat = catId; currentGroup = group;
-  const list = sortRecipes(DATA.filter(d=>catOf(d)===catId && groupOf(d)===group && visibleRecipes(d)));
+  const list = sortRecipes(DATA.filter(d=>catOf(d)===catId && formGroupOf(d)===group && visibleRecipes(d)));
   const m = GROUP_META[group]||{};
   document.getElementById("grName").innerHTML = esc(group) + `<span class="title-count">${list.length} 条</span>`;
   document.getElementById("grDesc").textContent = m.desc || "";
