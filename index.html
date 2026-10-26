@@ -487,6 +487,7 @@
       <div class="tabs" id="chTabs" hidden></div>
       <div id="chPrimer" hidden></div>
       <div class="kgrid" id="chGroups"></div>
+      <div class="kgrid" id="chBrands" hidden></div>
       <div id="chAll" hidden></div>
       <div class="kgrid" id="chTools" hidden></div>
     </section>
@@ -4477,6 +4478,39 @@ function groupsOfCat(catId){
 function countOf(catId, group){
   return DATA.filter(d=>catOf(d)===catId && (!group || groupOf(d)===group) && visibleRecipes(d)).length;
 }
+/* 频道内出现过的市场品牌（只统计真有 brand 字段的配方，家居/自制不算品牌） */
+function brandsOfCat(catId){
+  const seen = [];
+  DATA.forEach(d=>{
+    if(catOf(d)===catId && d.brand && seen.indexOf(d.brand)===-1) seen.push(d.brand);
+  });
+  return seen.sort((a,b)=>countOfBrand(catId,b)-countOfBrand(catId,a));
+}
+function countOfBrand(catId, brand){
+  return DATA.filter(d=>catOf(d)===catId && d.brand===brand && visibleRecipes(d)).length;
+}
+/* 细分地域：从菜名与 src 中识别（江西各地市 / 客家 / 粤港 / 川 / 江南等） */
+const REGION_RULES = [
+  ["赣州", ["赣州"]], ["兴国", ["兴国"]], ["宁都", ["宁都"]], ["南昌", ["南昌"]],
+  ["客家", ["客家"]], ["赣南", ["赣南"]], ["赣式", ["赣式", "江西"]],
+  ["粤式", ["粤式", "岭南"]], ["港式", ["港式"]], ["川味", ["川味", "四川"]],
+  ["江南", ["江南", "上海"]],
+];
+function regionOf(d){
+  if(d.region) return d.region;
+  const hay = (d.name || "") + " " + (d.src || "");
+  for(const [label, keys] of REGION_RULES){
+    if(keys.some(k=>hay.indexOf(k)!==-1)) return label;
+  }
+  return "";
+}
+/* 详情页展示的归属：优先市场品牌，其次细分地域，都没有则不显示 */
+function originOf(d){
+  if(d.brand) return { kind:"品牌", v:d.brand };
+  const r = regionOf(d);
+  if(r) return { kind:"地域", v:r };
+  return null;
+}
 
 /* ================= 工具 ================= */
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
@@ -4671,6 +4705,18 @@ function openChannel(catId){
     document.getElementById("chGroups").innerHTML = allGroups.map(groupCard).join("");
   }
 
+  // 面板：品牌卡（只有存在市场品牌的频道才渲染）
+  const brandBox = document.getElementById("chBrands");
+  const catBrands = brandsOfCat(catId);
+  brandBox.innerHTML = catBrands.map(b=>{
+    const meta = (BRANDS_DATA.find(g=>g.rows && g.rows.some(r=>r.brand===b)) || {});
+    const note = (meta.rows || []).find(r=>r.brand===b);
+    return `<div class="kcard" data-brand="${esc(b)}">
+      <div class="t">${esc(b)}<span class="n">${countOfBrand(catId,b)} 条</span></div>
+      <div class="d">${esc((note && note.note) || "门店招牌复刻")}</div>
+    </div>`;
+  }).join("");
+
   // 面板：工具卡
   const hasTools = !!(cat.tools && cat.tools.length);
   document.getElementById("chTools").innerHTML = hasTools ? cat.tools.map(t=>
@@ -4694,6 +4740,8 @@ function openChannel(catId){
   if(hasPrimer) panels.push({id:"primer", label:"常识科普"});
   panels.push({id:"all", label:"全部"});
   panels.push({id:"groups", label:cat.groupLabel || "配方"});
+  const brandsHere = brandsOfCat(catId);
+  if(brandsHere.length) panels.push({id:"brand", label:"品牌"});
   if(hasTools) panels.push({id:"tools", label:"工具箱"});
   const tabsEl = document.getElementById("chTabs");
   if(panels.length > 1){
@@ -4715,6 +4763,8 @@ function setChTab(t){
     b.classList.toggle("active", b.dataset.tab===t));
   document.getElementById("chPrimer").hidden = t!=="primer";
   document.getElementById("chGroups").hidden = t!=="groups";
+  const bb = document.getElementById("chBrands");
+  if(bb) bb.hidden = t!=="brand";
   document.getElementById("chAll").hidden = t!=="all";
   document.getElementById("chTools").hidden = t!=="tools";
   if(t === "all") renderChAll();
@@ -4735,8 +4785,23 @@ document.getElementById("view-channel").addEventListener("click",e=>{
   const card = e.target.closest(".kcard");
   if(!card) return;
   if(card.dataset.group) openGroup(currentCat, card.dataset.group);
+  else if(card.dataset.brand) openBrand(currentCat, card.dataset.brand);
   else if(card.dataset.v) show(card.dataset.v);
 });
+
+/* 品牌页：复用分组页视图，列出该品牌全部配方 */
+function openBrand(catId, brand){
+  const cat = CATEGORIES.find(c=>c.id===catId) || {t:""};
+  currentCat = catId; currentGroup = brand;
+  const list = sortRecipes(DATA.filter(d=>catOf(d)===catId && d.brand===brand && visibleRecipes(d)));
+  document.getElementById("grName").innerHTML = esc(brand) + `<span class="title-count">${list.length} 条</span>`;
+  document.getElementById("grDesc").textContent = cat.t + " · " + brand + " 门店招牌复刻（家庭少油少糖版）";
+  const listEl = document.getElementById("grList");
+  listEl.innerHTML = list.map(d=>recipeHTML(d,false)).join("");
+  bindRecipeToggles(listEl);
+  updateFoldBtn();
+  show("group");
+}
 
 /* ================= 难度等级页（按难易程度学配方） ================= */
 let currentDiff = 1, currentDiffTab = "all", currentDiffFilter = null;
@@ -4856,7 +4921,8 @@ const R_CHEV = '<span class="chev"><svg width="11" height="11" viewBox="0 0 24 2
 function recipeHTML(d, showGroup){
   const lv = LEVEL_TAG[d.level] || LEVEL_TAG.replica;
   const metaTea = (d.tea && d.tea!=="—") ? `茶底：<b>${esc(d.tea)}</b>` : "";
-  const metaGroup = showGroup ? `品牌：<b>${esc(groupOf(d))}</b>` : "";
+  const o = originOf(d);
+  const metaGroup = (showGroup && o) ? `${o.kind}：<b>${esc(o.v)}</b>` : "";
   const dc = d.diff ? (DIFF_TAG[d.diff]||{c:"#9a8f7a"}).c : "#9a8f7a";
   const meta = [metaGroup, metaTea].filter(Boolean).join(" · ");
   const key = keyOf(d);
