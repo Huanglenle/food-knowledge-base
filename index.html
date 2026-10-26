@@ -711,6 +711,18 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js" async></script>
 <script>
+/* ================= 安全本地存储（沙箱 / 无痕 / file:// 下 localStorage 可能抛异常，全站统一走这层） ================= */
+const LS = (function(){
+  let ok = false;
+  try { const k = "__t"; window.localStorage.setItem(k, "1"); window.localStorage.removeItem(k); ok = true; } catch(e){ ok = false; }
+  const mem = {};
+  return {
+    get(k){ try { return ok ? window.localStorage.getItem(k) : (mem[k] === undefined ? null : mem[k]); } catch(e){ return mem[k] === undefined ? null : mem[k]; } },
+    set(k, v){ try { if(ok) window.localStorage.setItem(k, v); else mem[k] = v; } catch(e){ mem[k] = v; } },
+    remove(k){ try { if(ok) window.localStorage.removeItem(k); else delete mem[k]; } catch(e){ delete mem[k]; } }
+  };
+})();
+
 /* ================= 云服务初始化（publicConfig 来自云服务开通结果，可安全随前端发布） ================= */
 const PUBLIC_CONFIG = {"resourceId":"wbcs_McaRKpGRHoFIdjQmbr1Fr0","endpoint":"https://milk-tea-recipes.app.workbuddy.host","oauthRelayBaseUrl":"https://www.workbuddy.cn/v2/as/genie-baas/oauth","publishableKey":"wbpk_tgwXUtdIhszLhfd04sw18U_Od5u6as4CWnU2KA3dFvalymsx3WmxoFX"};
 let cloud = null;
@@ -5162,7 +5174,7 @@ uChip.addEventListener("click", async ()=>{
 let favSet = new Set();
 let dislikeSet = new Set();
 let doneSet = new Set();
-let hideDone = localStorage.getItem("hideDone") === "1";
+let hideDone = LS.get("hideDone") === "1";
 const keyOf = d => catOf(d) + "|" + groupOf(d) + "|" + d.name;
 const visibleRecipes = d => !dislikeSet.has(keyOf(d)) && (!hideDone || !doneSet.has(keyOf(d)));
 
@@ -5173,7 +5185,7 @@ const SORT_MODES = [
   {id:"diffDesc", short:"难度 ↓", label:"难度 · 高 → 低"},
   {id:"name", short:"名称", label:"名称 · A → Z"}
 ];
-let sortMode = localStorage.getItem("sortMode") || "default";
+let sortMode = LS.get("sortMode") || "default";
 if(!SORT_MODES.some(m=>m.id===sortMode)) sortMode = "default";
 const diffRank = d => (d && d.diff) ? d3(d.diff) : 9;
 const cmpName = (a,b) => String(a).localeCompare(String(b), "zh-Hans-CN");
@@ -5228,7 +5240,7 @@ function rerenderList(){
 }
 function setSortMode(id){
   sortMode = id;
-  localStorage.setItem("sortMode", sortMode);
+  LS.set("sortMode", sortMode);
   renderSortBtns();
   rerenderList();
 }
@@ -5461,7 +5473,7 @@ async function renderDoneList(){
 }
 function setHideDone(v){
   hideDone = v;
-  localStorage.setItem("hideDone", hideDone ? "1" : "0");
+  LS.set("hideDone", hideDone ? "1" : "0");
   document.querySelectorAll(".done-toggle").forEach(b=>{
     b.textContent = "已做过 · " + (hideDone ? "已隐藏" : "显示中");
     b.classList.toggle("on", hideDone);
@@ -5631,17 +5643,34 @@ document.addEventListener("click", async e=>{
 });
 
 /* ================= 启动 ================= */
-renderNav();
-renderHome();
-renderBrandsPanels();
-showSoft("home");
+/* 启动：每步独立容错，任何一步失败都不应导致整页空白 */
+function bootStep(name, fn){
+  try { fn(); } catch(e){
+    console.error("[boot]" + name, e);
+    try {
+      const box = document.getElementById("view-home");
+      if(box && !box.dataset.errNoted){
+        box.dataset.errNoted = "1";
+        const tip = document.createElement("div");
+        tip.className = "panel";
+        tip.style.cssText = "border-color:#dca89c;background:#fdf4f1;";
+        tip.innerHTML = '<h3 style="color:#b3452e">部分内容加载失败</h3><p style="font-size:12.5px;color:#5f5e5a;margin:4px 0 0;">出错环节：' + name + '（' + String(e && e.message || e) + '）。请刷新重试，或用浏览器直接打开。</p>';
+        box.insertBefore(tip, box.firstChild);
+      }
+    } catch(_){}
+  }
+}
+bootStep("导航", renderNav);
+bootStep("首页", renderHome);
+bootStep("原料品牌", renderBrandsPanels);
+bootStep("视图", ()=>showSoft("home"));
 if(/MicroMessenger/i.test(navigator.userAgent)){
   const tip = document.createElement("div");
   tip.className = "wx-tip";
   tip.textContent = "微信内如遇异常，请点右上角「···」选择「在浏览器打开」";
   document.body.insertBefore(tip, document.body.firstChild);
 }
-syncDrawerTop();
+bootStep("顶栏高度", syncDrawerTop);
 window.addEventListener("resize", syncDrawerTop);
 if(cloud){
   initCloud();
