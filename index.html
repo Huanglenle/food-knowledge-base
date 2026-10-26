@@ -300,6 +300,36 @@
 .star:hover{color:var(--accent);transform:scale(1.18);}
 .star:active{transform:scale(.94);}
 .star.on{color:#d9a441;}
+/* 头部已做过 √（五角星左侧，免展开） */
+.dchk{cursor:pointer;color:#c9c5be;font-size:15px;font-weight:700;flex:0 0 auto;padding:6px;line-height:1;transition:transform .12s,color .14s;border-radius:6px;user-select:none;-webkit-user-select:none;}
+.dchk:hover{color:#2a6b3d;transform:scale(1.12);}
+.dchk:active{transform:scale(.94);}
+.dchk.on{color:#2a6b3d;}
+/* 每周菜单：换一道 */
+.swap{cursor:pointer;color:var(--ink-soft);font-size:12px;font-weight:600;border:1px solid var(--line-strong);background:var(--card);border-radius:999px;padding:5px 11px;line-height:1.2;font-family:inherit;flex:0 0 auto;transition:border-color .14s,color .14s,background .14s,transform .1s;min-height:30px;}
+.swap:hover{color:var(--accent-dark);border-color:var(--accent);}
+.swap:active{transform:scale(.95);background:var(--accent-soft);}
+/* 配方详情：想做 */
+.wish{cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:600;border:1px solid var(--line-strong);background:var(--card);border-radius:7px;padding:8px 13px;line-height:1.2;font-family:inherit;user-select:none;-webkit-user-select:none;transition:border-color .14s,color .14s,background .14s;min-height:36px;}
+.wish:hover{color:#8a5f12;border-color:#e0c78f;}
+.wish:active{background:#fbf3e0;}
+.wish.on{color:#8a5f12;border-color:#e0c78f;background:#fbf3e0;}
+/* 首页菜单卡：编辑入口 */
+.menu-card-wrap{position:relative;}
+.menu-edit{position:absolute;top:8px;right:8px;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:var(--muted);cursor:pointer;transition:background .14s,color .14s,transform .1s;z-index:2;}
+.menu-edit:hover{background:var(--card-alt);color:var(--accent-dark);}
+.menu-edit:active{transform:scale(.92);}
+/* 菜单管理页 */
+.mrow{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:8px;}
+.mrow .mn{flex:1 1 auto;min-width:0;font-size:13.5px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mrow .mg{flex:0 0 auto;font-size:11.5px;color:var(--muted);}
+.mrow .mx{cursor:pointer;flex:0 0 auto;color:var(--muted);font-size:12px;font-weight:600;border:1px solid var(--line-strong);background:var(--card);border-radius:999px;padding:5px 12px;font-family:inherit;min-height:30px;transition:border-color .14s,color .14s;}
+.mrow .mx:hover{color:#b3452e;border-color:#dca89c;}
+.mrow .mx:active{background:#f9e8e2;}
+.mrow .madd{cursor:pointer;flex:0 0 auto;color:var(--ink-soft);font-size:12px;font-weight:600;border:1px solid var(--line-strong);background:var(--card);border-radius:999px;padding:5px 12px;font-family:inherit;min-height:30px;transition:border-color .14s,color .14s;}
+.mrow .madd:hover{color:var(--accent-dark);border-color:var(--accent);}
+.mrow .madd:active{background:var(--accent-soft);}
+.mrow .cnt{flex:0 0 auto;font-size:11px;font-weight:700;color:#b0402a;background:#f9e8e2;border-radius:999px;padding:2px 8px;}
 .dislike{cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:600;border:1px solid var(--line-strong);background:var(--card);border-radius:7px;padding:8px 13px;line-height:1.2;font-family:inherit;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transition:border-color .14s,color .14s,background .14s;min-height:36px;}
 .dislike:hover{color:#b3452e;border-color:#dca89c;}
 .dislike:active{background:#f9e8e2;}
@@ -558,6 +588,17 @@
       <p class="page-desc">1–2 人 · 当季 · 每周五更新</p>
       <div class="tabs" id="menuTabs"></div>
       <div id="menuList"></div>
+    </section>
+
+    <!-- 菜单管理（想做 / 永久排除） -->
+    <section id="view-menuadmin" hidden>
+      <div class="pagehead">
+        <button class="pageback" data-pageback>‹ 返回</button>
+        <h1 class="page-title" id="maName">菜单管理</h1>
+      </div>
+      <p class="page-desc" id="maDesc">管理「想做」清单与被换掉 3 次永久排除的配方。</p>
+      <div id="maWish"></div>
+      <div id="maOut"></div>
     </section>
 
     <!-- 工具箱（饮品频道工具页） -->
@@ -4995,7 +5036,7 @@ const sidebar = document.getElementById("sidebar");
 const drawerMask = document.getElementById("drawerMask");
 
 /* ================= 视图路由（含返回栈） ================= */
-const VIEW_IDS = ["home","channel","group","search","toolbox","brands","favorites","trash","diff","done","menu"];
+const VIEW_IDS = ["home","channel","group","search","toolbox","brands","favorites","trash","diff","done","menu","menuadmin"];
 let currentView = "home", returnView = "home";
 let currentCat = null, currentGroup = null, currentChTab = "all";
 let navStack = [];
@@ -5083,12 +5124,17 @@ function renderHome(){
   // 每周菜单入口（本周/下周）
   document.getElementById("homeMenu").innerHTML = WEEK_MENUS.map(w=>{
     const seasonal = (w.note.match(/时令：(.+?)。/) || [,""])[1];
-    return `<div class="kcard" data-menu="${esc(w.id)}">
-      <div class="t"><span style="display:flex;align-items:center;min-width:0;"><span class="sq" style="--c:#7d9a6a">${esc(w.t[0])}</span>${esc(w.t)}</span></div>
+    return `<div class="kcard menu-card-wrap" data-menu="${esc(w.id)}">
+      <span class="menu-edit" data-menuedit="${esc(w.id)}" title="管理菜单">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      </span>
+      <div class="t" style="padding-right:30px;"><span style="display:flex;align-items:center;min-width:0;"><span class="sq" style="--c:#7d9a6a">${esc(w.t[0])}</span>${esc(w.t)}</span></div>
       <div class="d">${seasonal ? "时令：" + esc(seasonal) : esc(w.season)}</div>
     </div>`;
   }).join("");
   document.getElementById("homeMenu").addEventListener("click",e=>{
+    const edit = e.target.closest("[data-menuedit]");
+    if(edit){ e.stopPropagation(); openMenuAdmin(edit.dataset.menuedit); return; }
     const card = e.target.closest(".kcard");
     if(card && card.dataset.menu) openMenu(card.dataset.menu);
   });
@@ -5404,17 +5450,104 @@ function renderMenu(){
     <h3>${esc(w.t)} · ${esc(w.season)}</h3>
     <p style="margin:6px 0 0;font-size:13px;color:var(--ink-soft);line-height:1.7;">${esc((w.note.match(/^.+?。/) || [w.note])[0])}</p>
   </div>`;
-  html += w.days.map(day=>{
+  html += w.days.map((day, di)=>{
     const isToday = day.date === today;
-    const rows = day.dishes.map(name=>{
+    const rows = day.dishes.map((_, si)=>{
+      const name = effectiveDish(w.id, di, si);
       const d = DATA.find(x=>x.name===name);
-      return d ? recipeHTML(d,true)
-               : `<div class="recipe"><div class="recipe-head"><span class="rn">${esc(name)}</span><span class="rt">未收录</span></div></div>`;
+      const swapBtn = `<button class="swap" data-day="${esc(w.id)}" data-di="${di}" data-si="${si}" title="换一道">换一道</button>`;
+      if(!d) return `<div class="recipe"><div class="recipe-head"><span class="rn">${esc(name||"未定")}</span><span class="rt">未收录</span>${swapBtn}</div></div>`;
+      // 把换菜按钮插到头部星星之前
+      return recipeHTML(d,true).replace('<span class="dchk', swapBtn + '<span class="dchk');
     }).join("");
     return `<div class="sec-title" style="margin-top:14px;">${esc(day.d)}${isToday?` <span style="color:#b0402a;font-size:12px;font-weight:700;">· 今天</span>`:""}</div>` + rows;
   }).join("");
   box.innerHTML = html;
   bindRecipeToggles(box);
+}
+
+/* ================= 菜单管理页（想做 / 永久排除） ================= */
+let maMenuId = null;
+async function openMenuAdmin(menuId){
+  maMenuId = menuId || (WEEK_MENUS[0] && WEEK_MENUS[0].id);
+  const w = WEEK_MENUS.find(x => x.id === maMenuId) || {};
+  document.getElementById("maName").textContent = "菜单管理" + (w.t ? " · " + w.t : "");
+  document.getElementById("maDesc").textContent = "「想做」会随机排进最近几周的菜单；被换掉 3 次的菜永久不再推荐，在这里可以移除。";
+  document.getElementById("maWish").innerHTML = `<div class="empty">加载中…</div>`;
+  document.getElementById("maOut").innerHTML = "";
+  show("menuadmin");
+  await loadWishlist();
+  renderMenuAdmin();
+}
+function renderMenuAdmin(){
+  // 想做
+  const wishBox = document.getElementById("maWish");
+  const items = [...wishSet].map(k => recipeByKey(k)).filter(Boolean);
+  let wishHTML = `<div class="sec-title" style="margin-top:4px;">想做（${items.length}）</div>`;
+  if(!items.length){
+    wishHTML += `<div class="empty" style="margin-bottom:16px;"><b>还没有标记想做</b>在任意配方详情点「想做」，就会安排进最近的每周菜单。</div>`;
+  } else {
+    wishHTML += items.map(d => {
+      const k = keyOf(d);
+      const nextId = WEEK_MENUS[1] ? WEEK_MENUS[1].id : (WEEK_MENUS[0] && WEEK_MENUS[0].id);
+      const canAdd = nextId && addableToMenu(d, nextId);
+      return `<div class="mrow">
+        <span class="mn">${esc(d.name)}</span>
+        <span class="mg">${esc(groupOf(d))}</span>
+        ${canAdd ? `<button class="madd" data-addto="${esc(k)}">排入${esc(WEEK_MENUS[1]?"下周":"本周")}</button>` : ""}
+        <button class="mx" data-wishdel="${esc(k)}">移除</button>
+      </div>`;
+    }).join("");
+  }
+  wishBox.innerHTML = wishHTML;
+
+  // 永久排除
+  const outBox = document.getElementById("maOut");
+  const outs = swappedOutList();
+  let outHTML = `<div class="sec-title" style="margin-top:18px;">被换掉的菜（${outs.length}）</div>`;
+  if(!outs.length){
+    outHTML += `<div class="empty"><b>暂无</b>同一道菜在每周菜单里被「换一道」3 次后，会永久排除，不再被推荐。</div>`;
+  } else {
+    outHTML += outs.map(x => `<div class="mrow">
+      <span class="mn">${esc(x.d.name)}</span>
+      <span class="mg">${esc(groupOf(x.d))}</span>
+      <span class="cnt">换掉 ${x.cnt} 次</span>
+      <button class="mx" data-outdel="${esc(x.key)}">移除</button>
+    </div>`).join("");
+  }
+  outBox.innerHTML = outHTML;
+}
+/* 该菜能否排进指定菜单（不与已有菜重复、难度合规） */
+function addableToMenu(d, menuId){
+  const w = WEEK_MENUS.find(x => x.id === menuId);
+  if(!w) return false;
+  if(!d.diff || d.diff > 3) return false;
+  const used = [];
+  w.days.forEach((day, di) => day.dishes.forEach((_, si) => used.push(effectiveDish(menuId, di, si))));
+  return used.indexOf(d.name) === -1;
+}
+/* 把某道菜手动排进菜单：找一个同荤素、未占用的空位替换 */
+function addToMenu(key, menuId){
+  const d = recipeByKey(key);
+  if(!d) return;
+  const w = WEEK_MENUS.find(x => x.id === menuId);
+  if(!w) return;
+  if(!addableToMenu(d, menuId)){ toast("这道菜已经在菜单里了"); return; }
+  const wantMeat = isMeatDish(d);
+  // 优先找同荤素的位置，其次任意位置
+  let target = null;
+  for(let di = 0; di < w.days.length && !target; di++){
+    for(let si = 0; si < w.days[di].dishes.length; si++){
+      const n = effectiveDish(menuId, di, si);
+      const cur = DATA.find(x => x.name === n);
+      if(cur && isMeatDish(cur) === wantMeat){ target = { di, si }; break; }
+    }
+  }
+  if(!target) target = { di: 0, si: 0 };
+  menuOverrides[menuId + "|" + target.di + "|" + target.si] = d.name;
+  saveMenuOverrides();
+  toast("已排入「" + w.t + "」" + w.days[target.di].d);
+  renderMenuAdmin();
 }
 
 /* ================= 配方折叠列表（配料含品牌推荐 + 小诀窍） ================= */
@@ -5435,6 +5568,7 @@ function recipeHTML(d, showGroup){
       ${d.diff?`<span class="dstars" style="color:${dc}" title="难度 ${d.diff} 星">${diffStars(d.diff)}</span>`:""}
       ${oTag}
       <span class="tag ${lv.cls}">${lv.txt}</span>
+      <span class="dchk${doneSet.has(key)?" on":""}" data-key="${esc(key)}" title="标记已做过">✓</span>
       <span class="star" data-key="${esc(key)}" title="收藏">☆</span>
     </div>
     <div class="recipe-body">
@@ -5449,6 +5583,7 @@ function recipeHTML(d, showGroup){
       <div class="trick"><b>小诀窍</b>${esc(d.tips)}</div>
       <div class="body-actions">
         <button class="ask-ai" data-key="${esc(key)}">问 AI 做这道</button>
+        <button class="wish${wishSet.has(key)?" on":""}" data-key="${esc(key)}">${wishSet.has(key)?"已想做":"想做"}</button>
         <button class="dislike" data-key="${esc(key)}">不好吃</button>
         <button class="done" data-key="${esc(key)}">已做过</button>
       </div>
@@ -5459,7 +5594,7 @@ function bindRecipeToggles(root){
   root.querySelectorAll(".recipe-head").forEach(h=>{
     h.addEventListener("click",()=>h.parentElement.classList.toggle("open"));
   });
-  refreshStars(); refreshDislikes(); refreshCooked();
+  refreshStars(); refreshDislikes(); refreshCooked(); refreshWish();
 }
 /* ================= 分组页（通用） ================= */
 function openGroup(catId, group){
@@ -5747,7 +5882,23 @@ uChip.addEventListener("click", async ()=>{
 let favSet = new Set();
 let dislikeSet = new Set();
 let doneSet = new Set();
+let wishSet = new Set();
 let hideDone = LS.get("hideDone") === "1";
+/* 每周菜单「换一道」计数：key -> 次数；≥3 即永久排除 */
+let swapCnt = (function(){
+  try { return JSON.parse(LS.get("swapCnt") || "{}") || {}; } catch(e){ return {}; }
+})();
+function saveSwapCnt(){ try { LS.set("swapCnt", JSON.stringify(swapCnt)); } catch(e){} }
+/* 菜位历史：某个菜位依次换掉过哪些菜，用于避免「换出去又换回来」的横跳 */
+let swapHist = (function(){
+  try { return JSON.parse(LS.get("swapHist") || "{}") || {}; } catch(e){ return {}; }
+})();
+function saveSwapHist(){ try { LS.set("swapHist", JSON.stringify(swapHist)); } catch(e){} }
+/* 菜位连击记录：同一道菜在同一菜位被换掉几次 */
+let swapSlot = (function(){
+  try { return JSON.parse(LS.get("swapSlot") || "{}") || {}; } catch(e){ return {}; }
+})();
+function saveSwapSlot(){ try { LS.set("swapSlot", JSON.stringify(swapSlot)); } catch(e){} }
 const keyOf = d => catOf(d) + "|" + groupOf(d) + "|" + d.name;
 const visibleRecipes = d => !dislikeSet.has(keyOf(d)) && (!hideDone || !doneSet.has(keyOf(d)));
 
@@ -5865,6 +6016,213 @@ function refreshCooked(){
     s.classList.toggle("on", on);
     s.textContent = on ? "✓ 已做过" : "已做过";
   });
+  document.querySelectorAll(".dchk").forEach(s=>{
+    const on = doneSet.has(s.dataset.key);
+    s.classList.toggle("on", on);
+    s.title = on ? "已做过（点击取消）" : "标记已做过";
+  });
+}
+/* ---------- 想做 ---------- */
+async function loadWishlist(){
+  if(!cloud) return;
+  const { data: session } = await cloud.auth.getSession();
+  if(!session){ wishSet = new Set(); return; }
+  const { data, error } = await cloud.database.from("wishlist").select("recipe_key").limit(500);
+  if(!error && data) wishSet = new Set(data.map(r => r.recipe_key));
+}
+function refreshWish(){
+  document.querySelectorAll(".wish").forEach(s=>{
+    const on = wishSet.has(s.dataset.key);
+    s.classList.toggle("on", on);
+    s.textContent = on ? "已想做" : "想做";
+  });
+}
+async function toggleWish(key){
+  if(!cloudReady()) return;
+  const { data: session } = await cloud.auth.getSession();
+  if(!session){ openLogin(); return; }
+  const d = recipeByKey(key);
+  if(!d) return;
+  if(wishSet.has(key)){
+    const { error } = await cloud.database.from("wishlist").delete().eq("recipe_key", key).select();
+    if(error){ toast("操作失败，请重试"); return; }
+    wishSet.delete(key); toast("已从想做移除");
+  } else {
+    const { error } = await cloud.database.from("wishlist").insert({
+      recipe_key: key,
+      cat: catOf(d),
+      group_name: groupOf(d),
+      recipe_name: d.name,
+      owner_name: (session.user && session.user.name) || null
+    }).select();
+    if(error){
+      if(error.code === "23505"){ wishSet.add(key); }
+      else { toast("操作失败：" + (error.message || "请重试")); return; }
+    } else { wishSet.add(key); toast("已加入想做，会安排进最近的每周菜单"); }
+  }
+  refreshWish();
+}
+/* 被换掉 ≥3 次的配方（永久排除，直至在菜单管理页移除） */
+const SWAP_LIMIT = 3;
+function isSwappedOut(key){ return (swapCnt[key] || 0) >= SWAP_LIMIT; }
+function swappedOutList(){
+  return Object.keys(swapCnt).filter(k => swapCnt[k] >= SWAP_LIMIT).map(k => ({ key:k, cnt:swapCnt[k], d:recipeByKey(k) })).filter(x => x.d);
+}
+
+/* ---------- 菜单选菜规则（与人工制定菜单一致） ---------- */
+/* 荤菜判定：菜名或 type 命中肉类/水产关键词 */
+const MEAT_KW = ["鸡","鸭","鹅","猪","肉","排骨","牛","羊","鱼","虾","蟹","贝","蛤","蛏","鱿","墨鱼","螺","鲍","翅","腰","肝","肠","肚","蹄","腊","培根","火腿","丸","饺","包"];
+const VEG_KW = ["菜","豆腐","茄","瓜","藕","藕丁","萝卜","土豆","笋","菇","耳","芽","豆","丝瓜","苦瓜","白菜","芹菜","韭菜","菠菜","空心菜","生菜","菜心","油麦菜","海带","紫菜","番茄","西红柿","青椒","圆白菜","花菜","西兰花","南瓜","山药","芋","百合","莲子","银耳"];
+function isMeatDish(d){
+  const hay = (d.name || "") + " " + (d.type || "");
+  // 素馅/素菜优先判定
+  const vegHit = VEG_KW.some(k => hay.indexOf(k) !== -1);
+  const meatHit = MEAT_KW.some(k => hay.indexOf(k) !== -1);
+  if(!meatHit) return false;
+  if(!vegHit) return true;
+  // 双命中时看是否含明确的动物蛋白词
+  return /鸡|鸭|鹅|猪|牛肉|羊肉|肉末|肉丝|肉片|肉馅|肉丸|排骨|鱼|虾|蟹|蛤|蛏|鱿|墨鱼|培根|火腿|腊/.test(hay);
+}
+/* 当季关键词（按月份） */
+const SEASON_KW = {
+  1:["白菜","萝卜","羊肉","山药","冬笋","莲藕"],
+  2:["白菜","萝卜","羊肉","山药","冬笋","韭菜"],
+  3:["春笋","香椿","韭菜","豌豆苗","菠菜"],
+  4:["春笋","香椿","韭菜","豌豆苗","菠菜","芦笋"],
+  5:["芦笋","黄瓜","西红柿","豌豆"],
+  6:["丝瓜","冬瓜","空心菜","苦瓜","绿豆","黄瓜"],
+  7:["丝瓜","冬瓜","空心菜","苦瓜","绿豆","茄子"],
+  8:["丝瓜","冬瓜","空心菜","苦瓜","绿豆","茄子"],
+  9:["莲藕","南瓜","板栗","芋","梨","银耳"],
+  10:["白萝卜","莲藕","南瓜","板栗","雪梨","银耳","蟹","虾","鲈鱼","芋"],
+  11:["白菜","萝卜","莲藕","南瓜","山药","板栗","蟹"],
+  12:["白菜","萝卜","羊肉","山药","冬笋","莲藕"],
+};
+/* 主食材提取（用于避开相邻两天重复）——按大类归并，避免「鱼→虾→蟹」连环换 */
+const ING_GROUPS = [
+  ["水产", ["鱼","虾","蟹","蛤","蛏","鱿","墨鱼","螺","鲍","贝","海参","花甲","扇贝","生蚝"]],
+  ["鸡肉", ["鸡"]],
+  ["鸭肉", ["鸭"]],
+  ["猪肉", ["猪","排骨","肉末","肉丝","肉片","肉馅","肉丸","五花","里脊","蹄","肝","肠","肚"]],
+  ["牛肉", ["牛"]],
+  ["羊肉", ["羊"]],
+  ["豆腐", ["豆腐","豆干","腐竹","千张"]],
+  ["蛋类", ["蛋"]],
+];
+function mainIngOf(d){
+  const hay = (d.name || "") + " " + (d.items || []).map(i=>i[0]).join(" ");
+  for(const [g, kws] of ING_GROUPS){
+    if(kws.some(k => hay.indexOf(k) !== -1)) return g;
+  }
+  // 蔬菜类退回具体食材
+  const VEG = ["萝卜","白菜","茄子","土豆","莲藕","南瓜","冬瓜","丝瓜","苦瓜","花菜","豆角","山药","芋","菇","木耳","海带","青菜","菠菜","芹菜","韭菜","西红柿","番茄","黄瓜","莴笋","菜心","生菜"];
+  for(const k of VEG){ if(hay.indexOf(k) !== -1) return k; }
+  return "";
+}
+/* 从候选池里按规则挑一道：
+   cat 限定分类；wantMeat 是否要荤菜；used 已在本菜单出现的菜名；avoidIng 需避开的主食材；excludeNames 该菜位已换出去过的菜 */
+function pickDish(catId, wantMeat, used, avoidIng, excludeNames){
+  const month = new Date().getMonth() + 1;
+  const seasonKw = SEASON_KW[month] || [];
+  const ex = excludeNames || [];
+  let pool = DATA.filter(d => {
+    if((d.cat || "drinks") !== catId) return false;
+    if(!d.diff || d.diff > 3) return false;                       // 只选 1-3 星
+    if(used.indexOf(d.name) !== -1) return false;                  // 本期不重复
+    if(ex.indexOf(d.name) !== -1) return false;                    // 该菜位已换出去过的（防横跳）
+    if(visibleRecipes(d) === false) return false;                  // 排除不好吃/隐藏的
+    if(isSwappedOut(keyOf(d))) return false;                       // 被换掉 3 次的永久排除
+    return isMeatDish(d) === wantMeat;
+  });
+  if(!pool.length && ex.length){
+    // 兜底：去掉菜位历史限制再来一次
+    return pickDish(catId, wantMeat, used, avoidIng, []);
+  }
+  if(!pool.length) return null;
+  const avoidList = Array.isArray(avoidIng) ? avoidIng : (avoidIng ? [avoidIng] : []);
+  // 先做硬性排除：主食材与相邻天/原菜冲突的，尽量不要
+  if(avoidList.length){
+    const clean = pool.filter(d => avoidList.indexOf(mainIngOf(d)) === -1);
+    if(clean.length) pool = clean;
+  }
+  // 排序打分：时令命中 > 随机
+  const scored = pool.map(d => {
+    let s = 0;
+    const hay = d.name + " " + (d.items || []).map(i=>i[0]).join("");
+    if(seasonKw.some(k => hay.indexOf(k) !== -1)) s += 10;
+    s += Math.random() * 5;
+    return { d, s };
+  }).sort((a,b) => b.s - a.s);
+  return scored[0].d;
+}
+/* 换一道：更新 WEEK_MENUS 并持久化到文件不可能，因此改为运行时覆盖 + 本地记录 */
+const MENU_OVERRIDE_KEY = "menuOverrides";
+let menuOverrides = (function(){
+  try { return JSON.parse(LS.get(MENU_OVERRIDE_KEY) || "{}") || {}; } catch(e){ return {}; }
+})();
+function saveMenuOverrides(){ try { LS.set(MENU_OVERRIDE_KEY, JSON.stringify(menuOverrides)); } catch(e){} }
+/* 生效菜名：优先本地覆盖 */
+function effectiveDish(menuId, dayIdx, slot){
+  const k = menuId + "|" + dayIdx + "|" + slot;
+  if(menuOverrides[k]) return menuOverrides[k];
+  const w = WEEK_MENUS.find(x => x.id === menuId);
+  return (w && w.days[dayIdx] && w.days[dayIdx].dishes[slot]) || "";
+}
+/* 换一道：按现有选菜规则重选，旧菜计数 +1，满 3 次永久排除 */
+function doSwap(menuId, dayIdx, slot){
+  const w = WEEK_MENUS.find(x => x.id === menuId);
+  if(!w) return;
+  const oldName = effectiveDish(menuId, dayIdx, slot);
+  if(!oldName) return;
+  const oldD = DATA.find(d => d.name === oldName);
+  const catId = oldD ? (oldD.cat || "drinks") : "yuecai";
+  const wantMeat = oldD ? isMeatDish(oldD) : true;
+  // 本期全部已用菜名（含覆盖）
+  const used = [];
+  w.days.forEach((day, di) => day.dishes.forEach((_, si) => {
+    const n = effectiveDish(menuId, di, si);
+    if(n) used.push(n);
+  }));
+  // 相邻两天主食材 + 同一天另一道菜的主食材，都要避开
+  const avoid = [];
+  if(oldD){ const ing = mainIngOf(oldD); if(ing) avoid.push(ing); }
+  [dayIdx - 1, dayIdx + 1].forEach(di => {
+    if(di < 0 || di >= w.days.length) return;
+    w.days[di].dishes.forEach((_, si) => {
+      const n = effectiveDish(menuId, di, si);
+      const dd = n && DATA.find(x => x.name === n);
+      if(dd){ const ing = mainIngOf(dd); if(ing && avoid.indexOf(ing) === -1) avoid.push(ing); }
+    });
+  });
+  const slotKey = menuId + "|" + dayIdx + "|" + slot;
+  const slotExcl = (swapHist[slotKey] || []).slice();
+  if(oldName && slotExcl.indexOf(oldName) === -1) slotExcl.push(oldName);
+  const pick = pickDish(catId, wantMeat, used, avoid, slotExcl);
+  if(!pick){ toast("这个分类里暂时没有可换的菜了"); return; }
+  /* 计数规则：同一道菜在同一菜位被「换一道」满 3 次 → 永久排除，不再进任何菜单。
+     swapSlot[菜位] = { last: 上次的菜名, streak: {该菜名: 连续次数} } */
+  const oldKey = oldD ? keyOf(oldD) : "";
+  if(oldKey){
+    const rec = swapSlot[slotKey] || { last:"", streak:{} };
+    if(rec.last !== oldName) rec.streak = {};   // 中途被人工改过就重置
+    rec.last = oldName;
+    rec.streak[oldKey] = (rec.streak[oldKey] || 0) + 1;
+    swapSlot[slotKey] = rec;
+    saveSwapSlot();
+    swapCnt[oldKey] = Math.max(swapCnt[oldKey] || 0, rec.streak[oldKey]);
+    saveSwapCnt();
+    if(!swapHist[slotKey]) swapHist[slotKey] = [];
+    if(swapHist[slotKey].indexOf(oldName) === -1) swapHist[slotKey].push(oldName);
+    saveSwapHist();
+  }
+  menuOverrides[slotKey] = pick.name;
+  saveMenuOverrides();
+  renderMenu();
+  if(oldKey && swapCnt[oldKey] >= SWAP_LIMIT){
+    toast("「" + oldName + "」已被换掉 3 次，以后不再推荐");
+  } else {
+    toast("已换成「" + pick.name + "」");
+  }
 }
 async function toggleFav(key){
   if(!cloudReady()) return;
@@ -6187,6 +6545,18 @@ chatText.addEventListener("keydown", e=>{ if(e.key === "Enter"){ e.preventDefaul
 document.addEventListener("click", async e=>{
   const star = e.target.closest(".star");
   if(star){ e.stopPropagation(); toggleFav(star.dataset.key); return; }
+  const dchk = e.target.closest(".dchk");
+  if(dchk){ e.stopPropagation(); toggleDone(dchk.dataset.key); return; }
+  const wish = e.target.closest(".wish");
+  if(wish){ e.stopPropagation(); toggleWish(wish.dataset.key); return; }
+  const swap = e.target.closest(".swap");
+  if(swap){ e.stopPropagation(); doSwap(swap.dataset.day, parseInt(swap.dataset.di,10), parseInt(swap.dataset.si,10)); return; }
+  const wishdel = e.target.closest("[data-wishdel]");
+  if(wishdel){ e.stopPropagation(); await toggleWish(wishdel.dataset.wishdel); renderMenuAdmin(); return; }
+  const outdel = e.target.closest("[data-outdel]");
+  if(outdel){ e.stopPropagation(); delete swapCnt[outdel.dataset.outdel]; saveSwapCnt(); toast("已从排除列表移除"); renderMenuAdmin(); return; }
+  const addto = e.target.closest("[data-addto]");
+  if(addto){ e.stopPropagation(); const mid = WEEK_MENUS[1] ? WEEK_MENUS[1].id : (WEEK_MENUS[0]&&WEEK_MENUS[0].id); addToMenu(addto.dataset.addto, mid); return; }
   const dislike = e.target.closest(".dislike");
   if(dislike){ e.stopPropagation(); toggleDislike(dislike.dataset.key); return; }
   const done = e.target.closest(".done");
@@ -6319,6 +6689,8 @@ async function continueNormalStartup(){
   refreshDislikes();
   await loadCooked();
   refreshCooked();
+  await loadWishlist();
+  refreshWish();
   setHideDone(hideDone);
   renderSortBtns();
 }
