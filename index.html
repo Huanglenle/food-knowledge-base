@@ -5877,12 +5877,13 @@ function addToMenu(key, menuId){
 /* ================= 配方折叠列表（配料含品牌推荐 + 小诀窍） ================= */
 const R_CHEV = '<span class="chev"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>';
 function recipeHTML(d, showGroup, opts={}){
-  const {inMenu=false, day=null, di=null, si=null} = opts;
+  const {inMenu=false, day=null, di=null, si=null, showCat=false} = opts;
   const lv = LEVEL_TAG[d.level] || LEVEL_TAG.replica;
   const metaTea = (d.tea && d.tea!=="—") ? `茶底：<b>${esc(d.tea)}</b>` : "";
   const metaType = d.type ? `做法：<b>${esc(d.type)}</b>` : "";
+  const metaCat = showCat ? `分类：<b>${esc((CATEGORIES.find(c=>c.id===catOf(d))||{t:catOf(d)}).t)}</b>` : "";
   const dc = d.diff ? (DIFF_TAG[d.diff]||{c:"#9a8f7a"}).c : "#9a8f7a";
-  const meta = [metaType, metaTea].filter(Boolean).join(" · ");
+  const meta = [metaCat, metaType, metaTea].filter(Boolean).join(" · ");
   const o = originOf(d);
   const oTag = o ? `<span class="tag origin ${o.kind==="品牌"?"b":"r"}">${esc(o.v)}</span>` : "";
   const key = keyOf(d);
@@ -6018,7 +6019,7 @@ function renderSearch(q){
 
   let html = "";
   if(rec.length){
-    html += `<h3 class="s-h3">配方（${rec.length}）</h3>` + rec.map(d=>recipeHTML(d,true)).join("");
+    html += `<h3 class="s-h3">配方（${rec.length}）</h3>` + rec.map(d=>recipeHTML(d,true,{showCat:true})).join("");
   }
   if(primers.length){
     html += `<h3 class="s-h3">常识科普（${primers.length}）</h3><div class="hits">${primers.map(p=>`
