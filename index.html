@@ -778,6 +778,34 @@ const LS = (function(){
 
 /* ================= 云服务初始化（publicConfig 来自云服务开通结果，可安全随前端发布） ================= */
 const PUBLIC_CONFIG = {"resourceId":"wbcs_McaRKpGRHoFIdjQmbr1Fr0","endpoint":"https://milk-tea-recipes.app.workbuddy.host","oauthRelayBaseUrl":"https://www.workbuddy.cn/v2/as/genie-baas/oauth","publishableKey":"wbpk_tgwXUtdIhszLhfd04sw18U_Od5u6as4CWnU2KA3dFvalymsx3WmxoFX"};
+
+/* 会话存储三级回退：localStorage → Cookie → 内存（沙箱/无痕/预览面板保底） */
+function createCloudStorage(){
+  // 优先 localStorage
+  try{
+    const k="__wb_probe"; window.localStorage.setItem(k,"1"); window.localStorage.removeItem(k);
+    return window.localStorage;
+  }catch(e){}
+  // 降级 Cookie（30 天）
+  try{
+    document.cookie="__wb_probe=1;path=/;max-age=10"; if(document.cookie.indexOf("__wb_probe")!==-1){
+      return {
+        getItem(k){ const m=document.cookie.match(new RegExp("(?:^|; )"+k.replace(/[.$]/g,"\\$&")+"=([^;]*)")); return m?decodeURIComponent(m[1]):null; },
+        setItem(k,v){ document.cookie=k+"="+encodeURIComponent(v)+";path=/;max-age=2592000;SameSite=Lax"; },
+        removeItem(k){ document.cookie=k+"=;path=/;max-age=0"; }
+      };
+    }
+  }catch(e){}
+  // 最终降级内存
+  const mem={};
+  return {
+    getItem(k){ return mem[k]===undefined?null:mem[k]; },
+    setItem(k,v){ mem[k]=v; },
+    removeItem(k){ delete mem[k]; }
+  };
+}
+const cloudStorage = createCloudStorage();
+
 let cloud = null;
 function retryCloud(){
   if(cloud) return true;
@@ -786,13 +814,27 @@ function retryCloud(){
       cloud = WorkBuddyCloud.createWorkBuddyCloud({
         endpoint: PUBLIC_CONFIG.endpoint,
         oauthRelayBaseUrl: PUBLIC_CONFIG.oauthRelayBaseUrl,
-        publishableKey: PUBLIC_CONFIG.publishableKey
+        publishableKey: PUBLIC_CONFIG.publishableKey,
+        storage: cloudStorage
       });
     }
   }catch(e){ cloud = null; }
   return !!cloud;
 }
 retryCloud();
+
+/* 存储能力提示：内存模式下登录态刷新即丢，主动提示一次 */
+(function(){
+  if(cloudStorage === window.localStorage) return;
+  const isCookie = document.cookie.indexOf("__wb_probe") !== -1;
+  setTimeout(()=>{
+    if(isCookie){
+      toast("当前为兼容模式，登录状态可保存 30 天");
+    } else {
+      toast("当前环境不支持持久化存储，刷新后需重新登录");
+    }
+  }, 1200);
+})();
 function cloudReady(){
   if(cloud || retryCloud()) return true;
   toast("云服务未加载成功，请检查网络后刷新页面");
