@@ -827,6 +827,9 @@ retryCloud();
 (function(){
   if(cloudStorage === window.localStorage) return;
   const isCookie = document.cookie.indexOf("__wb_probe") !== -1;
+  // 预览面板/沙箱 iframe 内不弹提示（用户无法控制环境）
+  const inIframe = window.self !== window.top;
+  if(inIframe) return;
   setTimeout(()=>{
     if(isCookie){
       toast("当前为兼容模式，登录状态可保存 30 天");
