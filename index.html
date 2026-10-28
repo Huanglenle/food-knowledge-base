@@ -305,9 +305,10 @@
 .star:hover{color:var(--accent);transform:scale(1.18);}
 .star:active{transform:scale(.94);}
 .star.on{color:#d9a441;}
-/* 头部已做过 √（五角星左侧，免展开） */
-.dchk{cursor:pointer;color:#c9c5be;font-size:15px;font-weight:700;flex:0 0 auto;padding:6px;line-height:1;transition:transform .12s,color .14s;border-radius:6px;user-select:none;-webkit-user-select:none;}
-.dchk:hover{color:#2a6b3d;transform:scale(1.12);}
+/* 头部已做过标记（五角星左侧，免展开）：未做=灰色线性无表情脸，已做=绿色填色笑脸 */
+.dchk{cursor:pointer;color:#c9c5be;flex:0 0 auto;padding:5px;line-height:0;border-radius:6px;user-select:none;-webkit-user-select:none;transition:transform .12s;display:inline-flex;align-items:center;}
+.dchk svg{width:17px;height:17px;display:block;}
+.dchk:hover{transform:scale(1.12);}
 .dchk:active{transform:scale(.94);}
 .dchk.on{color:#2a6b3d;}
 /* 每周菜单：换一道 */
@@ -447,7 +448,7 @@
     .recipe-head:not(.favrow){flex-wrap:wrap;gap:3px 6px;padding:10px 14px;min-height:0;}
     .recipe-head:not(.favrow) .chev{order:0;margin-top:5px;}
     .recipe-head:not(.favrow) .rn{order:1;flex:1 1 auto;min-width:calc(100% - 84px);}
-    .recipe-head:not(.favrow) .dchk{order:2;flex:0 0 auto;padding:2px 4px;font-size:14px;}
+    .recipe-head:not(.favrow) .dchk{order:2;flex:0 0 auto;padding:3px 4px;}
     .recipe-head:not(.favrow) .star{order:2;flex:0 0 auto;padding:2px 4px;font-size:15px;}
     .recipe-head:not(.favrow) .dstars{order:3;margin-left:19px;font-size:10.5px;letter-spacing:0;line-height:20px;}
     .recipe-head:not(.favrow) .tag{order:4;font-size:9px;padding:2px 5px;}
@@ -6660,6 +6661,82 @@ const DATA = [
    steps:["银耳冷水泡发 2 小时，撕小朵。","银耳加 800ml 水，大火煮开转小火炖 40 分钟到出胶。","加冰糖、枸杞煮 5 分钟。","关火放温后，加入牛油果块和牛奶，搅匀即可。"],
    tips:"**牛油果必须在关火放温后再加**——高温会破坏它的香气，也会让羹变苦。银耳先炖出胶是这道羹的基础。牛油果让羹更浓稠绵密，还能补好脂肪。这是中西合璧的养生思路，润燥又顶饱。",
    level:"replica", src:"家常做法"},
+  /* ---------- 空气炸锅补充（少油快手 · 第二批扩充） ---------- */
+  {cat:"snack", group:"烤物小吃", name:"蒜香排骨（空气炸锅）", type:"烤", diff:2, tea:"—",
+   items:[["肋排","400g"],["蒜","6 瓣"],["生抽","1 勺"],["蚝油","半勺"],["料酒","1 勺"],["淀粉","1 小勺"],["黑胡椒","少许"]],
+   steps:["肋排剁小段，泡水 20 分钟去血水，彻底擦干。","蒜末、生抽、蚝油、料酒、淀粉、黑胡椒抓匀，腌 30 分钟。","平铺入炸篮（不叠放），180℃ 烤 12 分钟。","翻面再烤 8 分钟到表面焦黄。"],
+   tips:"排骨**泡水去血水 + 彻底擦干**是外脆内嫩的前提。淀粉形成薄壳锁汁。**不叠放**是关键，叠放会蒸不熟、不上色。最后 2 分钟可调到 200℃ 上色。",
+   level:"replica", src:"家常做法"},
+  {cat:"snack", group:"烤物小吃", name:"脆皮豆腐（空气炸锅）", type:"烤", diff:1, tea:"—",
+   items:[["老豆腐","400g"],["生抽","1 勺"],["蚝油","半勺"],["淀粉","2 勺"],["油","喷 4 下"],["辣椒面","少许（可选）"]],
+   steps:["豆腐切 2cm 方块，厨房纸吸干水分。","裹一层薄淀粉，喷 4 下油抓匀。","180℃ 烤 15 分钟，中途翻面一次。","出炉撒辣椒面，蘸生抽蚝油汁。"],
+   tips:"一星零门槛。**吸干水分 + 薄淀粉壳**是脆皮的全部秘密。喷油比刷油均匀，4 下约 2g 油。豆腐选老豆腐，嫩豆腐会碎。",
+   level:"replica", src:"家常做法"},
+  {cat:"snack", group:"烤物小吃", name:"烤茄子（空气炸锅）", type:"烤", diff:1, tea:"—",
+   items:[["长茄子","2 根"],["蒜","1 整头"],["小米辣","2 个"],["生抽","2 勺"],["蚝油","半勺"],["葱花","适量"],["油","1 勺"]],
+   steps:["茄子洗净对半剖开，表面划菱形花刀。","180℃ 烤 12 分钟到软塌。","蒜末加生抽、蚝油、1 勺油调成蒜蓉酱。","铺在茄子上，再烤 4 分钟，撒葱花。"],
+   tips:"茄子**划花刀**让蒜蓉酱渗进去。先烤软再铺酱，顺序不能反——酱先放会烤糊发苦。1 勺油全在酱里，比烧烤摊少一半油。",
+   level:"replica", src:"家常做法"},
+  {cat:"snack", group:"烤物小吃", name:"烤五花肉（空气炸锅）", type:"烤", diff:1, tea:"—",
+   items:[["五花肉","300g"],["生抽","1 勺"],["料酒","1 勺"],["孜然粉","1 小勺"],["辣椒粉","半勺"],["蒜","3 瓣"]],
+   steps:["五花肉切 3mm 薄片，加蒜末、生抽、料酒、孜然、辣椒粉腌 20 分钟。","平铺炸篮，180℃ 烤 10 分钟。","翻面再烤 6 分钟到边缘焦脆。","配生菜包着吃。"],
+   tips:"五花肉自身的油会被热风逼出来，**完全不用额外加油**，烤出的油都积在炸篮底部——比煎的少油得多。切薄片是快熟和脆的关键。",
+   level:"replica", src:"家常做法"},
+  {cat:"snack", group:"烤物小吃", name:"烤鸡翅根（空气炸锅）", type:"烤", diff:1, tea:"—",
+   items:[["鸡翅根","8 个"],["生抽","1.5 勺"],["老抽","几滴"],["料酒","1 勺"],["蜂蜜","1 小勺"],["蒜","3 瓣"],["姜","2 片"]],
+   steps:["翅根两面各划两刀，加所有调料抓匀腌 30 分钟。","平铺炸篮，180℃ 烤 12 分钟。","翻面刷一层腌料汁，180℃ 再烤 8 分钟。","最后 200℃ 烤 2 分钟上色。"],
+   tips:"**划刀**是入味前提。蜂蜜让表皮有焦糖光泽，**只放 1 小勺**（多了会焦苦）。最后 200℃ 高温 2 分钟是上色关键，别省。",
+   level:"replica", src:"家常做法"},
+  {cat:"snack", group:"烤物小吃", name:"烤韭菜（空气炸锅）", type:"烤", diff:1, tea:"—",
+   items:[["韭菜","200g"],["生抽","1 勺"],["孜然粉","半小勺"],["辣椒面","半小勺"],["油","喷 3 下"]],
+   steps:["韭菜洗净**彻底沥干**，切 10cm 段。","放锡纸小碗中（或炸篮垫锡纸），喷 3 下油。","180℃ 烤 4 分钟。","取出拌入生抽、孜然、辣椒面即可。"],
+   tips:"韭菜**必须沥干**——带水滴会蒸软不焦香。烤 4 分钟刚好断生带焦边，久了发黄。垫锡纸小碗接住酱汁，拌起来更入味。",
+   level:"replica", src:"家常做法"},
+  {cat:"snack", group:"烤物小吃", name:"烤土豆片（空气炸锅）", type:"烤", diff:1, tea:"—",
+   items:[["土豆","2 个"],["油","喷 4 下"],["盐","1g"],["孜然粉","少许"],["辣椒面","少许"]],
+   steps:["土豆切 2mm 薄片，泡水 10 分钟去淀粉，彻底擦干。","喷油、撒盐抓匀。","平铺炸篮，180℃ 烤 12 分钟，中途翻面一次。","出炉撒孜然、辣椒面。"],
+   tips:"**泡水去淀粉 + 彻底擦干**是脆片的两个前提，缺一不可。切 2mm 厚薄均匀，用擦片器更稳。不叠放，受热才均匀。比市售薯片少 90% 油。",
+   level:"replica", src:"家常做法"},
+  {cat:"snack", group:"烤物小吃", name:"烤金针菇（空气炸锅）", type:"烤", diff:1, tea:"—",
+   items:[["金针菇","250g"],["蒜","4 瓣"],["生抽","1 勺"],["蚝油","半勺"],["油","1 小勺"],["小米辣","1 个"],["葱花","少许"]],
+   steps:["金针菇去根洗净，**用力挤干水分**，撕小束。","锡纸折成小碗，金针菇放入。","蒜末、生抽、蚝油、油调成汁浇上。","180℃ 烤 10 分钟，撒葱花小米辣。"],
+   tips:"金针菇水分极多，**挤干**和**锡纸小碗接住汁水**是两步关键——汁水不流失，烤出来自带鲜汤。烤出的汁拌饭很香，别倒掉。",
+   level:"replica", src:"家常做法"},
+  {cat:"snack", group:"烤物小吃", name:"烤鸡腿（空气炸锅）", type:"烤", diff:2, tea:"—",
+   items:[["琵琶腿","4 个"],["生抽","2 勺"],["料酒","1 勺"],["蚝油","半勺"],["蒜","4 瓣"],["姜","2 片"],["黑胡椒","少许"]],
+   steps:["鸡腿用叉子扎孔，加所有调料抓匀腌 1 小时。","平铺炸篮，皮朝上，180℃ 烤 15 分钟。","翻面烤 10 分钟，最后皮朝上 200℃ 烤 3 分钟脆皮。"],
+   tips:"**扎孔**让味道进得深。皮朝上收尾高温 3 分钟，皮才脆。腌 1 小时是下限，过夜更香。鸡腿自身出油，全程零额外用油。",
+   level:"replica", src:"家常做法"},
+  {cat:"snack", group:"烤物小吃", name:"烤藕片（空气炸锅）", type:"烤", diff:1, tea:"—",
+   items:[["莲藕","1 节"],["油","喷 4 下"],["盐","1g"],["黑胡椒","少许"]],
+   steps:["莲藕去皮切 3mm 薄片，泡水 5 分钟去表面淀粉，彻底擦干。","喷油、撒盐、黑胡椒抓匀。","平铺炸篮，180℃ 烤 12 分钟，中途翻面。","烤到边缘微卷焦黄即可。"],
+   tips:"藕片泡水去淀粉防粘连。**擦干**是脆的前提。3mm 厚薄刚好——太薄会烤成干片，太厚中间不熟。这是替代薯片的低脂零食。",
+   level:"replica", src:"家常做法"},
+  {cat:"snack", group:"烤物小吃", name:"烤虾（空气炸锅）", type:"烤", diff:1, tea:"—",
+   items:[["基围虾","300g"],["蒜","3 瓣"],["料酒","1 勺"],["盐","1g"],["黑胡椒","少许"],["油","喷 3 下"]],
+   steps:["虾剪去虾枪虾须，开背去虾线。","加蒜末、料酒、盐、黑胡椒腌 10 分钟。","平铺炸篮喷油，180℃ 烤 8 分钟。","虾壳变红酥脆即可，可连壳吃。"],
+   tips:"虾**开背**才入味。烤 8 分钟壳脆肉嫩，过了肉会缩。喷油 3 下就够，虾本身低脂。配柠檬角挤汁更好。",
+   level:"replica", src:"家常做法"},
+  {cat:"snack", group:"烤物小吃", name:"烤杏鲍菇（空气炸锅）", type:"烤", diff:1, tea:"—",
+   items:[["杏鲍菇","300g"],["生抽","1 勺"],["蚝油","半勺"],["孜然粉","半小勺"],["油","1 小勺"]],
+   steps:["杏鲍菇切 5mm 厚片或撕粗条。","加生抽、蚝油、孜然、油抓匀腌 10 分钟。","平铺炸篮，180℃ 烤 10 分钟，中途翻动一次。","边缘焦黄即可出锅。"],
+   tips:"杏鲍菇烤后会缩小一半，**切厚一点**才有肉感。撕条比切片更挂味。孜然后撒也可以，烤前拌入更入味。",
+   level:"replica", src:"家常做法"},
+  {cat:"snack", group:"烤物小吃", name:"烤南瓜（空气炸锅）", type:"烤", diff:1, tea:"—",
+   items:[["老南瓜","400g"],["油","喷 3 下"],["盐","1 小撮"],["黑胡椒","少许"]],
+   steps:["南瓜去皮去瓤，切 2cm 块。","喷油、撒盐抓匀。","平铺炸篮，180℃ 烤 15 分钟，中途翻面。","边缘焦糖色即可，撒黑胡椒。"],
+   tips:"南瓜选**老南瓜**（贝贝南瓜最粉）。**一小撮盐**反而衬出甜味，比加糖好吃。烤到边缘微焦是最佳状态，焦糖化产生天然甜香。",
+   level:"replica", src:"家常做法"},
+  {cat:"snack", group:"烤物小吃", name:"烤馒头片蒜香味（空气炸锅）", type:"烤", diff:1, tea:"—",
+   items:[["隔夜馒头","2 个"],["蒜","4 瓣"],["黄油或食用油","1 勺"],["盐","1g"],["葱花","少许"]],
+   steps:["馒头切 1.5cm 厚片。","蒜末、融化的黄油（或油）、盐拌成蒜香酱，刷在馒头片两面。","平铺炸篮，180℃ 烤 6 分钟到金黄酥脆。","撒葱花即可。"],
+   tips:"**隔夜馒头**才好切不碎。蒜香酱两面都刷才香。用食用油代替黄油更清爽，风味差一点点但更健康。烤 6 分钟到外脆内软，别烤过头变干硬。",
+   level:"replica", src:"家常做法"},
+  {cat:"snack", group:"烤物小吃", name:"烤鱿鱼须（空气炸锅）", type:"烤", diff:1, tea:"—",
+   items:[["鱿鱼须","300g"],["生抽","1 勺"],["料酒","1 勺"],["孜然粉","1 小勺"],["辣椒面","半勺"],["蒜","3 瓣"],["油","1 小勺"]],
+   steps:["鱿鱼须洗净切段，**彻底擦干**。","加蒜末、生抽、料酒、孜然、辣椒面、油抓匀腌 20 分钟。","平铺炸篮，200℃ 烤 8 分钟，中途翻动一次。","表面微焦即可。"],
+   tips:"鱿鱼**必须彻底擦干**——表面带水煎不出焦香。200℃ 高温短时间烤，低温久烤会变橡皮。烤 8 分钟是上限，鱿鱼过火的代价比不熟大得多。",
+   level:"replica", src:"家常做法"},
 ];
 
 /* ================= 原料品牌库（30 项） ================= */
@@ -7838,7 +7915,7 @@ function recipeHTML(d, showGroup, opts={}){
       ${d.diff?`<span class="dstars" style="color:${dc}" title="难度 ${d.diff} 星">${diffStars(d.diff)}</span>`:""}
       ${oTag}
       <span class="tag ${lv.cls}">${lv.txt}</span>
-      <span class="dchk${doneSet.has(key)?" on":""}" data-key="${esc(key)}" title="标记已做过">✓</span>
+      <span class="dchk${doneSet.has(key)?" on":""}" data-key="${esc(key)}" title="${doneSet.has(key)?"已做过（点击取消）":"标记已做过"}">${dchkIcon(doneSet.has(key))}</span>
       <span class="star" data-key="${esc(key)}" title="收藏">☆</span>
     </div>
     <div class="recipe-body">
@@ -8281,6 +8358,12 @@ async function loadCooked(){
   const { data, error } = await cloud.database.from("cooked").select("recipe_key").limit(500);
   if(!error && data) doneSet = new Set(data.map(r => r.recipe_key));
 }
+/* 头部已做过标记：未做=灰色线性无表情脸，已做=绿色填色笑脸 */
+function dchkIcon(on){
+  return on
+    ? '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><circle cx="8.5" cy="9.5" r="1.4" fill="#fff"/><circle cx="15.5" cy="9.5" r="1.4" fill="#fff"/><path d="M8 14.2c1.1 1.5 2.5 2.3 4 2.3s2.9-.8 4-2.3" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9.3"/><circle cx="8.5" cy="9.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="9.5" r="1.1" fill="currentColor" stroke="none"/><path d="M8.5 15.5h7" stroke-linecap="round"/></svg>';
+}
 function refreshCooked(){
   document.querySelectorAll(".done").forEach(s=>{
     const on = doneSet.has(s.dataset.key);
@@ -8291,6 +8374,7 @@ function refreshCooked(){
     const on = doneSet.has(s.dataset.key);
     s.classList.toggle("on", on);
     s.title = on ? "已做过（点击取消）" : "标记已做过";
+    s.innerHTML = dchkIcon(on);
   });
 }
 /* ---------- 想做 ---------- */
