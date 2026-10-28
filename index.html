@@ -763,7 +763,7 @@
 <div id="toast"></div>
 <button id="toTop" title="回到顶部" aria-label="回到顶部"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg></button>
 
-<script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js" async></script>
+<script src="./cloud-sdk.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js';document.head.appendChild(s);"></script>
 <script>
 /* ================= 安全本地存储（沙箱 / 无痕 / file:// 下 localStorage 可能抛异常，全站统一走这层） ================= */
 const LS = (function(){
