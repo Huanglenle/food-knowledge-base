@@ -8166,19 +8166,40 @@ function addToMenu(key, menuId){
 
 /* ================= 配方折叠列表（配料含品牌推荐 + 小诀窍） ================= */
 const R_CHEV = '<span class="chev"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>';
-function recipeHTML(d, showGroup, opts={}){
+function recipeBodyHTML(d, opts={}){
   const {inMenu=false, day=null, di=null, si=null, showCat=false} = opts;
-  const lv = LEVEL_TAG[d.level] || LEVEL_TAG.replica;
   const metaTea = (d.tea && d.tea!=="—") ? `茶底：<b>${esc(d.tea)}</b>` : "";
   const metaType = d.type ? `做法：<b>${esc(d.type)}</b>` : "";
   const metaCat = showCat ? `分类：<b>${esc((CATEGORIES.find(c=>c.id===catOf(d))||{t:catOf(d)}).t)}</b>` : "";
-  const dc = d.diff ? (DIFF_TAG[d.diff]||{c:"#9a8f7a"}).c : "#9a8f7a";
   const meta = [metaCat, metaType, metaTea].filter(Boolean).join(" · ");
-  const o = originOf(d);
-  const oTag = o ? `<span class="tag origin ${o.kind==="品牌"?"b":"r"}">${esc(o.v)}</span>` : "";
   const key = keyOf(d);
   const swapBtn = inMenu ? `<button class="swap" data-day="${esc(day)}" data-di="${di}" data-si="${si}" title="换一道">换一道</button>` : "";
   const showWish = !isInCurrentMenus(key);
+  return `<div class="recipe-body">
+    ${meta?`<p class="meta">${meta}</p>`:""}
+    <div class="ratio">
+      ${d.items.map(i=>{
+        const rec = brandOf(i[0]);
+        return `<div class="k">${esc(i[0])}${rec?`<span class="kb">荐 ${esc(rec)}</span>`:""}</div><div class="v">${esc(i[1])}</div>`;
+      }).join("")}
+    </div>
+    ${(d.steps&&d.steps.length)?`<div class="steps"><b>做法步骤</b><ol>${d.steps.map(s=>`<li>${esc(s)}</li>`).join("")}</ol></div>`:""}
+    <div class="trick"><b>小诀窍</b>${esc(d.tips)}</div>
+    <div class="body-actions">
+      <button class="ask-ai" data-key="${esc(key)}">问 AI</button>
+      ${swapBtn}
+      ${showWish ? `<button class="wish${wishSet.has(key)?" on":""}" data-key="${esc(key)}">${wishSet.has(key)?"已想做":"想做"}</button>` : ""}
+      <button class="dislike" data-key="${esc(key)}">不好吃</button>
+      <button class="done" data-key="${esc(key)}">已做过</button>
+    </div>
+  </div>`;
+}
+function recipeHTML(d, showGroup, opts={}){
+  const lv = LEVEL_TAG[d.level] || LEVEL_TAG.replica;
+  const dc = d.diff ? (DIFF_TAG[d.diff]||{c:"#9a8f7a"}).c : "#9a8f7a";
+  const o = originOf(d);
+  const oTag = o ? `<span class="tag origin ${o.kind==="品牌"?"b":"r"}">${esc(o.v)}</span>` : "";
+  const key = keyOf(d);
   return `<div class="recipe${d.special?" special":""}" data-name="${esc(d.name)}">
     <div class="recipe-head">
       ${R_CHEV}
@@ -8189,24 +8210,29 @@ function recipeHTML(d, showGroup, opts={}){
       <span class="dchk${doneSet.has(key)?" on":""}" data-key="${esc(key)}" title="${doneSet.has(key)?"已做过（点击取消）":"标记已做过"}">${dchkIcon(doneSet.has(key))}</span>
       <span class="star" data-key="${esc(key)}" title="收藏">☆</span>
     </div>
-    <div class="recipe-body">
-      ${meta?`<p class="meta">${meta}</p>`:""}
-      <div class="ratio">
-        ${d.items.map(i=>{
-          const rec = brandOf(i[0]);
-          return `<div class="k">${esc(i[0])}${rec?`<span class="kb">荐 ${esc(rec)}</span>`:""}</div><div class="v">${esc(i[1])}</div>`;
-        }).join("")}
-      </div>
-      ${(d.steps&&d.steps.length)?`<div class="steps"><b>做法步骤</b><ol>${d.steps.map(s=>`<li>${esc(s)}</li>`).join("")}</ol></div>`:""}
-      <div class="trick"><b>小诀窍</b>${esc(d.tips)}</div>
-      <div class="body-actions">
-        <button class="ask-ai" data-key="${esc(key)}">问 AI</button>
-        ${swapBtn}
-        ${showWish ? `<button class="wish${wishSet.has(key)?" on":""}" data-key="${esc(key)}">${wishSet.has(key)?"已想做":"想做"}</button>` : ""}
-        <button class="dislike" data-key="${esc(key)}">不好吃</button>
-        <button class="done" data-key="${esc(key)}">已做过</button>
-      </div>
+    ${recipeBodyHTML(d, opts)}
+  </div>`;
+}
+/* 云端清单行（收藏 / 已做过 / 垃圾箱）：能匹配到库内配方的直接展开详情，已下架的只显示名字 */
+function cloudRowHTML(r, actionLabel){
+  const d = recipeByKey(r.recipe_key);
+  if(!d){
+    return `<div class="recipe"><div class="recipe-head favrow flat" data-key="${esc(r.recipe_key)}">
+      <span class="rn">${esc(r.recipe_name)}</span>
+      <span class="rt">${esc(r.group_name || "")} · 库中已下架</span>
+      <button class="unfav" data-key="${esc(r.recipe_key)}">${actionLabel}</button>
+    </div></div>`;
+  }
+  const dc = d.diff ? (DIFF_TAG[d.diff]||{c:"#9a8f7a"}).c : "#9a8f7a";
+  return `<div class="recipe" data-name="${esc(d.name)}">
+    <div class="recipe-head favrow ex" data-key="${esc(r.recipe_key)}">
+      ${R_CHEV}
+      <span class="rn">${esc(d.name)}</span>
+      ${d.diff?`<span class="dstars" style="color:${dc}" title="难度 ${d.diff} 星">${diffStars(d.diff)}</span>`:""}
+      <span class="rt">${esc(r.group_name || groupOf(d))}</span>
+      <button class="unfav" data-key="${esc(r.recipe_key)}">${actionLabel}</button>
     </div>
+    ${recipeBodyHTML(d)}
   </div>`;
 }
 function bindRecipeToggles(root){
@@ -8981,11 +9007,7 @@ async function renderFavList(){
   if(error){ box.innerHTML = `<div class="empty"><b>加载失败</b>请稍后重试。</div>`; return; }
   const visible = sortRows((data || []).filter(r => !dislikeSet.has(r.recipe_key)));
   if(!visible.length){ box.innerHTML = `<div class="empty"><b>还没有收藏</b>在任意配方行点右侧 ☆ 即可收藏。</div>`; return; }
-  box.innerHTML = visible.map(r=>`<div class="recipe"><div class="recipe-head favrow" data-key="${esc(r.recipe_key)}">
-    <span class="rn">${esc(r.recipe_name)}</span>
-    <span class="rt">${esc(r.group_name || "")}</span>
-    <button class="unfav" data-key="${esc(r.recipe_key)}">移除</button>
-  </div></div>`).join("");
+  box.innerHTML = visible.map(r=>cloudRowHTML(r, "移除")).join("");
 }
 async function renderTrashList(){
   const box = document.getElementById("trashList");
@@ -9006,11 +9028,7 @@ async function renderTrashList(){
     .order("created_at", { ascending: false }).limit(200);
   if(error){ box.innerHTML = `<div class="empty"><b>加载失败</b>请稍后重试。</div>`; return; }
   if(!data || !data.length){ box.innerHTML = `<div class="empty"><b>垃圾箱是空的</b>在任意配方行点「× 不好吃」即可隐藏。</div>`; return; }
-  box.innerHTML = data.map(r=>`<div class="recipe"><div class="recipe-head favrow" data-key="${esc(r.recipe_key)}">
-    <span class="rn">${esc(r.recipe_name)}</span>
-    <span class="rt">${esc(r.group_name || "")}</span>
-    <button class="unfav" data-key="${esc(r.recipe_key)}">恢复显示</button>
-  </div></div>`).join("");
+  box.innerHTML = data.map(r=>cloudRowHTML(r, "恢复显示")).join("");
 }
 async function toggleDone(key){
   if(!cloudReady()) return;
@@ -9067,19 +9085,11 @@ async function renderDoneList(){
     const list = sortRows(groups[l.id]); if(!list.length) return;
     const c = DIFF_TAG[l.id].c;
     html += `<div class="sec-title" style="color:${c};margin-top:18px;">${esc(l.t)} · ${esc(l.s)}（${list.length}）</div>` +
-      list.map(r=>`<div class="recipe"><div class="recipe-head favrow" data-key="${esc(r.recipe_key)}">
-        <span class="rn">${esc(r.recipe_name)}</span>
-        <span class="rt">${esc(r.group_name || "")}</span>
-        <button class="unfav" data-key="${esc(r.recipe_key)}">移除</button>
-      </div></div>`).join("");
+      list.map(r=>cloudRowHTML(r, "移除")).join("");
   });
   if(unk.length){
     html += `<div class="sec-title" style="margin-top:18px;">其他（${unk.length}）</div>` +
-      unk.map(r=>`<div class="recipe"><div class="recipe-head favrow" data-key="${esc(r.recipe_key)}">
-        <span class="rn">${esc(r.recipe_name)}</span>
-        <span class="rt">${esc(r.group_name || "")}</span>
-        <button class="unfav" data-key="${esc(r.recipe_key)}">移除</button>
-      </div></div>`).join("");
+      unk.map(r=>cloudRowHTML(r, "移除")).join("");
   }
   box.innerHTML = html;
 }
@@ -9250,6 +9260,13 @@ document.addEventListener("click", async e=>{
   if(unf){ e.stopPropagation(); if(currentView === "trash") toggleDislike(unf.dataset.key); else if(currentView === "done") toggleDone(unf.dataset.key); else toggleFav(unf.dataset.key); return; }
   const row = e.target.closest(".favrow");
   if(row){
+    const card = row.closest(".recipe");
+    // 库内配方：直接在清单里展开/收起详情
+    if(card && card.querySelector(".recipe-body")){
+      card.classList.toggle("open");
+      return;
+    }
+    // 已下架配方：无法展开，保持原跳转逻辑兜底
     const d = recipeByKey(row.dataset.key);
     if(d){
       if(currentView === "trash"){
