@@ -172,6 +172,12 @@
   .kcard.soon{opacity:.55;border-style:dashed;}
   .kcard.soon:hover{border-color:var(--line);}
 
+  /* ---------- 近期网络热门 ---------- */
+  .trend-hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:18px 0 3px;font-size:13px;color:var(--ink-soft);}
+  .trend-no{font-size:11px;font-weight:800;color:var(--accent-dark);letter-spacing:.04em;}
+  .trend-from{font-size:11px;font-weight:700;padding:1px 7px;border-radius:5px;background:var(--accent-soft);color:var(--accent-dark);border:1px solid var(--line);}
+  .trend-why{font-size:12px;color:var(--muted);line-height:1.6;margin:0 0 7px;}
+
   /* ---------- 常识科普 ---------- */
   .primer{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:18px;overflow:hidden;}
   .primer-head{
@@ -489,7 +495,7 @@
       <h1 class="page-title">美食知识库</h1>
       <p class="page-desc">轻油 · 轻盐 · 轻糖，不做油炸。</p>
       <div class="sec-title with-action" id="homeMenuTitle">
-        每周菜单 · 1–2 人 · 当季食材
+        每周菜单 · 近期热门 · 1–2 人 · 当季食材
         <span class="sec-action" data-menuedit title="管理菜单">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
         </span>
@@ -596,6 +602,16 @@
       <p class="page-desc">1–2 人 · 当季 · 每周五更新</p>
       <div class="tabs" id="menuTabs"></div>
       <div id="menuList"></div>
+    </section>
+
+    <!-- 近期网络热门（15 道 · 每周随本周/下周菜单一起更新） -->
+    <section id="view-trend" hidden>
+      <div class="pagehead">
+        <button class="pageback" data-pageback>‹ 返回</button>
+        <h1 class="page-title">近期网络热门</h1>
+      </div>
+      <p class="page-desc" id="trDesc">近期各平台高频出现的做法 · 每周更新</p>
+      <div id="trList"></div>
     </section>
 
     <!-- 菜单管理（想做 / 永久排除） -->
@@ -7784,6 +7800,60 @@ const WEEK_MENUS = [
     ]},
 ];
 
+/* ================= 近期网络热门（每周随本周/下周菜单一起滚动） =================
+   口径：从近期公开内容中高频出现的做法与口味趋势整理，逐条对齐到本库已有配方，
+   不是任何平台的官方榜单或排名。items 的 name 必须与 DATA 中某条配方名完全一致。
+   每周由自动化任务联网调研后重写：week / range / updated / brief / note / items。 */
+const TRENDING = {
+  week:"2026-W45", range:"11.2 – 11.8", updated:"11.5",
+  brief:"立冬饺子与温补炖菜 · 砂锅一锅出 · 空气炸锅减脂 · 微波炉懒人",
+  note:"立冬时令：白菜、白萝卜、山药、板栗、烟笋、扇贝、黄鱼、土鸡。近期各平台集中在三股风：立冬饺子与温补炖菜、砂锅一锅出、空气炸锅 / 微波炉的低油懒人做法。以下 15 道是从近期公开内容中高频出现的做法与口味趋势整理，并逐条对齐到本库已有配方，点开即可看完整用量与步骤；非平台官方榜单或排名。",
+  items:[
+    {name:"蒸饺（烫面版）", from:"小红书 / 抖音", why:"立冬「厨房挑战」与包饺子合拍带火蒸饺，烫面皮透亮不油，比水煮更上镜也更好消化。"},
+    {name:"板栗烧鸡", from:"今日头条", why:"立冬温补清单常客，板栗正当季，粉糯吸汁；少油焖煮比油炸省事，鸡肉去皮更清爽。"},
+    {name:"山药炖鸡汤", from:"今日头条", why:"11 月时令「山药土鸡汤」高频出现，鸡块去皮、焯后撇油，汤清味鲜，秋冬温补不上火。"},
+    {name:"白菜豆腐煲", from:"今日头条", why:"立冬砂锅菜热门，白菜清甜配豆腐，零油起锅炖一锅，暖身又不厚重。"},
+    {name:"咖喱土豆鸡块（家常版）", from:"今日头条", why:"砂锅咖喱土豆鸡走红，土豆炖到起沙、汤汁拌饭，一锅出少洗碗。"},
+    {name:"土豆烧牛腩", from:"腾讯新闻", why:"立冬滋补 4 菜之一，牛腩小火炖到软烂；本库版本盐糖都收着放，靠番茄和洋葱出味。"},
+    {name:"粉蒸排骨", from:"腾讯新闻", why:"对应走红的「小米蒸排骨」，蒸制零油炸、米粉锁汁，排骨不柴也不腻。"},
+    {name:"鱼香肉丝（少油少糖版）", from:"腾讯新闻", why:"立冬下饭菜榜单常驻，本库版本把糖和油都减了，酸甜靠香醋与泡椒撑起来。"},
+    {name:"井冈烟笋炒肉", from:"腾讯新闻", why:"对应「笋丝炒肉丝」，秋冬鲜笋难寻，用泡发烟笋替代，烟香更下饭。"},
+    {name:"蒜蓉粉丝蒸扇贝", from:"今日头条", why:"11 月时令海鲜推荐，水开蒸 6 分钟就好，蒜香提鲜、几乎不用油。"},
+    {name:"清蒸黄鱼", from:"今日头条", why:"「清蒸小黄鱼」近期高频出现，肉嫩刺少，蒸比煎省油，倒掉腥水再淋汁就不腥。"},
+    {name:"柠檬烤鸡胸（空气炸锅）", from:"什么值得买", why:"空气炸锅减脂餐合集里的柠檬黑椒鸡胸，喷油几下、无重酱料，靠柠檬去腥提香。"},
+    {name:"麻辣脆皮豆腐（空气炸锅）", from:"下厨房", why:"与走红的「无油蔬菜豆腐丸子」同一思路，热风逼出焦壳，低脂高蛋白。"},
+    {name:"蒜蓉开背茄子（微波炉）", from:"今日头条", why:"懒人吃法里「3 分钟微波炉蒜蓉茄子」最出圈，免油烟、免看火，茄子软糯入味。"},
+    {name:"万能凉拌汁", from:"今日头条", why:"「一酱拌一切」被反复转发，一次调好冷藏，拌黄瓜、豆腐皮、木耳、鸡胸都行。"},
+  ]
+};
+/* 与菜单同样的运行时自愈：定时任务断更时如实标注「停留在上一期」 */
+function viewTrending(){
+  const mon = isoWeekMonday(TRENDING.week);
+  const diff = mon ? Math.round((mon - mondayOf(new Date())) / 6048e5) : 0;
+  return Object.assign({}, TRENDING, {__diff: diff});
+}
+function openTrend(){ renderTrend(); show("trend"); }
+function renderTrend(){
+  const t = viewTrending();
+  const box = document.getElementById("trList");
+  if(!box) return;
+  const stale = t.__diff < 0 ? ` <span style="font-size:12px;color:#b0402a;">（停留在上一期，待更新）</span>` : "";
+  const desc = document.getElementById("trDesc");
+  if(desc) desc.textContent = `近期各平台高频出现的做法 · ${t.range} 更新 · 共 ${t.items.length} 道`;
+  let html = `<div class="panel" style="margin-bottom:12px;">
+    <h3>本周热门 · ${esc(t.range)}${stale}</h3>
+    <p style="margin:6px 0 0;font-size:13px;color:var(--ink-soft);line-height:1.7;">${esc(t.note)}</p>
+  </div>`;
+  html += t.items.map((it, i)=>{
+    const hd = `<div class="trend-hd"><span class="trend-no">${String(i+1).padStart(2,"0")}</span><span class="trend-from">${esc(it.from)}</span></div><p class="trend-why">${esc(it.why)}</p>`;
+    const d = DATA.find(x=>x.name===it.name);
+    if(!d) return hd + `<div class="recipe"><div class="recipe-head"><span class="rn">${esc(it.name)}</span><span class="rt">未收录</span></div></div>`;
+    return hd + recipeHTML(d, false, {showCat:true});
+  }).join("");
+  box.innerHTML = html;
+  bindRecipeToggles(box);
+}
+
 /* 运行时滚动：按真实日期把菜单标为本周/下周，旧周自动隐藏——即便定时任务没跑，展示也不会错位 */
 function isoWeekMonday(iso){
   const m = String(iso).match(/^(\d{4})-W(\d{2})$/);
@@ -7994,7 +8064,7 @@ const sidebar = document.getElementById("sidebar");
 const drawerMask = document.getElementById("drawerMask");
 
 /* ================= 视图路由（含返回栈） ================= */
-const VIEW_IDS = ["home","channel","group","search","toolbox","brands","favorites","trash","diff","done","menu","menuadmin"];
+const VIEW_IDS = ["home","channel","group","search","toolbox","brands","favorites","trash","diff","done","menu","trend","menuadmin"];
 let currentView = "home", returnView = "home";
 let currentCat = null, currentGroup = null, currentChTab = "all";
 let navStack = [];
@@ -8079,17 +8149,23 @@ function renderNav(){
 
 /* ================= 首页：总入口 ================= */
 function renderHome(){
-  // 每周菜单入口（本周/下周）
+  // 每周菜单入口（本周 / 下周）+ 近期网络热门
+  const tr = viewTrending();
   document.getElementById("homeMenu").innerHTML = viewWeekMenus().map(w=>{
     const seasonal = (w.note.match(/时令：(.+?)。/) || [,""])[1];
     return `<div class="kcard" data-menu="${esc(w.id)}">
       <div class="t"><span style="display:flex;align-items:center;min-width:0;"><span class="sq" style="--c:#7d9a6a">${esc(w.t[0])}</span>${esc(w.t)}</span></div>
       <div class="d">${seasonal ? "时令：" + esc(seasonal) : esc(w.season)}</div>
     </div>`;
-  }).join("");
+  }).join("") + `<div class="kcard" data-trend="1" style="grid-column:1/-1;">
+      <div class="t"><span style="display:flex;align-items:center;min-width:0;"><span class="sq" style="--c:#b5804a">热</span>近期网络热门</span><span class="n">${tr.items.length} 道 · ${esc(tr.range)} 更新</span></div>
+      <div class="d">${esc(tr.brief)}</div>
+    </div>`;
   document.getElementById("homeMenu").addEventListener("click",e=>{
     const card = e.target.closest(".kcard");
-    if(card && card.dataset.menu) openMenu(card.dataset.menu);
+    if(!card) return;
+    if(card.dataset.menu){ openMenu(card.dataset.menu); return; }
+    if(card.dataset.trend) openTrend();
   });
   // 每周菜单标题行管理入口
   const menuTitle = document.getElementById("homeMenuTitle");
