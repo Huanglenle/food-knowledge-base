@@ -8149,17 +8149,13 @@ function renderNav(){
 
 /* ================= 首页：总入口 ================= */
 function renderHome(){
-  // 每周菜单入口（本周 / 下周）+ 近期网络热门
-  const tr = viewTrending();
+  // 每周菜单入口（本周 / 下周）+ 近期网络热门：卡片只保留标题，不显示小字备注
   document.getElementById("homeMenu").innerHTML = viewWeekMenus().map(w=>{
-    const seasonal = (w.note.match(/时令：(.+?)。/) || [,""])[1];
     return `<div class="kcard" data-menu="${esc(w.id)}">
       <div class="t"><span style="display:flex;align-items:center;min-width:0;"><span class="sq" style="--c:#7d9a6a">${esc(w.t[0])}</span>${esc(w.t)}</span></div>
-      <div class="d">${seasonal ? "时令：" + esc(seasonal) : esc(w.season)}</div>
     </div>`;
   }).join("") + `<div class="kcard" data-trend="1" style="grid-column:1/-1;">
-      <div class="t"><span style="display:flex;align-items:center;min-width:0;"><span class="sq" style="--c:#b5804a">热</span>近期网络热门</span><span class="n">${tr.items.length} 道 · ${esc(tr.range)} 更新</span></div>
-      <div class="d">${esc(tr.brief)}</div>
+      <div class="t"><span style="display:flex;align-items:center;min-width:0;"><span class="sq" style="--c:#b5804a">热</span>近期网络热门</span></div>
     </div>`;
   document.getElementById("homeMenu").addEventListener("click",e=>{
     const card = e.target.closest(".kcard");
