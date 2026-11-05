@@ -8761,7 +8761,7 @@ async function toggleWish(key){
       owner_name: (session.user && session.user.name) || null
     }).select();
     if(error){
-      if(error.code === "23505"){ wishSet.add(key); }
+      if(isDupErr(error)){ wishSet.add(key); }
       else { toast("操作失败：" + (error.message || "请重试")); return; }
     } else { wishSet.add(key); toast("已加入想做，会安排进最近的每周菜单"); }
   }
@@ -8984,6 +8984,13 @@ function doSwap(menuId, dayIdx, slot){
     setTimeout(()=>toast("未登录：换菜结果仅存本机，登录后可跨设备同步"), 1400);
   }
 }
+/* 判断是否为唯一约束冲突（SDK 返回的错误结构不稳定：code 可能在 error.code / error.error.code，或直接揉在 message 文本里） */
+function isDupErr(error){
+  if(!error) return false;
+  const code = error.code || (error.error && error.error.code) || "";
+  const msg = error.message || (error.error && error.error.message) || "";
+  return code === "23505" || /duplicate key/i.test(msg);
+}
 async function toggleFav(key){
   if(!cloudReady()) return;
   const { data: session } = await cloud.auth.getSession();
@@ -9003,7 +9010,7 @@ async function toggleFav(key){
       owner_name: (session.user && session.user.name) || null
     }).select();
     if(error){
-      if(error.code === "23505"){ favSet.add(key); }
+      if(isDupErr(error)){ favSet.add(key); }
       else { toast("收藏失败：" + (error.message || "请重试")); return; }
     } else favSet.add(key);
   }
@@ -9029,7 +9036,7 @@ async function toggleDislike(key){
       owner_name: (session.user && session.user.name) || null
     }).select();
     if(error){
-      if(error.code === "23505"){ dislikeSet.add(key); }
+      if(isDupErr(error)){ dislikeSet.add(key); }
       else { toast("标记失败：" + (error.message || "请重试")); return; }
     } else { dislikeSet.add(key); toast("已标记为不好吃，可在垃圾箱恢复"); }
   }
@@ -9102,7 +9109,7 @@ async function toggleDone(key){
       owner_name: (session.user && session.user.name) || null
     }).select();
     if(error){
-      if(error.code === "23505"){ doneSet.add(key); }
+      if(isDupErr(error)){ doneSet.add(key); toast("之前已标记过「已做过」"); }
       else { toast("标记失败：" + (error.message || "请重试")); return; }
     } else { doneSet.add(key); toast("已标记为「已做过」"); }
   }
