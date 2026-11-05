@@ -780,25 +780,41 @@ const LS = (function(){
 /* ================= 云服务初始化（publicConfig 来自云服务开通结果，可安全随前端发布） ================= */
 const PUBLIC_CONFIG = {"resourceId":"wbcs_McaRKpGRHoFIdjQmbr1Fr0","endpoint":"https://milk-tea-recipes.app.workbuddy.host","oauthRelayBaseUrl":"https://www.workbuddy.cn/v2/as/genie-baas/oauth","publishableKey":"wbpk_tgwXUtdIhszLhfd04sw18U_Od5u6as4CWnU2KA3dFvalymsx3WmxoFX"};
 
-/* 会话存储三级回退：localStorage → Cookie → 内存（沙箱/无痕/预览面板保底） */
+/* 会话存储：localStorage 为主 + Cookie 兜底双写（防 iOS/无痕清理 localStorage 掉登录态），再降级内存 */
+let cloudStorageMode = "memory";
 function createCloudStorage(){
-  // 优先 localStorage
+  let ls = null;
   try{
     const k="__wb_probe"; window.localStorage.setItem(k,"1"); window.localStorage.removeItem(k);
-    return window.localStorage;
+    ls = window.localStorage;
   }catch(e){}
-  // 降级 Cookie（30 天）
+  let ck = null;
   try{
-    document.cookie="__wb_probe=1;path=/;max-age=10"; if(document.cookie.indexOf("__wb_probe")!==-1){
-      return {
+    document.cookie="__wb_probe=1;path=/;max-age=10";
+    if(document.cookie.indexOf("__wb_probe")!==-1){
+      document.cookie="__wb_probe=;path=/;max-age=0";
+      ck = {
         getItem(k){ const m=document.cookie.match(new RegExp("(?:^|; )"+k.replace(/[.$]/g,"\\$&")+"=([^;]*)")); return m?decodeURIComponent(m[1]):null; },
-        setItem(k,v){ document.cookie=k+"="+encodeURIComponent(v)+";path=/;max-age=2592000;SameSite=Lax"; },
+        setItem(k,v){ document.cookie=k+"="+encodeURIComponent(v)+";path=/;max-age=2592000;SameSite=Lax;Secure"; },
         removeItem(k){ document.cookie=k+"=;path=/;max-age=0"; }
       };
     }
   }catch(e){}
-  // 最终降级内存
+  if(ls && ck){
+    cloudStorageMode = "dual";
+    return {
+      // 读：localStorage 优先，空了从 Cookie 捞回并回填（iOS 定期清 localStorage 的场景）
+      getItem(k){ let v = null; try{ v = ls.getItem(k); }catch(e){} if(v !== null) return v;
+        try{ v = ck.getItem(k); }catch(e){} if(v !== null){ try{ ls.setItem(k, v); }catch(e){} } return v; },
+      // 写：双写；Cookie 有约 4KB 上限，超长的会话只写 localStorage
+      setItem(k,v){ try{ ls.setItem(k,v); }catch(e){} try{ if(encodeURIComponent(v).length < 3800) ck.setItem(k,v); }catch(e){} },
+      removeItem(k){ try{ ls.removeItem(k); }catch(e){} try{ ck.removeItem(k); }catch(e){} }
+    };
+  }
+  if(ls){ cloudStorageMode = "local"; return ls; }
+  if(ck){ cloudStorageMode = "cookie"; return ck; }
   const mem={};
+  cloudStorageMode = "memory";
   return {
     getItem(k){ return mem[k]===undefined?null:mem[k]; },
     setItem(k,v){ mem[k]=v; },
@@ -826,15 +842,12 @@ retryCloud();
 
 /* 存储能力提示：内存模式下登录态刷新即丢，主动提示一次 */
 (function(){
-  if(cloudStorage === window.localStorage) return;
-  const isCookie = document.cookie.indexOf("__wb_probe") !== -1;
-  // 预览面板/沙箱 iframe 内不弹提示（用户无法控制环境）
   const inIframe = window.self !== window.top;
   if(inIframe) return;
   setTimeout(()=>{
-    if(isCookie){
+    if(cloudStorageMode === "cookie"){
       toast("当前为兼容模式，登录状态可保存 30 天");
-    } else {
+    } else if(cloudStorageMode === "memory"){
       toast("当前环境不支持持久化存储，刷新后需重新登录");
     }
   }, 1200);
@@ -7443,18 +7456,7 @@ const PRIMERS = {
 
 /* ================= 每周菜单（本周/下周 · 1-2 人 · 当季食材 · 每周五自动滚动） ================= */
 const WEEK_MENUS = [
-  { id:"2026-W44", t:"本周菜单", range:"10.26 – 11.1", season:"深秋",
-    note:"深秋时令：白萝卜、花菜、大白菜、梭子蟹、虾、秋刀鱼、土鸡。1–2 人采购参考：梭子蟹 1–2 只约 400g、土鸡半只（可分两天吃）、基围虾 300g、龙口粉丝 1 把、秋刀鱼 2 条。",
-    days:[
-      { d:"周一", date:"10.26", dishes:["香煎鲈鱼","清炒白萝卜丝"] },
-      { d:"周二", date:"10.27", dishes:["高山金钱香菇炖土鸡汤","干锅花菜"] },
-      { d:"周三", date:"10.28", dishes:["梭子蟹炒年糕（甜辣版）","凉拌木耳"] },
-      { d:"周四", date:"10.29", dishes:["青椒肉丝","酸辣土豆丝"] },
-      { d:"周五", date:"10.30", dishes:["干锅香辣虾","拍黄瓜"] },
-      { d:"周六", date:"10.31", dishes:["赣式蒜蓉粉丝蒸虾","蒸水蛋"] },
-      { d:"周日", date:"11.1", dishes:["日式烤秋刀鱼（空气炸锅）","烤时蔬杂烩（烤箱）"] },
-    ]},
-  { id:"2026-W45", t:"下周菜单", range:"11.2 – 11.8", season:"立冬前",
+  { id:"2026-W45", t:"本周菜单", range:"11.2 – 11.8", season:"立冬前",
     note:"立冬前时令：大白菜、白萝卜、菜心、莲藕、芋头、鸡腿、排骨。1–2 人采购参考：排骨 400g（分两天用）、鸡腿 4 只、白萝卜 1 根约 500g、芋头 300g、绿叶菜各 300g。",
     days:[
       { d:"周一", date:"11.2", dishes:["蚝油生菜","番茄排骨汤"] },
@@ -7465,7 +7467,54 @@ const WEEK_MENUS = [
       { d:"周六", date:"11.7", dishes:["香草烤鸡腿（烤箱）","烤玉米段（空气炸锅）"] },
       { d:"周日", date:"11.8", dishes:["宁都三杯鸡","西芹炒百合"] },
     ]},
+  { id:"2026-W46", t:"下周菜单", range:"11.9 – 11.15", season:"初冬",
+    note:"初冬时令：大白菜、白萝卜、莲藕、山药、芋头、板栗、排骨、鱼头。1–2 人采购参考：排骨 300g、鸭半只、鱼头 1 个、前腿肉 300g、大白菜 1 颗、白萝卜 1 根、山药 300g。",
+    days:[
+      { d:"周一", date:"11.9", dishes:["粉蒸排骨","酸辣大白菜"] },
+      { d:"周二", date:"11.10", dishes:["赣州生焖鸭","酸辣藕丁"] },
+      { d:"周三", date:"11.11", dishes:["南昌鱼头炖豆腐（少油版）","百合山药羹"] },
+      { d:"周四", date:"11.12", dishes:["客家咸菜焖猪肉（少油版）","凉拌萝卜皮"] },
+      { d:"周五", date:"11.13", dishes:["糖醋排骨","冰糖炖雪梨"] },
+      { d:"周六", date:"11.14", dishes:["南昌米粉蒸肉（零油蒸）","广式酱萝卜"] },
+      { d:"周日", date:"11.15", dishes:["山药线鸡","炝炒圆白菜"] },
+    ]},
 ];
+
+/* 运行时滚动：按真实日期把菜单标为本周/下周，旧周自动隐藏——即便定时任务没跑，展示也不会错位 */
+function isoWeekMonday(iso){
+  const m = String(iso).match(/^(\d{4})-W(\d{2})$/);
+  if(!m) return null;
+  const y = +m[1], w = +m[2];
+  const jan4 = new Date(Date.UTC(y, 0, 4));
+  const dow = jan4.getUTCDay() || 7;
+  const mon = new Date(jan4);
+  mon.setUTCDate(jan4.getUTCDate() - (dow - 1) + (w - 1) * 7);
+  return mon;
+}
+function mondayOf(d){
+  const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() || 7) - 1));
+  return x;
+}
+function rollWeekMenus(){
+  const curMon = mondayOf(new Date());
+  WEEK_MENUS.forEach(w=>{
+    const mon = isoWeekMonday(w.id);
+    if(!mon){ w.__diff = 0; return; }
+    w.__diff = Math.round((mon - curMon) / 6048e5);
+    if(w.__diff === 0) w.t = "本周菜单";
+    else if(w.__diff === 1) w.t = "下周菜单";
+    else w.t = "历史菜单";
+    const sun = new Date(mon); sun.setUTCDate(mon.getUTCDate() + 6);
+    w.range = (mon.getUTCMonth()+1) + "." + mon.getUTCDate() + " – " + (sun.getUTCMonth()+1) + "." + sun.getUTCDate();
+  });
+}
+/* 只展示本周/下周；若定时任务断更，兜底显示最近一期并标注 */
+function viewWeekMenus(){
+  const v = WEEK_MENUS.filter(w => w.__diff === 0 || w.__diff === 1).sort((a,b)=>a.__diff-b.__diff);
+  return v.length ? v : WEEK_MENUS.slice(-1);
+}
+rollWeekMenus();
 
 /* ================= 配料 → 品牌推荐（自动关联，按序匹配） ================= */
 const ING_BRAND = [
@@ -7727,7 +7776,7 @@ function renderNav(){
 /* ================= 首页：总入口 ================= */
 function renderHome(){
   // 每周菜单入口（本周/下周）
-  document.getElementById("homeMenu").innerHTML = WEEK_MENUS.map(w=>{
+  document.getElementById("homeMenu").innerHTML = viewWeekMenus().map(w=>{
     const seasonal = (w.note.match(/时令：(.+?)。/) || [,""])[1];
     return `<div class="kcard" data-menu="${esc(w.id)}">
       <div class="t"><span style="display:flex;align-items:center;min-width:0;"><span class="sq" style="--c:#7d9a6a">${esc(w.t[0])}</span>${esc(w.t)}</span></div>
@@ -8038,25 +8087,29 @@ document.getElementById("view-diff").addEventListener("click",e=>{
 });
 
 /* ================= 每周菜单（本周/下周 · 1-2 人 · 当季食材） ================= */
-let currentMenuId = WEEK_MENUS[0] ? WEEK_MENUS[0].id : null;
+let currentMenuId = (viewWeekMenus()[0] || WEEK_MENUS[0] || {}).id || null;
 function openMenu(id){
-  if(id && WEEK_MENUS.find(w=>w.id===id)) currentMenuId = id;
+  const vm = viewWeekMenus();
+  if(id && vm.find(w=>w.id===id)) currentMenuId = id;
+  else if(!vm.find(w=>w.id===currentMenuId)) currentMenuId = vm[0].id;
   const tabsEl = document.getElementById("menuTabs");
-  tabsEl.innerHTML = WEEK_MENUS.map(w=>
+  tabsEl.innerHTML = vm.map(w=>
     `<button data-tab="${esc(w.id)}" class="${w.id===currentMenuId?"active":""}">${esc(w.t)}</button>`).join("");
   tabsEl.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{ currentMenuId = b.dataset.tab; renderMenu(); window.scrollTo({top:0}); }));
   renderMenu();
   show("menu");
 }
 function renderMenu(){
-  const w = WEEK_MENUS.find(x=>x.id===currentMenuId) || WEEK_MENUS[0];
+  const vm = viewWeekMenus();
+  const w = vm.find(x=>x.id===currentMenuId) || vm[0];
   const box = document.getElementById("menuList");
-  if(!w){ box.innerHTML = `<div class="empty"><b>菜单还没有生成</b>每周五自动更新下周菜单。</div>`; return; }
+  if(!w){ box.innerHTML = `<div class="empty"><b>菜单还没有生成</b>每周一自动滚动更新菜单。</div>`; return; }
   const now = new Date();
   const today = (now.getMonth()+1) + "." + now.getDate();
   document.querySelectorAll("#menuTabs button").forEach(b=>b.classList.toggle("active", b.dataset.tab===w.id));
+  const stale = (w.__diff !== undefined && w.__diff < 0) ? ` <span style="font-size:12px;color:#b0402a;">（停留在最近一期，待滚动）</span>` : "";
   let html = `<div class="panel" style="margin-bottom:12px;">
-    <h3>${esc(w.t)} · ${esc(w.season)}</h3>
+    <h3>${esc(w.t)} · ${esc(w.range)} · ${esc(w.season)}${stale}</h3>
     <p style="margin:6px 0 0;font-size:13px;color:var(--ink-soft);line-height:1.7;">${esc((w.note.match(/^.+?。/) || [w.note])[0])}</p>
   </div>`;
   html += w.days.map((day, di)=>{
@@ -8077,7 +8130,7 @@ function renderMenu(){
 /* ================= 菜单管理页（想做 / 永久排除） ================= */
 let maMenuId = null;
 async function openMenuAdmin(menuId){
-  maMenuId = menuId || (WEEK_MENUS[0] && WEEK_MENUS[0].id);
+  maMenuId = menuId || ((viewWeekMenus()[0] || WEEK_MENUS[0] || {}).id);
   const w = WEEK_MENUS.find(x => x.id === maMenuId) || {};
   document.getElementById("maName").textContent = "菜单管理" + (w.t ? " · " + w.t : "");
   document.getElementById("maDesc").textContent = "「想做」会随机排进最近几周的菜单；被换掉 3 次的菜永久不再推荐，在这里可以移除。";
@@ -9140,7 +9193,12 @@ async function ensureModel(){
   if(modelId) return true;
   if(!cloud){ appendMsg("assistant", "云服务未加载，请检查网络后刷新页面。"); return false; }
   const models = await cloud.llm.models.list();
-  const m = (models || []).find(x => x.disabled !== true);
+  const usable = (models || []).filter(x => x.disabled !== true && x.enabled !== false);
+  // 优先快模型：纯问答场景不需要推理模型（auto 等 onlyReasoning 模型又慢又易超时）
+  const PREFER = ["hunyuan-chat", "glm-4.6", "glm-4.7", "default"];
+  const m = PREFER.map(id => usable.find(x => x.id === id)).find(Boolean)
+    || usable.find(x => !x.onlyReasoning)
+    || usable[0];
   if(!m){ appendMsg("assistant", "当前没有可用模型，请稍后再试。"); return false; }
   modelId = m.id;
   return true;
@@ -9214,11 +9272,12 @@ async function sendChat(){
     hist.push({ role: "assistant", content: acc });
     if(!acc) aiEl.textContent = "（无回复，可重试）";
   }catch(err){
-    const code = (err && err.error && err.error.code) || "";
+    const code = (err && err.error && err.error.code) || (err && err.code) || "";
+    const raw = String((err && (err.message || err.status || err)) || "");
     let msg;
     if(err && err.name === "AbortError") msg = acc ? acc + "\n（已停止）" : "（已停止生成）";
     else if(code.indexOf("quota_") === 0) msg = "额度已用完或触发限流，请稍后再试。";
-    else if(code.indexOf("auth_") === 0) msg = "调用鉴权失败，请刷新页面重试。";
+    else if(code.indexOf("auth_") === 0 || /401|unauthorized|invalid_token/i.test(raw)) msg = "登录状态可能已过期，请关闭对话后重新登录再问。";
     else if(code.indexOf("gateway_") === 0 || code.indexOf("model_") === 0) msg = "模型服务暂时不可用，请稍后重试。";
     else msg = "调用失败，请重试。";
     aiEl.textContent = acc ? acc : msg;
