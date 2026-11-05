@@ -610,7 +610,7 @@
         <button class="pageback" data-pageback>‹ 返回</button>
         <h1 class="page-title">近期网络热门</h1>
       </div>
-      <p class="page-desc" id="trDesc">近期各平台高频出现的做法 · 每周更新</p>
+      <p class="page-desc" id="trDesc"></p>
       <div id="trList"></div>
     </section>
 
@@ -7837,14 +7837,11 @@ function renderTrend(){
   const t = viewTrending();
   const box = document.getElementById("trList");
   if(!box) return;
-  const stale = t.__diff < 0 ? ` <span style="font-size:12px;color:#b0402a;">（停留在上一期，待更新）</span>` : "";
+  // 顶部说明精简为一行：日期 + 数量 + 口径；时令概述与趋势长文不再重复展示
   const desc = document.getElementById("trDesc");
-  if(desc) desc.textContent = `近期各平台高频出现的做法 · ${t.range} 更新 · 共 ${t.items.length} 道`;
-  let html = `<div class="panel" style="margin-bottom:12px;">
-    <h3>本周热门 · ${esc(t.range)}${stale}</h3>
-    <p style="margin:6px 0 0;font-size:13px;color:var(--ink-soft);line-height:1.7;">${esc(t.note)}</p>
-  </div>`;
-  html += t.items.map((it, i)=>{
+  if(desc) desc.innerHTML = `${esc(t.range)} · 共 ${t.items.length} 道 · 非平台官方榜单` +
+    (t.__diff < 0 ? ` <span style="color:#b0402a;">· 停留在上一期，待更新</span>` : "");
+  let html = t.items.map((it, i)=>{
     const hd = `<div class="trend-hd"><span class="trend-no">${String(i+1).padStart(2,"0")}</span><span class="trend-from">${esc(it.from)}</span></div><p class="trend-why">${esc(it.why)}</p>`;
     const d = DATA.find(x=>x.name===it.name);
     if(!d) return hd + `<div class="recipe"><div class="recipe-head"><span class="rn">${esc(it.name)}</span><span class="rt">未收录</span></div></div>`;
