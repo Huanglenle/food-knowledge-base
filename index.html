@@ -894,8 +894,9 @@ function cloudReady(){
  *    - 可选：分类加 tools:[{id,t,d}] 并在 PAGE_RENDERERS 注册一个工具页渲染函数（展示在「科普」Tab 的「工具箱」子区）。
  * 4. 加原料品牌：BRANDS_DATA 对应面板 rows.push({item, brand, note, use, kw})。
  * 5. 配料想自动带「荐」：往 ING_BRAND 顶部插 ["关键词","推荐品牌"]（上面的规则优先匹配）。
- * 6. 每周菜单：WEEK_MENUS 维护 2 条（本周/下周），id 用 ISO 周，dishes 填配方名（必须全局唯一）。
- *    由「每周五」的定时任务自动滚动生成下周菜单，手工新增配方后无需动它。
+ * 6. 每周菜单：WEEK_MENUS 包含「本周 + 下周 + 若干备用周」（建议共 5 条），id 用 ISO 周，dishes 填配方名（必须全局唯一）。
+ *    spare:true 标记的是备用周，正常不展示；当前周缺失时由页面自动启用最早的备用周并标注「备用菜单」，作为定时任务断更的兜底。
+ *    定时任务每次滚动后需补齐到 5 条（当前 + 4 周备用），手工新增配方后无需动它。
  * ============================================================ */
 
 /* ================= 分类（知识库入口） ================= */
@@ -8961,6 +8962,40 @@ const WEEK_MENUS = [
       { d:"周六", date:"12.5", dishes:["干锅花菜（少油版）","小米蒸排骨"] },
       { d:"周日", date:"12.6", dishes:["菌菇鸡汤","土豆炖豆角"] },
     ]},
+  { id:"2026-W50", t:"备用菜单", spare:true, range:"12.7 – 12.13", season:"大雪",
+    note:"大雪时令：白萝卜、大白菜、冬笋、山药、莲藕、板栗、羊肉、菌菇。1–2 人采购参考：牛腩 500g、白萝卜 1 根、鸡腿 2 个、排骨 500g、藕 1 节、山药 1 根、干香菇 20g、大白菜 1 颗、板栗 200g、冬笋 2 根。",
+    days:[
+      { d:"周一", date:"12.7", dishes:["白萝卜炖牛腩","凉拌菠菜"] },
+      { d:"周二", date:"12.8", dishes:["黄焖鸡（家常版）","番茄炒菜花"] },
+      { d:"周三", date:"12.9", dishes:["芋头排骨汤","清炒山药片"] },
+      { d:"周四", date:"12.10", dishes:["香菇滑鸡","清炒山药木耳"] },
+      { d:"周五", date:"12.11", dishes:["西红柿鸡蛋面","清炒豆芽"] },
+      { d:"周六", date:"12.12", dishes:["板栗烧鸡","清炒苋菜"] },
+      { d:"周日", date:"12.13", dishes:["山药排骨汤","清炒秋葵"] },
+    ]},
+  { id:"2026-W51", t:"备用菜单", spare:true, range:"12.14 – 12.20", season:"冬至前",
+    note:"冬至前时令：羊肉、白萝卜、大白菜、莲藕、山药、板栗、菌菇、芋头。1–2 人采购参考：羊肉 600g、鲳鱼 1 条、老豆腐 1 块、排骨 500g、白萝卜 1 根、藕 1 节、小鸡半只、土豆 3 个、大白菜 1 颗、芋头 200g。",
+    days:[
+      { d:"周一", date:"12.14", dishes:["当归羊肉煲","炝炒圆白菜"] },
+      { d:"周二", date:"12.15", dishes:["红烧鲳鱼","木耳炒鸡蛋"] },
+      { d:"周三", date:"12.16", dishes:["家常豆腐","清炒丝瓜"] },
+      { d:"周四", date:"12.17", dishes:["糖醋排骨","酸辣土豆丝"] },
+      { d:"周五", date:"12.18", dishes:["萝卜丝鲫鱼汤","清炒豌豆苗"] },
+      { d:"周六", date:"12.19", dishes:["小鸡炖蘑菇","清炒红薯叶"] },
+      { d:"周日", date:"12.20", dishes:["小鸡炖土豆","清炒佛手瓜"] },
+    ]},
+  { id:"2026-W52", t:"备用菜单", spare:true, range:"12.21 – 12.27", season:"冬至",
+    note:"冬至时令：羊肉、白萝卜、大白菜、莲藕、山药、板栗、菌菇、红枣。1–2 人采购参考：羊排 500g、鸡腿 2 个、带鱼 2 条、排骨 500g、老豆腐 1 块、白萝卜 1 根、大白菜 1 颗、藕 1 节、山药 1 根、红枣 20g。",
+    days:[
+      { d:"周一", date:"12.21", dishes:["清蒸排骨（零油）","清炒芥兰"] },
+      { d:"周二", date:"12.22", dishes:["照烧鸡腿排","清炒芸豆丝"] },
+      { d:"周三", date:"12.23", dishes:["红烧带鱼","清炒韭菜"] },
+      { d:"周四", date:"12.24", dishes:["豆腐蒸蛋","西芹炒百合"] },
+      { d:"周五", date:"12.25", dishes:["番茄牛腩煲","清炒南瓜苗"] },
+      { d:"周六", date:"12.26", dishes:["板栗炖鸡","蒜泥蒸茄子"] },
+      { d:"周日", date:"12.27", dishes:["山药红枣乌鸡汤","胡萝卜炒鸡蛋"] },
+    ]},
+
 ];
 
 /* ================= 近期网络热门（每周随本周/下周菜单一起滚动） =================
@@ -9039,15 +9074,21 @@ function rollWeekMenus(){
     w.__diff = Math.round((mon - curMon) / 6048e5);
     if(w.__diff === 0) w.t = "本周菜单";
     else if(w.__diff === 1) w.t = "下周菜单";
+    else if(w.__diff > 1){ w.t = "备用菜单"; w.spare = true; }
     else w.t = "历史菜单";
     const sun = new Date(mon); sun.setUTCDate(mon.getUTCDate() + 6);
     w.range = (mon.getUTCMonth()+1) + "." + mon.getUTCDate() + " – " + (sun.getUTCMonth()+1) + "." + sun.getUTCDate();
   });
 }
-/* 只展示本周/下周；若定时任务断更，兜底显示最近一期并标注 */
+/* 展示口径：本周/下周优先；两者都缺（定时任务断更）时，启用最早的备用周顶上并标 __spareFallback */
 function viewWeekMenus(){
   const v = WEEK_MENUS.filter(w => w.__diff === 0 || w.__diff === 1).sort((a,b)=>a.__diff-b.__diff);
-  return v.length ? v : WEEK_MENUS.slice(-1);
+  if(v.length) return v;
+  const spares = WEEK_MENUS.filter(w => (w.__diff === undefined ? (w.spare ? 2 : 99) : w.__diff) > 1 || w.spare === true);
+  const dist = w => (w.__diff === undefined ? Math.max(2, Math.round((isoWeekMonday(w.id) - mondayOf(new Date())) / 6048e5)) : w.__diff);
+  spares.sort((a,b)=>dist(a)-dist(b));
+  if(spares.length) return [Object.assign({}, spares[0], {__spareFallback:true, t:"本周菜单"})];
+  return WEEK_MENUS.slice(-1);
 }
 rollWeekMenus();
 
@@ -9313,7 +9354,7 @@ function renderHome(){
   // 每周菜单入口（本周 / 下周）+ 近期网络热门：卡片只保留标题，不显示小字备注
   document.getElementById("homeMenu").innerHTML = viewWeekMenus().map(w=>{
     return `<div class="kcard" data-menu="${esc(w.id)}">
-      <div class="t"><span style="display:flex;align-items:center;min-width:0;"><span class="sq" style="--c:#7d9a6a">${esc(w.t[0])}</span>${esc(w.t)}</span></div>
+      <div class="t"><span style="display:flex;align-items:center;min-width:0;"><span class="sq" style="--c:#7d9a6a">${esc(w.t[0])}</span>${esc(w.t)}</span>${w.__spareFallback?`<span class="n" style="color:#b0402a;">备用</span>`:""}</div>
     </div>`;
   }).join("") + `<div class="kcard" data-trend="1" style="grid-column:1/-1;">
       <div class="t"><span style="display:flex;align-items:center;min-width:0;"><span class="sq" style="--c:#b5804a">热</span>近期网络热门</span></div>
@@ -9644,7 +9685,8 @@ function renderMenu(){
   const now = new Date();
   const today = (now.getMonth()+1) + "." + now.getDate();
   document.querySelectorAll("#menuTabs button").forEach(b=>b.classList.toggle("active", b.dataset.tab===w.id));
-  const stale = (w.__diff !== undefined && w.__diff < 0) ? ` <span style="font-size:12px;color:#b0402a;">（停留在最近一期，待滚动）</span>` : "";
+  const stale = (w.__diff !== undefined && w.__diff < 0) ? ` <span style="font-size:12px;color:#b0402a;">（停留在最近一期，待滚动）</span>`
+    : (w.__spareFallback ? ` <span style="font-size:12px;color:#b0402a;">（备用菜单 · 定时任务待恢复）</span>` : "");
   let html = `<div class="panel" style="margin-bottom:12px;">
     <h3>${esc(w.t)} · ${esc(w.range)} · ${esc(w.season)}${stale}</h3>
     <p style="margin:6px 0 0;font-size:13px;color:var(--ink-soft);line-height:1.7;">${esc((w.note.match(/^.+?。/) || [w.note])[0])}</p>
